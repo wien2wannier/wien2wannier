@@ -3,9 +3,9 @@
 !!!    Main program ‘w2w’
 !!!
 !!! Copyright 2010-2012 Jan Kuneš, Philipp Wissgott
-!!!           2013-2014 Elias Assmann
+!!!           2013-2015 Elias Assmann
 !!! 
-!!! $Id: main.f 199 2014-04-11 16:18:29Z assmann $
+!!! $Id: main.f 433 2015-08-13 13:12:48Z assmann $
 
 !!/--- Files expected in ‘def’ ---
 !!  5 inwf	'old'	  'formatted'
@@ -24,8 +24,7 @@
 program wf                                                      
   use param
   use const,    only: R8, C16, BUFSZ
-  use struct,   only: aa,bb,cc, iprint, irel, alpha, Nat, &
-       &              lattic, title, init_struct
+  use struct,   only: aa,bb,cc, irel, alpha, Nat, lattic, title, init_struct
   use xa,       only: init_xa
   use xa3,      only: init_xa3
   use bessel,   only: init_bessel
@@ -36,8 +35,6 @@ program wf
   use wien2k,   only: errflg, errclr, gtfnam
 
   implicit none
-
-  complex(c16), parameter :: cim = (0.d0,1.d0)
 
   character(len=    3)  :: mode
   character(len=   11)  :: status,form                                      
@@ -104,9 +101,6 @@ program wf
   end do enefile
 
 !!!.....READ INPUT AND POTE  
-!!! if more information needed, put IPRINT>0
-  IPRINT=0
-
   nnkpt: do
      read(unit_nnkp,'(a80)',end=114) aline
      if(index(aline,'begin kpoints').ne.0) then
@@ -171,7 +165,7 @@ program wf
         DO J=1,N
            READ(unit_in,*,err=925,end=926)IA,L,M,X1,X2
            ind=L*(L+1)+M+1
-           C(I,ind,IA)=X1+CIM*X2
+           C(I,ind,IA)=X1 + (0,1)*X2
            CENTERATOM(I)=IA 
         ENDDO
      ENDDO
@@ -248,9 +242,9 @@ program wf
 !!!
 910 INFO = 1
 
-!!!        'lapw2.def' couldn't be opened
+!!!        def file couldn't be opened
 !!!
-  WRITE (ERRMSG,9000) FNAME
+  WRITE (ERRMSG,9000) DEFFN
   CALL OUTERR('w2w',ERRMSG)
   GOTO 999
 920 INFO = 2
@@ -302,8 +296,11 @@ program wf
 
 END program wf
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-08-10 12:39:14 assman@faepop23.tu-graz.ac.at>

@@ -1,17 +1,17 @@
-!!! wien2wannier/SRC_trig/vec2ascii.f90
+!!! wien2wannier/SRC_trig/vec2ascii.f
 !!! 
 !!!    Translates WIEN2k vector files to plain text.  Based on
 !!!    join_vectorfiles.
 !!!
 !!!    Usage: vec2ascii [-up/-dn] [-c] <case> <numberofparallelfiles>
 !!!
-!!! Copyright 2013-2014 Elias Assmann
+!!! Copyright 2013-2015 Elias Assmann
 !!!
-!!! $Id: vec2ascii.f 224 2014-05-30 14:56:29Z assmann $
+!!! $Id: vec2ascii.f 385 2015-06-01 13:08:18Z assmann $
 
 PROGRAM vec2ascii
   use util,      only: line_count
-  use structmod, only: struct, struct_read
+  use structmod, only: struct_t, struct_read
   use const,     only: BUFSZ, R8, C16
   
   implicit none
@@ -33,7 +33,7 @@ PROGRAM vec2ascii
  INTEGER, pointer :: KZZ(:,:)
  REAL(R8), allocatable ::  Z(:,:)
  COMPLEX(C16), allocatable ::  ZC(:,:)
- type(struct) stru
+ type(struct_t) stru
  character(bufsz) :: vectorfileend, targetvectorfileend
  character(bufsz) :: energyfileend, targetenergyfileend
  character(bufsz) :: suf
@@ -186,8 +186,11 @@ PROGRAM vec2ascii
  write(*,*)"++ joining vector files(+energy files) complete ++"
 END PROGRAM vec2ascii
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-05-23 19:58:48 elias>

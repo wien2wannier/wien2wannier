@@ -53,7 +53,41 @@ program, please download wien2wannier 0.97 from
 issues have been resolved.
 
 
-Changes in 1.0 (Wien2k_14.2) include:
+Changes in 1.0.1 (update to Wien2k_14.2) include:
+
+* several fixes and changes to `write_win':
+
+  - fixed calculation of atom positions (`atoms_cart' and `atoms_frac'
+    blocks); `atoms_cart' is the default because it is numerically
+    slightly better in some cases
+
+  - fixed handling of Wannier90 options given on the command line
+
+  - bugfixes relating to `mp_grid', `bands_plot', and `guiding_centres'
+
+  - implemented support for both old-format (5-digit integers) and
+    new-format (10-digit integers) `klist' files
+
+* fixed a Makefile problem affecting `w2w' and `wplot'; when using
+  gfortran, real and complex module versions were mixed, resulting in
+  errors
+
+* fixed a bug in w2wc which when compiled with ifort would sometimes
+  crash with an error ``read statement [from vectorso] requires too
+  much data'' in the presence of SOC
+
+* fixed a bug in w2w where `case.mmn' wrongly acquired a complex
+  conjugation
+
+* fixed a bug in w2w resulting in segmentation faults for some cases
+
+
+Many thanks to Marc Höppner, Hong Jiang, Gernot Kraberger, Oleg Rubel,
+Liang Si, Yundi Quan, Jiaxu Yan, Jianxin Zhu, and Manuel Zingl for
+their valuable comments on past versions.
+
+
+Changes in 1.0 (included in Wien2k_14.2) include:
 
 * removed all Unicode (non-ASCII) characters from the messages printed
   by wien2wannier, they were causing problems for some users
@@ -108,11 +142,7 @@ Changes in 1.0-β2 include:
 * renamed convert_hamiltonian -> convham
 
 
-Many thanks to Marc Höppner, Hong Jiang, Oleg Rubel, Yundi Quan, Jiaxu
-Yan, and Jianxin Zhu for their valuable comments on the beta versions.
-
-
-=== Older version information follows.
+=== Older version information follows ===============================
 
 +++Version 0.97(08/07/13)
 1) fixed detection of real/complex case in w2w (it checks the struct file now)
@@ -205,10 +235,20 @@ to
 4) capability to run spin-orbit(complex) problems
 
 +++Version: 0.3(09/28/09) #some bug fixes for utility programs from P.Wissgott
-+++Version: 0.2(7/23/09) #bug fix from J. Kunes 
++++Version: 0.2(7/23/09) #bug fix from J. Kunes
 in planew.frc in w2w
   bug fix
 old:       id=-(BQZ(pair_index)*m2y+BQY(pair_index))*m2z-BQX(pair_index)-1
 replaced by
 new:       id=-(BQZ(pair_index)*m2y+BQY(pair_index))*m2x-BQX(pair_index)-1
 +++Version: 0.1 #first preliminary testversion, no logging or specified output
+
+
+##/---
+## Local Variables:
+## mode:          text
+## comment-start: "#"
+## End:
+##
+## Time-stamp: <2015-07-14 13:18:38 assman@faepop23.tu-graz.ac.at>
+##\---

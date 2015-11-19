@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_w2w/sphbes.f
 !!!
-!!! $Id: sphbes.f 167 2014-02-03 09:43:33Z assmann $
+!!! $Id: sphbes.f 420 2015-06-30 20:58:59Z assmann $
 
       SUBROUTINE SPHBES(N,X,FJ)                                         
       use const
@@ -98,8 +98,11 @@
    98 RETURN                                                            
       END                                                               
 
+
 !!/---
 !! Local Variables:
-!! mode: fortran
+!! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-06-30 22:15:55 assman@faepop23.tu-graz.ac.at>

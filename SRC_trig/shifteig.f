@@ -1,12 +1,12 @@
-!!! wien2wannier/SRC_trig/shifteig.f90
+!!! wien2wannier/SRC_trig/shifteig.f
 !!!
 !!!    Shifts the energy within the seed.eig file to account for the
 !!!    Fermi energy
 !!!
 !!! Copyright 2009-2012 Philipp Wissgott
-!!!                2014 Elias Assmann
+!!!           2014-2015 Elias Assmann
 !!!
-!!! $Id: shifteig.f 208 2014-05-14 12:29:09Z assmann $
+!!! $Id: shifteig.f 385 2015-06-01 13:08:18Z assmann $
 
 PROGRAM shift_energy
   use reallocate, only: realloc
@@ -73,8 +73,11 @@ PROGRAM shift_energy
   call errclr(errfn)
 END PROGRAM shift_energy
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-05-23 19:58:48 elias>

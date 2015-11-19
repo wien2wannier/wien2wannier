@@ -7,9 +7,9 @@
 ###    Based on ‘init_lapw’.
 ###
 ### Copyright 2009-2012 Philipp Wissgott
-###           2013-2014 Elias Assmann
+###           2013-2015 Elias Assmann
 ###
-### $Id: init_w2w_lapw 287 2014-10-09 14:11:17Z assmann $
+### $Id: init_w2w_lapw 385 2015-06-01 13:08:18Z assmann $
 
 #---> path- and file-names
 set file    = `pwd`
@@ -60,6 +60,7 @@ set updn
 #---> default flags
 unset quiet
 unset verbose
+unset mmn
 
 # options for batch usage
 unset batch
@@ -71,8 +72,8 @@ unset bmin bmax
 unset proj
 set w90opt
 
-if (-s $file.clmup) set sp updn=up
-if (-s $file.inso)  set so
+if ( -e $file.clmup && ! -z $file.clmup ) set sp updn=up
+if ( -e $file.inso  && ! -z $file.inso  ) set so
 
 #---> handling of input options
 echo ">   ($name) options: $argv" >> $logfile
@@ -102,6 +103,8 @@ while ($#argv)
 
     case -b:
       set batch; sb
+    case -mmn:
+      set mmn; sb
 
     case -emin:
       shift; set emin=$1; sb
@@ -134,6 +137,15 @@ while ($#argv)
       end
       breaksw
 
+    case -numk:
+      set numk=
+      shift;
+      while ( $#argv && "$1" !~ '-*' )
+        set numk=( $numk:q "$1" )
+        shift
+      end
+      breaksw      
+
     case -e: 
       shift; set stopafter = $1; sb
     case -s:
@@ -143,7 +155,7 @@ while ($#argv)
       set stopafter; sb
 
     default:
-      croak 'option `$1'"' does not exist"
+      croak 'option `'"$1' does not exist"
   endsw
 end
 
@@ -158,10 +170,10 @@ if ($?batch) then
     croak "bmin and bmax must appear paired"
   endif
   if (! $?emin ^ $?bmin) then
-    croak "either energy or band range must be given"
+    croak "energy range xor band range must be given"
   endif
-  if (! $?proj         ) then
-    croak "initial projections must be given"
+  if (! $?proj ^ $?mmn ) then
+    croak "initial projections xor -mmn must be given"
   endif
 endif
 
@@ -205,13 +217,16 @@ if (! $?batch) then
   if ($b == 'e') goto kgen
 else
   output kgen -fbz ($numk 0)
+  set numk = ( $numk )
+  if ($#numk > 1) then
+  set numk = "0\
+    $numk"
+  endif
   $bin/x kgen -fbz <<EOF
 $numk
 0
 EOF
   teststatus
-  cp $file.klist $file.klist_w90
-  cp $file.kgen $file.kgen_w90
 endif
 
 
@@ -225,7 +240,7 @@ else
   set out1=$file.output1
 endif
 
-if (-s $out1) then
+if ( -e $out1 && ! -z $out1 ) then
   if (! $?batch) then
     echo '-----> found `'"$out1' from a previous lapw1 run"
 
@@ -262,6 +277,9 @@ if (! $?batch) then
   set b=($<)
   if ($b == 'e') goto inwf
 else
+  if ($?mmn) then
+    set proj=(-mode mmn)
+  endif
   output $bin/write_inwf -f $file -bands $bmin $bmax $proj:q
   $bin/write_inwf -f $file -bands $bmin $bmax $proj:q
   teststatus
@@ -334,3 +352,6 @@ sp/so  switches  are  usually  unnecessary  (detected  automatically).
 theend
 
 exit 0
+
+
+## Time-stamp: <2015-05-28 16:24:43 assman@faepop23.tu-graz.ac.at>

@@ -5,9 +5,9 @@
 ###    Wrapper script for ‘wplot’ when using ‘vector’ files from a
 ###    parallel calculation
 ###
-### Copyright 2014 Elias Assmann
+### Copyright 2014-2015 Elias Assmann
 ###
-### $Id: wplotpara_lapw 196 2014-03-25 15:45:48Z assmann $
+### $Id: wplotpara_lapw 385 2015-06-01 13:08:18Z assmann $
 
 onintr exit
 set name	= $0
@@ -48,3 +48,6 @@ set maxproc = `grep : .processes | grep  -v -e init: -e residue: | wc -l`
 $bin/vec2old -p -local -$updn
 $exe $def.def $wf $maxproc
 exit 0
+
+
+## Time-stamp: <2015-05-28 16:21:56 assman@faepop23.tu-graz.ac.at>

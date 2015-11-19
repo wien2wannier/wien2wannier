@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_wplot/locdef.f
 !!!
-!!! $Id: locdef.f 166 2014-02-03 09:39:24Z assmann $
+!!! $Id: locdef.f 385 2015-06-01 13:08:18Z assmann $
 
 SUBROUTINE LOCDEF(ROT0,IMAT,ROT)
   use const
@@ -88,8 +88,11 @@ SUBROUTINE LOCDEF(ROT0,IMAT,ROT)
   RETURN
 END SUBROUTINE LOCDEF
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-05-23 19:58:48 elias>

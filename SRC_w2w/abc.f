@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_w2w/abc.f
 !!!
-!!! $Id: abc.f 167 2014-02-03 09:43:33Z assmann $
+!!! $Id: abc.f 385 2015-06-01 13:08:18Z assmann $
 
 subroutine abc(l,jatom,pei,pi12lo,pe12lo,jlo,lapw)                           
   USE param
@@ -50,8 +50,11 @@ subroutine abc(l,jatom,pei,pi12lo,pe12lo,jlo,lapw)
   return
 end subroutine abc
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-05-23 19:58:48 elias>

@@ -5,13 +5,13 @@
 !!!    Usage: join_vectorfiles [-up/-dn] [-c] <case> <numberofparallelfiles>
 !!!
 !!! Copyright 2010-2012 Philipp Wissgott
-!!!           2013-2014 Elias Assmann
+!!!           2013-2015 Elias Assmann
 !!!
-!!! $Id: join_vectorfiles.f 224 2014-05-30 14:56:29Z assmann $
+!!! $Id: join_vectorfiles.f 385 2015-06-01 13:08:18Z assmann $
 
 PROGRAM join_vectorfiles
   use const,     only: R8, C16, BUFSZ
-  use structmod, only: struct, struct_read
+  use structmod, only: struct_t, struct_read
   use util,      only: paropen
   use clio,      only: argstr, fetcharg, croak
   use kpoints,   only: count_kmesh_klist
@@ -32,12 +32,12 @@ PROGRAM join_vectorfiles
   real(R8),     allocatable :: Z (:,:)
   complex(C16), allocatable :: ZC(:,:)
 
-  integer       :: nkpoints, NE, NV
-  integer       :: jatom,i,j,jl,jj,jk
-  real(R8)      :: SX, SY, SZ, weight, eorb_ind
-  CHARACTER(3)  :: IPGR
-  CHARACTER(10) :: KNAME
-  type(struct)  :: stru
+  integer        :: nkpoints, NE, NV
+  integer        :: jatom,i,j,jl,jj,jk
+  real(R8)       :: SX, SY, SZ, weight, eorb_ind
+  CHARACTER(3)   :: IPGR
+  CHARACTER(10)  :: KNAME
+  type(struct_t) :: stru
 
   type(argstr)     :: defname, cmplxarg
   character(BUFSZ) :: fname
@@ -146,8 +146,11 @@ PROGRAM join_vectorfiles
  enddo files
 END PROGRAM
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-05-23 19:58:48 elias>

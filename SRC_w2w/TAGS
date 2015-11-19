@@ -1,0 +1,296 @@
+
+Makefile,983
+SHELL 21,866
+.SUFFIXES:.SUFFIXES22,882
+C_LIBS 45,1527
+DESTDIR	47,1547
+R_EXECNAME 48,1563
+C_EXECNAME 49,1581
+O_DIR 53,1731
+R_DIR 54,1744
+C_DIR 55,1758
+FFLAGS+=59,1854
+R_EXEC 60,1890
+C_EXEC 61,1924
+real:real72,2243
+complex:complex73,2262
+all:all75,2282
+clean:clean77,2301
+distclean:distclean80,2434
+.PHONY:.PHONY83,2479
+OBJS 90,2712
+R_OBJS 104,3225
+C_OBJS 105,3270
+RC_OBJS 113,3497
+mod_users 119,3673
+util_users 123,3857
+objs 131,4159
+r_objs 132,4216
+c_objs 133,4273
+$(R_EXEC)$(R_EXEC135,4331
+$(C_EXEC)$(C_EXEC138,4429
+$(O_DIR)/%.o:$(O_DIR)/%.o147,4693
+$(O_DIR)/%.o:$(O_DIR)/%.o149,4767
+$(R_DIR)/%.o:$(R_DIR)/%.o152,4842
+$(R_DIR)/%.o:$(R_DIR)/%.o154,4916
+$(C_DIR)/%.o:$(C_DIR)/%.o157,4991
+$(C_DIR)/%.o:$(C_DIR)/%.o159,5077
+$(O_DIR)/%.o:$(O_DIR)/%.o162,5164
+$(foreach o, $(mod_users), $(R_DIR)/$o)$(foreach o, $(mod_users), $(R_DIR)/$o172,5423
+$(foreach o, $(mod_users), $(C_DIR)/$o)$(foreach o, $(mod_users), $(C_DIR)/$o173,5483
+
+abc.f,21
+subroutine abc(5,86
+
+almgen.F,29
+     SUBROUTINE almgen(5,92
+
+atpar.f,23
+SUBROUTINE ATPAR 5,90
+
+cputim.c,84
+void cputim_(11,272
+void walltim_(22,475
+void cputim(30,659
+void walltim(35,711
+
+cputim_aix.f,64
+      SUBROUTINE CPUTIM(5,100
+      SUBROUTINE WALLTIM(35,570
+
+cputim_cray.f,64
+      SUBROUTINE CPUTIM(5,102
+      SUBROUTINE WALLTIM(34,558
+
+cputim_dec.f,59
+	subroutine cputim(5,100
+      SUBROUTINE WALLTIM(23,401
+
+cputim_generic.c,84
+void cputim_(11,296
+void walltim_(22,499
+void cputim(30,683
+void walltim(35,735
+
+cputim_hp.f,63
+      SUBROUTINE CPUTIM(5,98
+      SUBROUTINE WALLTIM(33,547
+
+cputim_macg4.f,134
+   subroutine cputim_(5,104
+         subroutine cputim(22,519
+       SUBROUTINE WALLTIM(39,939
+       SUBROUTINE WALLTIM_(46,1065
+
+cputim_nec.f,64
+      SUBROUTINE CPUTIM(5,100
+      SUBROUTINE WALLTIM(13,224
+
+cputim_pgi.c,84
+void cputim_(11,284
+void walltim_(22,472
+void cputim(30,656
+void walltim(35,708
+
+cputim_s100.f,64
+      SUBROUTINE CPUTIM(5,102
+      SUBROUTINE WALLTIM(13,230
+
+cputim_sgi+pgi.c,43
+void cputim_(11,296
+void walltim_(22,484
+
+cputim_sgi.c,84
+void cputim_(11,284
+void walltim_(22,472
+void cputim(30,656
+void walltim(35,708
+
+cputim_sgi.f,93
+      SUBROUTINE CPUTIM(5,100
+      function second(9,228
+      SUBROUTINE WALLTIM(13,315
+
+dergl.f,31
+      subroutine dergl(11,156
+
+diracout.f,32
+      subroutine diracout(5,96
+
+dvbes1.f,30
+      SUBROUTINE DVBES1(5,92
+
+gaunt1.f,45
+      DOUBLE PRECISION FUNCTION GAUNT1(5,92
+
+gaunt2.f,29
+      SUBROUTINE GAUNT25,92
+
+harmon.f,30
+      SUBROUTINE HARMON(5,92
+
+inouh.f,29
+      subroutine inouh 5,90
+
+inth.f,28
+      SUBROUTINE INTH 5,88
+
+inverss.f,36
+      SUBROUTINE INVERSSYMDEF(5,94
+
+l2amn.F,23
+SUBROUTINE l2AMN(5,90
+
+l2mmn.f,55
+SUBROUTINE l2MMN(5,90
+     subroutine ptime(168,6474
+
+latgen.f,29
+      SUBROUTINE LATGEN5,92
+
+mknam.f,29
+      SUBROUTINE MKNAM(5,90
+
+modules.F,264
+  SUBROUTINE init_assleg50,1604
+  SUBROUTINE init_struct81,2428
+  SUBROUTINE init_bessel(159,5286
+  SUBROUTINE init_xa(186,5940
+  SUBROUTINE init_xa3(204,6435
+  SUBROUTINE init_mmn(224,6929
+    SUBROUTINE  init_pairs(235,7260
+  SUBROUTINE init_ams248,7555
+
+outerr.f,30
+      SUBROUTINE OUTERR(5,92
+
+outwin.f,30
+      SUBROUTINE OUTWIN(5,92
+
+planew.F,30
+      SUBROUTINE PLANEW(5,92
+
+radint.f,30
+      SUBROUTINE RADINT(5,92
+
+read_vec.f,28
+SUBROUTINE read_vec(10,228
+
+rint13.f,30
+      SUBROUTINE RINT13(5,92
+
+rotate.f,30
+      SUBROUTINE ROTATE 5,92
+
+rotdef.f,23
+SUBROUTINE ROTDEF5,92
+
+rout.f,28
+      SUBROUTINE ROUT(5,88
+
+sphbes.f,30
+      SUBROUTINE SPHBES(5,92
+
+util_w2w.F,2291
+  subroutine realloc_r_p1(118,3418
+  subroutine realloc_r_p2(136,4004
+  subroutine realloc_r_p3(153,4423
+  subroutine realloc_c_p1(171,4909
+  subroutine realloc_c_p2(187,5273
+  subroutine realloc_c_p3(204,5706
+  subroutine realloc_i_p1(222,6208
+  subroutine realloc_i_p2(238,6552
+  subroutine realloc_i_p3(255,6967
+  subroutine realloc_r_d1(275,7527
+  subroutine realloc_r_d2(289,7958
+  subroutine realloc_r_d3(305,8420
+  subroutine realloc_c_d1(322,8949
+  subroutine realloc_c_d2(337,9360
+  subroutine realloc_c_d3(353,9841
+  subroutine realloc_i_d1(370,10390
+  subroutine realloc_i_d2(385,10776
+  subroutine realloc_i_d3(401,11235
+  pure subroutine inverse3x3(493,13787
+  subroutine ptime_setunit(517,14700
+  subroutine ptick(539,15381
+  subroutine ptock(550,15682
+  subroutine ptot(569,16165
+  subroutine ptime_print(586,16758
+  pure elemental function uppercase(614,17622
+  pure elemental function lowercase(630,18064
+  integer function line_count(647,18507
+  subroutine paropen(674,19167
+  integer function newunit(713,20646
+  subroutine get_progname(765,21827
+  subroutine croak(775,22012
+  subroutine carp(793,22435
+  subroutine cluck(801,22643
+  subroutine fetcharg_alloc(812,22968
+  subroutine fetcharg_buf(852,24219
+  subroutine fetcharg_str(879,25150
+  subroutine fetcharg_int(905,26070
+  subroutine fetcharg_real(936,27000
+  subroutine struct_read_unit(1020,29976
+    subroutine read_rsym(1227,36149
+    subroutine make_ksym(1238,36457
+  subroutine struct_read_fname(1288,38077
+  subroutine inwf_read_unit(1331,39165
+  subroutine inwf_read_fname(1378,40355
+  subroutine inwf_read_argstr(1391,40662
+  subroutine get_kmesh_klist_unit(1438,42101
+  subroutine get_kmesh_band_unit(1483,43486
+  function count_kmesh_klist_unit(1533,45097
+  function count_kmesh_band_unit(1549,45470
+  subroutine get_kmesh_klist_fname(1567,46007
+  subroutine get_kmesh_band_fname(1580,46489
+  function count_kmesh_klist_fname(1593,46945
+  function count_kmesh_band_fname(1604,47240
+  subroutine klist_detect_fmt(1617,47644
+  subroutine chk_read_unit(1705,50764
+  subroutine chk_read_fname(1765,52792
+  subroutine chk_read_argstr(1786,53295
+      SUBROUTINE ERRFLG(1811,53860
+    SUBROUTINE ERRCLR(1897,56793
+      SUBROUTINE GTFNAM(1905,56955
+
+w2w,21
+H‹|$hè$h147,172409
+
+w2wc,1309
+AƒËD‰]äë0AƒËAƒ1710,620799
+|âH;H1722,625561
+I;1774,654101
+I;ñrL;1774,654101
+I;ñrL;ÖrLrL1774,654101
+I;ñrL;ÖrLÚM;ÓsH+UÈLUÈ1774,654101
+¸ÿÿÿÿH‰ì]ÃM‰ÑDYÿI‰Ð;ÎèŠÿÎA:tIÿÁëëD‰ßL‰ÈE…ÛtL‰eðIÿÀIÿÁÿÏEŠ E:!u…ÿuìL‹eðI+ÂH‰H1790,660867
+¸ÿÿÿÿH‰ì]ÃM‰ÑDYÿI‰Ð;ÎèŠÿÎA:tIÿÁëëD‰ßL‰ÈE…ÛtL‰eðIÿÀIÿÁÿÏEŠ E:!u…ÿuìL‹eðI+ÂH‰ì]Ã3ÀH‰H1790,660867
+*IÿÂIÿ1810,666695
+ë¢HÿÂHÿ1818,672573
+ë HÿÂHÿ1819,672854
+EOAƒù@ƒû>|^ó…ðþÿÿCAC1881,688372
+D‰MtƒøuA±D‰MtƒøuA±1886,689089
+|ÿÃ’ÒD;D1894,689667
+ôÿÿéôÿÿDD1899,691800
+„DþÿDþ1904,694372
+tƒøu@tƒøu1905,694487
+tƒøu@¶ë@2ö„Òt@„öuhD‰ð÷Ø;Ø~%AFA1905,694487
+|ÿÆ’ÒD;D1910,695073
+øLÿL1948,724167
+MþM1949,734139
+øMþM1950,734168
+øMçM1973,748440
+IÿÄHIÿÄ1974,751221
+HÿÂM‹<*LøL1978,772868
+øM‹|*øLøL1979,772897
+ø’ÀIƒÂIƒ2010,795590
+ÄAq\ÐÄA\ÆÄÁ)\éÅQY.ÅQYýHQYý2013,804893
+h1—¥´6A_p‰=|º6+ÂýüÎa„wÌ«Miv2=¼BzåÕ”¿Ö±ÁÂIš?¦µil¯½7†Tr3Ü€Ï#„GG¬Å§©¤N@aÃÓ+eâX·Ñé&1¬Zd;ßO—nO—2626,1045830
+eð?ÞöÝ)kpð?6¨r+Ô{ð?È›uE‡ð?àfö½’ð?ƒóÆÊ>žð?9›Ç©ð?‰ùlXµð?…läEñÀð?÷Gr+’Ìð?ì]9#;Øð?¢ÑÓ2ìãð?Å©ß_¥ïð?Óþ¯fûð?>#×(0ñ?Q[Ðñ?¶*^«Ûñ?Ì1lÀ½*ñ?«ò¨6ñ?à-©®šBñ?.1O“•Nñ?QŽ¥È˜Zñ?ÂÃqT¤fñ?{Q}<¸rñ?À»•†Ô~ñ?êŒ8ùŠñ?/]7X&—ñ?uËoë[£ñ?Šø™¯ñ?Ô\„à»ñ?k(•/Èñ?ª¹h1‡Ôñ?'@´^çàñ?Ùü"Píñ?MÎ8„Áùñ?ÖŒbˆb2663,1074813
+
+ylm.f,27
+      SUBROUTINE YLM(5,86
+
+ph.f,0
+
+main.f,0

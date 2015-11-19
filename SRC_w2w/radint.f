@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_w2w/radint.f
 !!!
-!!! $Id: radint.f 167 2014-02-03 09:43:33Z assmann $
+!!! $Id: radint.f 420 2015-06-30 20:58:59Z assmann $
 
       SUBROUTINE RADINT(JATOM,LJMAX,BM)
       USE param
@@ -49,8 +49,11 @@
  19   CONTINUE
       END
 
+
 !!/---
 !! Local Variables:
-!! mode: fortran
+!! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-06-30 22:16:06 assman@faepop23.tu-graz.ac.at>

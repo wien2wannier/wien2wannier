@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_w2w/modules.F
 !!!
-!!! $Id: modules.F 208 2014-05-14 12:29:09Z assmann $
+!!! $Id: modules.F 424 2015-07-14 11:17:35Z assmann $
 
 MODULE param
   use const, only: R8, C16
@@ -15,10 +15,9 @@ MODULE param
   integer            LMAX2, LOMAX
   integer            NCOM, NGAU
   integer            NRAD!, NPAIR, NBANDS
-  integer            IBLCK, IBLOCK
+  integer            IBLOCK
   integer            LXDOS, NLOAT, NRF
   real(r8)             clight
-  parameter (IBLCK=   64)
   PARAMETER (IBLOCK= 128)
   !.....Optimize IBLOCK and IBLCK for your hardware (32-255)
   PARAMETER (LMAX2=  5)                                              
@@ -73,7 +72,7 @@ MODULE struct
   CHARACTER(4)               :: lattic,irel,cform
   CHARACTER(80)              :: title
   CHARACTER(10), ALLOCATABLE :: aname(:)
-  INTEGER                    :: nat,iord,iprint
+  INTEGER                    :: nat,iord
   INTEGER,ALLOCATABLE        :: mult(:),jrj(:)
   INTEGER,ALLOCATABLE        :: iz(:,:,:)
 
@@ -202,13 +201,11 @@ MODULE xa3
 
 CONTAINS
   SUBROUTINE init_xa3(nb,nmat,num_kpts)
-    ALLOCATE(a(NMAT,NB,num_kpts),BKX(NMAT),BKY(NMAT),BKZ(NMAT))
-    ALLOCATE(apw1(nb,NMAT),apw2(nb,NMAT))
-    ALLOCATE(size(num_kpts),GX(nmat,num_kpts),GY(nmat,num_kpts),GZ(nmat,num_kpts))
-    GX = 0
-    GY = 0
-    GZ = 0
-    ALLOCATE(XK(num_kpts),YK(num_kpts),ZK(num_kpts))
+    ALLOCATE(apw1(Nb,Nmat), apw2(Nb,Nmat), a(Nmat,Nb,num_kpts))
+    ALLOCATE(BKX(Nmat), BKY(Nmat), BKZ(Nmat))
+    ALLOCATE(GX(Nmat,num_kpts), GY(Nmat,num_kpts), GZ(Nmat,num_kpts))
+    ALLOCATE(XK(num_kpts), YK(num_kpts), ZK(num_kpts), size(num_kpts))
+    GX = 0; GY = 0; GZ = 0
   END SUBROUTINE init_xa3
 END MODULE xa3
 
@@ -220,13 +217,13 @@ MODULE amn_mmn
 
   COMPLEX(C16),ALLOCATABLE     :: overlap(:,:,:),c(:,:,:)
 
- CONTAINS
+CONTAINS
   SUBROUTINE init_mmn(nbands,npair,nproj)
-   USE param
-   INTEGER    :: nbands,npair,nproj
-   ALLOCATE(overlap(nbands,nbands,npair),c(nproj,(LMAX2+1)*(LMAX2+1),ndif))
-   END SUBROUTINE init_mmn
- END MODULE amn_mmn
+    USE param
+    INTEGER    :: nbands,npair,nproj
+    ALLOCATE(overlap(nbands,nbands,npair),c(nproj,(LMAX2+1)*(LMAX2+1),ndif))
+  END SUBROUTINE init_mmn
+END MODULE amn_mmn
 
 MODULE pairs
   INTEGER,ALLOCATABLE       :: KP(:),KPB(:),BQX(:),BQY(:),BQZ(:),BQX1(:),BQY1(:),BQZ1(:)
@@ -261,8 +258,11 @@ MODULE ams
    END SUBROUTINE init_ams
  END MODULE ams
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-07-14 13:15:29 assman@faepop23.tu-graz.ac.at>

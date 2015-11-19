@@ -1,15 +1,13 @@
-###############################################################################
-#                                                                             #
-#                           SRC_wplot/Makefile                                #
-#                                                                             #
-#  make           ... generate executable for the real-valued version         #
-#  make complex   ... generate executable for the complex-valued version      #
-#  make all       ... generate both the above                                 #
-#  make clean     ... delete unnecessary files                                #
-#                                                                             #
-#  $Id: Makefile 287 2014-10-09 14:11:17Z assmann $	                      #
-###############################################################################
-#
+### wien2wannier/SRC_wplot/Makefile
+###
+###    make           ... generate executable for the real-valued version
+###    make complex   ... generate executable for the complex-valued version
+###    make all       ... generate both the above
+###    make clean     ... delete unnecessary files
+###
+### $Id: Makefile 409 2015-06-09 07:54:07Z assmann $
+
+
 # FC ........... compiler name
 # FOPT ......... optimization flags
 # FGEN ......... code generation flags (flags not related to optimization)
@@ -118,9 +116,9 @@ MOD_USERS = auggen.o auglo.o augpw.o dergl.o diracout.o findmt.o	\
 	    wavint.o wavsph.o main.o
 
 UTIL_USERS = auggen.o augpw.o auglo.o bessel.o dergl.o dvbes1.o		\
-	     gbass.o inouh.o inth.o latgen.o locdef.o main.o moduls.o	\
-	     orth.o outwin.o rotdef.o spcgen.o sphbes.o trans.o		\
-	     wavint.o wplot.o ylm.o
+	     grdgen.o gbass.o inouh.o inth.o latgen.o locdef.o main.o	\
+	     moduls.o orth.o outwin.o rotdef.o spcgen.o sphbes.o	\
+	     trans.o wavint.o wplot.o ylm.o
 
 #..............................................................................
 #
@@ -145,10 +143,15 @@ $(C_EXEC): $(objs) $(c_objs) $(UTILOBJ) Makefile
 #
 #  Real and complex need to be kept separate!
 #
-$(O_DIR)/%.o $(R_DIR)/%.o: %.f Makefile
+$(O_DIR)/%.o: %.f Makefile
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(O_DIR)
-$(O_DIR)/%.o $(R_DIR)/%.o: %.F Makefile
+$(O_DIR)/%.o: %.F Makefile
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(O_DIR)
+
+$(R_DIR)/%.o: %.f Makefile
+	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(R_DIR)
+$(R_DIR)/%.o: %.F Makefile
+	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(R_DIR)
 
 $(C_DIR)/%.o: %.f Makefile
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(C_DIR) -D_COMPLEX_
@@ -174,3 +177,5 @@ $(mod_users): $(O_DIR)/moduls.o
 $(util_users): $(UTILOBJ)
 $(util_users): FFLAGS += -I$(UTILDIR)
 
+
+## Time-stamp: <2015-06-08 15:56:16 assman@faepop23.tu-graz.ac.at>

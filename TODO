@@ -29,6 +29,8 @@ wplot2xsf:
  * what about 0/1/2-dim?
    - 2d is supported by XCrysDen
 
+ * support r-parallelization
+
 
 findbands:
 
@@ -52,12 +54,14 @@ join_vectorfiles:
  * “energy-only” option
 
 
-w2u:
+w2w:
 
- * move module ``wcLDA_util´´ to separate file
+ * use ‘inwfmod’ to read input file
 
 
 wplot:
+
+ * use ‘inwfmod’ to read that file
 
  * check mode ‘ANY’
 
@@ -65,7 +69,7 @@ wplot:
 
  * check RLOs
 
- * xsf vs. Bohr?
+ * support r-parallelization
 
  * inconsistent k-points between chk and vector should fail, not give
    NaN
@@ -80,13 +84,19 @@ woptic:
  * convert to use ‘def’ file, or some other more sensible way
 
  * make check for ‘case.symop’ compulsory when necessary
+
+ * woptic vs. $SCRATCH
    
 
 woptic_main:
 
- * w / maxw: why does it go to 2*Emax?  Why all the ‘-1’s?
+ * fix scissors shift, chemical potential
 
  * apply chemical potential to interacting states or all states?
+
+ * As a function of internal frequency spacing, the dc quantities
+   converge much slower than the (higher-Ω) optical conductivity.
+   Does it make sense to have an extra “dc ω grid”?
 
 
 refine_tetra:
@@ -99,3 +109,13 @@ woptic-interpolate_vr:
  * make interpolation work with ``rotmatrix''
 
  * interpolation out of Wannier subspace: can disentanglement help?
+
+
+##/---
+## Local Variables:
+## mode:          text
+## comment-start: "#"
+## End:
+##
+## Time-stamp: <2015-06-01 12:33:24 assman@faepop23.tu-graz.ac.at>
+##\---

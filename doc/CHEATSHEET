@@ -1,6 +1,6 @@
 
-                       Wien2Wannier CheatSheet
-                       ***********************
+                          WIEN2WANNIER CHEAT SHEET
+                          ************************
 
 
 The usual procedure
@@ -11,20 +11,20 @@ The usual procedure
    0.2) identify target bands & band characters
 
 1) Create a subdirectory with the necessary files       prepare_w2wdir TARGET
-   1.1) `prepare_w2wdir' gets Fermi energy from `CASE.scf'
-        or `CASE.scf2'; take care after `lapw2 -qtl -band'!
+   1.1) `prepare_w2wdir´ gets Fermi energy from `CASE.scf´
+        or `CASE.scf2´; take care after `lapw2 -qtl -band´!
    1.2) enter that directory                            cd TARGET
 
 2) Write input files                                    init_w2w [-up|-dn]
    2.1) start with a small k-mesh (e.g. 4×4×4), no shift
    2.2) findbands: energy window [eV, EF=0] to span target bands
-   2.3) write_inwf: First, enter complete ``band window'' (including
-        disentanglement) as determined using `findbands'.
+   2.3) write_inwf: First, enter complete ``band window´´ (including
+        disentanglement) as determined using `findbands´.
         Then, enter initial projections, press Ctrl-D when done.
         #Wannier functions = #projections; rest: -> disentanglement
 
 3) Compute eigenvectors on full-BZ k-mesh               x lapw1  OPTIONS
-   3.1) may use `.machines', `-p'                      [x lapwso OPTIONS]
+   3.1) may use `.machines´, `-p´                      [x lapwso OPTIONS]
    3.2) OPTIONS: -up/-dn, -orb, ...
 
 4) Compute overlaps                                     x w2w [-up|-dn] [-p]
@@ -34,10 +34,10 @@ The usual procedure
 6) Consistency checks
    6.1) Wannier90 main output                           CASE.wout
         - convergence of disentanglement and wannierization
-        - under ``Final State'': Wannier centers, spreads
+        - under ``Final State´´: Wannier centers, spreads
    6.2) compare band structures, e.g. in gnuplot        CASE_band.dat
         p 'CASE.spaghetti_ene' u ($4/.53):5, 'CASE_band.dat' w l
-   6.3) hopping amplitudes (CASE.win: `hr_plot=T')      CASE_hr.dat
+   6.3) hopping amplitudes (CASE.win: `hr_plot=T´)      CASE_hr.dat
         real?  decaying fast enough?  symmetries?
 
 7) Convergence: k-mesh; disentanglement window
@@ -48,12 +48,12 @@ Plotting
 
 1) Write input file                                     write_inwplot CASE
    1.1) start with a coarse mesh (e.g. 10×10×10)
-   1.2) use positions from `CASE.wout'!
-        `wplot2xsf' will shift according to `CASE_centres.xyz'
+   1.2) use positions from `CASE.wout´!
+        `wplot2xsf´ will shift according to `CASE_centres.xyz´
 
-2) Compute `CASE_N.psink', `CASE_N.psiarg'              x wplot [-up|-dn][-p]
+2) Compute `CASE_N.psink´, `CASE_N.psiarg´              x wplot [-up|-dn][-p]
                                                                 [-so]
-3) Convert to `xsf' format                              wplot2xsf [-up|-dn]
+3) Convert to `xsf´ format                              wplot2xsf [-up|-dn]
 
-4) Visualize, e.g.: `xcrysden --xsf CASE_N.xsf', `VESTA'
+4) Visualize, e.g.: `xcrysden --xsf CASE_N.xsf´, `VESTA´
    4.1)  |w(r)|^2 * sgn Re w(r)  is plotted by default

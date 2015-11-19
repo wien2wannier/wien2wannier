@@ -1,4 +1,7 @@
 #!/bin/csh -f
+#
+# This is the wien2wannier version of x_lapw.
+# $Id: x_lapw 437 2015-09-03 18:21:30Z assmann $
 unalias rm
 
 set running = ".running.$$.`hostname`.`date +%d%m%H%M%S`"
@@ -2235,8 +2238,12 @@ if ( $so == so && $updn == '' ) then
 endif
 set soupdn=$so$updn
 set w90updn=$updn
-if ( $so == so &&               # non-sp SO \
-     -s $file.vector$sc$hf$so && ! -s {$file.vector$sc$hf$so}up ) then
+set vecso   =  $file.vector$sc$hf$so
+set vecsoup = {$file.vector$sc$hf$so}up
+if ( $so == so &&                        \
+      ( -e $vecso   && ! -z $vecso    ) && \
+    ! ( -e $vecsoup && ! -z $vecsoup ))    \
+  then
   if      ( $updn == up ) then
     set soupdn=so
   else if ( $updn == dn) then
@@ -2244,9 +2251,10 @@ if ( $so == so &&               # non-sp SO \
   endif
   set updn=
 endif
-    
+unset vecso vecsoup
+
 cat <<EOF >$def
-  5,'$file.inwf',            'old',    'formatted',  0
+  5,'$file.inwf$updn',       'old',    'formatted',  0
   6,'$file.outputwf$updn',   'unknown','formatted',  0
   7,'$file.amn$w90updn',     'unknown','formatted',  0
   8,'$file.mmn$w90updn',     'unknown','formatted',  0
@@ -2255,7 +2263,7 @@ cat <<EOF >$def
  12,'$file.eig$updn',	     'unknown','formatted',  0
  18,'$file.vsp$updn',        'old',    'formatted',  0
  20,'$file.struct',   	     'old',    'formatted',  0
- 50,'$file.energy$soupdn',   'old',    'formatted',  0
+ 50,'$file.energy$sc$hf$soupdn', 'old', 'formatted',  0
  51,'$file.fermi$updn'       'old',    'formatted',  0
 EOF
 breaksw
@@ -2315,7 +2323,7 @@ cat >$def <<EOF
  51,'$file.output$typ$updnso','old',	'formatted', 0
 EOF
 if ( ! $?efermi ) then
-  if ( -s $file.fermi$updn ) then
+  if ( -e $file.fermi$updn && ! -z $file.fermi$updn ) then
     set efermi = `cat $file.fermi$updn`
   else
     echo "Warning: Fermi energy not supplied and $file.fermi$updn not found."
@@ -2344,23 +2352,28 @@ breaksw
 case combine_spinfiles:
 case w2waddsp:
 true >$def
-if (-s $file.mmnup ^ -s $file.mmndn) then
+if (( -e $file.mmnup && ! -z $file.mmnup ) ^ \
+    ( -e $file.mmndn && ! -z $file.mmndn )) then
   error "w2waddsp: mmn file present for one spin only"
 endif
-if (-s $file.amnup ^ -s $file.amndn) then
+if (( -e $file.amnup && ! -z $file.amnup ) ^ \
+    ( -e $file.amndn && ! -z $file.amndn )) then
   error "w2waddsp: amn file present for one spin only"
 endif
-if (! -s $file.amnup && ! -s $file.mmnup) then
+if (! ( -e $file.amnup && ! -z $file.amnup ) && \
+    ! ( -e $file.mmnup && ! -z $file.mmnup )) then
   error "w2waddsp: neither mmn nor amn files present -- nothing to do"
 endif
-if (-s $file.mmnup) then
+
+if ( -e $file.mmnup && ! -z $file.mmnup ) then
   cat >>$def <<EOF
  11, '$file.mmnup',  'old',          'formatted', 0
  12, '$file.mmndn',  'old',          'formatted', 0
  13, '$file.mmn',    'unknown',      'formatted', 0
 EOF
 endif
-if (-s $file.amnup) then
+
+if ( -e $file.amnup && ! -z $file.amnup ) then
   cat >>$def <<EOF
  21, '$file.amnup',  'old',          'formatted', 0
  22, '$file.amndn',  'old',          'formatted', 0
@@ -2368,7 +2381,6 @@ if (-s $file.amnup) then
 EOF
 endif
 set exe=w2waddsp
-cp $file.eigup $file.eig
 breaksw
 
 case wannier90:
@@ -2449,6 +2461,7 @@ endif
 
 echo $exe >>$running
 $t $bin/$exe $def 
+
 if($status != 0) then
   echo "error: command   $bin/$exe $def   failed"
   if ($?qtl || $?alm || $?almd || $?qdmft || $?band || $?fermi || $?efg || $?emin1 || $?emax1 ) then
@@ -2468,6 +2481,9 @@ endif
 
 set lapw2test=`echo $exe | cut -c 1-5`
 if("$lapw2test" == 'lapw2') then
+    if ($?qtl || $?alm || $?almd || $?qdmft || $?band || $?fermi || $?efg || $?emin1 || $?emax1 ) then
+      if( -e .oldin2 ) mv .oldin2 $file.in2$cmplx
+    endif
     if(! $?in1orig & ! $?band & ! $?emin1 & ! $?emax1) then
 	if( -e $file.scf2$sc$updn && ! -z $file.scf2$sc$updn) then 
 	    if($cmplx == 'c') then
@@ -2487,9 +2503,6 @@ endif
 
 clear:
 #cleanup
-if ($?qtl || $?alm || $?almd || $?qdmft || $?band || $?fermi || $?efg || $?emin1 || $?emax1 ) then
-  if( -e .oldin2 ) mv .oldin2 $file.in2$cmplx
-endif
   if ($?rxesw ) then
     if( -e .oldint ) mv .oldint $file.int
   endif
@@ -2792,3 +2805,6 @@ endsw
 if (-e $running) rm $running
 
 exit(1)
+
+
+## Time-stamp: <2015-10-20 15:25:07 assman@faepop36.tu-graz.ac.at>

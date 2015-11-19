@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_wplot/moduls.f
 !!!
-!!! $Id: moduls.f 166 2014-02-03 09:39:24Z assmann $
+!!! $Id: moduls.f 385 2015-06-01 13:08:18Z assmann $
 
 module param
   use const, only: BUFSZ
@@ -56,13 +56,13 @@ end module param
 
 module struct
   use const, only: R8
-  real(r8), allocatable :: POS(:,:),ZNUC(:),RMT(:)
+  real(R8), allocatable :: POS(:,:),ZNUC(:),RMT(:)
   integer,allocatable :: MULT(:),IATNR(:)
 end module struct
 
 module radgrd 
   use const, only: R8
-  real(r8),allocatable :: RM(:,:),RNOT(:),DX(:)
+  real(R8),allocatable :: RM(:,:),RNOT(:),DX(:)
   integer,allocatable :: JRI(:)
 end module radgrd
 
@@ -74,33 +74,33 @@ end module lolog
 
 module loabc
   use const, only: R8
-  real(r8),allocatable :: ALO(:,:,:,:)  
+  real(R8),allocatable :: ALO(:,:,:,:)  
 end module loabc
 
 module atspdt
   use const, only: R8
-  real(r8),allocatable :: P(:,:,:),DP(:,:,:) 
+  real(R8),allocatable :: P(:,:,:),DP(:,:,:) 
 end module atspdt
 
 module radfu
   use const, only: R8
-  real(r8),allocatable ::  RRAD(:,:,:,:)
+  real(R8),allocatable ::  RRAD(:,:,:,:)
 end module radfu
 
 module bessfu
   use const, only: R8
-  real(r8),allocatable ::  FJ(:,:,:),DFJ(:,:,:),RAD(:)
+  real(R8),allocatable ::  FJ(:,:,:),DFJ(:,:,:),RAD(:)
   integer, allocatable :: IRAD(:)
 end module bessfu
 
 module work
   use const, only: C16
-  complex(c16),allocatable :: aug(:,:,:)
+  complex(C16),allocatable :: aug(:,:,:)
 end module work
 
 module grid
   use const, only: R8
-  real(r8),allocatable :: rgrid(:,:)
+  real(R8),allocatable :: rgrid(:,:)
   integer,allocatable :: ireg(:),ilat(:,:),iri(:)
   integer npg
 end module grid
@@ -150,8 +150,11 @@ module sym2
   integer  :: IMAT(3,3,NSYM), IORD
 end module sym2
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-05-23 19:58:48 elias>

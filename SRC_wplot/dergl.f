@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_wplot/dergl.f
 !!!
-!!! $Id: dergl.f 166 2014-02-03 09:39:24Z assmann $
+!!! $Id: dergl.f 385 2015-06-01 13:08:18Z assmann $
 
 !rschmid
 !
@@ -101,8 +101,11 @@
       return
       end
 
+
 !!/---
 !! Local Variables:
-!! mode: fortran
+!! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-05-23 19:58:48 elias>

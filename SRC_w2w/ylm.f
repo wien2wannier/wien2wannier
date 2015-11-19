@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_w2w/ylm.f
 !!!
-!!! $Id: ylm.f 167 2014-02-03 09:43:33Z assmann $
+!!! $Id: ylm.f 420 2015-06-30 20:58:59Z assmann $
 
       SUBROUTINE YLM(V,LMAX,Y)
       use const
@@ -243,7 +243,7 @@
 !
          I4L2 = INDEX2 - 4*L + 2
          I2L  = INDEX2 - 2*L
-         D4LL1C = COSTH*SQRT(real(4*L*L-1))
+         D4LL1C = COSTH*SQRT(DBLE(4*L*L-1))
          D2L13  = -SQRT(DBLE(2*L+1)/DBLE(2*L-3))
 !
          DO 10 M = L - 2, 0, -1
@@ -272,8 +272,11 @@
 !
       END
 
+
 !!/---
 !! Local Variables:
-!! mode: fortran
-!! end:
+!! mode: f90
+!! End:
 !!\---
+!!
+!! Time-stamp: <2015-06-30 22:52:49 assman@faepop23.tu-graz.ac.at>

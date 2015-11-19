@@ -3,9 +3,9 @@
 !!!    Read a ‘vector’ file
 !!!
 !!! Copyright 2010-2012 Jan Kuneš, Philipp Wissgott
-!!!                2013 Elias Assmann
+!!!           2013-2015 Elias Assmann
 !!!
-!!! $Id: read_vec.f 191 2014-03-03 09:16:46Z assmann $
+!!! $Id: read_vec.f 420 2015-06-30 20:58:59Z assmann $
 
 SUBROUTINE read_vec(NEMIN,NEMAX,kkk,maxx,maxy,maxz,efermi)
   use param
@@ -22,17 +22,16 @@ SUBROUTINE read_vec(NEMIN,NEMAX,kkk,maxx,maxy,maxz,efermi)
 
   integer :: i, j, n, NB, NE, num
 
-  real(r8) :: E(1000), Emist
+  real(r8) :: E(1000)
   
   CHARACTER(10)    BNAME
-  real(r8), allocatable ::  norm(:)
-  real(r8), allocatable :: cmuss(:)
 
   DO I=1,NAT
-     READ(unit_vector) EMIST
-     READ(unit_vector) EMIST
+     READ(unit_vector)
+     READ(unit_vector)
   ENDDO
 
+  maxx=0; maxy=0; maxz=0
   kpoint: do
      READ(unit_vector,END=998) XK(kkk+1),YK(kkk+1),ZK(kkk+1),BNAME,N,NE
      KKK=KKK+1
@@ -44,26 +43,12 @@ SUBROUTINE read_vec(NEMIN,NEMAX,kkk,maxx,maxy,maxz,efermi)
         IF (abs(GZ(I,kkk)).gt.maxz) maxz=abs(GZ(I,kkk))
      ENDDO
 
-     allocate(cmuss(N))
-     allocate(norm(NE))
-     norm(:) = 0d0
-
      DO J=1,NE
         READ(unit_vector)NUM,E(NUM)
         if (NUM.ge.NEMIN.and.NUM.le.nemax) then
            READ(unit_vector)(A(I,NUM-NEMIN+1,kkk),I=1,N)
-           !      do jb=1,N
-
-           !       norm(J) = norm(J) + dabs(A(jb,NUM-NEMIN+1,kkk))**2
-           !write(*,*)dabs(A(jb,NUM-NEMIN+1,kkk))**2,norm(J)
-           !      enddo
         else
-           READ(unit_vector)(cmuss(I),I=1,N)
-           !     do jb=1,N
-           !           norm(J) = norm(J) + dabs(cmuss(jb))**2
-           !write(*,*)dabs(cmuss(jb))**2,norm(J)
-           !     enddo
-
+           READ(unit_vector)
         endif
      ENDDO
      
@@ -71,15 +56,16 @@ SUBROUTINE read_vec(NEMIN,NEMAX,kkk,maxx,maxy,maxz,efermi)
         NB=NUM-NEMIN+1
         write(unit_eig,"(2I12,F22.16)")NB,kkk, ryd_ev*(E(NUM)-efermi)
      ENDDO
-     deallocate(cmuss)
-     deallocate(norm)
   end do kpoint
   
 998 write(unit_out,*)'vector read in',kkk
 END SUBROUTINE read_vec
+
 
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-06-30 22:52:57 assman@faepop23.tu-graz.ac.at>

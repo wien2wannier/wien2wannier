@@ -1,4 +1,4 @@
-!!! wien2wannier/SRC_trig/rephase.f90
+!!! wien2wannier/SRC_trig/rephase.f
 !!!
 !!!    Rewrites inwf input file such that the phases given by psiargs
 !!!    files are considered and the resulting Wannier functions should
@@ -10,9 +10,9 @@
 !!!    small phases are neglected due to possible numerical errors.
 !!!
 !!! Copyright 2009-2012 Philipp Wissgott
-!!!                2013 Elias Assmann
+!!!           2013-2015 Elias Assmann
 !!!
-!!! $Id: rephase.f 182 2014-02-03 22:28:17Z assmann $
+!!! $Id: rephase.f 385 2015-06-01 13:08:18Z assmann $
 
 PROGRAM rephase
   use util,  only: line_count
@@ -237,8 +237,11 @@ PROGRAM rephase
 
 END PROGRAM rephase
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-05-23 19:58:48 elias>

@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_wplot/spcgen.f
 !!!
-!!! $Id: spcgen.f 166 2014-02-03 09:39:24Z assmann $
+!!! $Id: spcgen.f 385 2015-06-01 13:08:18Z assmann $
 
 SUBROUTINE SPCGEN(NAT,RMT,ATMS)
   use const
@@ -41,8 +41,11 @@ SUBROUTINE SPCGEN(NAT,RMT,ATMS)
 
 END SUBROUTINE SPCGEN
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-05-23 19:58:48 elias>

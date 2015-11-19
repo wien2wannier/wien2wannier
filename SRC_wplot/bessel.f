@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_wplot/bessel.f
 !!!
-!!! $Id: bessel.f 166 2014-02-03 09:39:24Z assmann $
+!!! $Id: bessel.f 385 2015-06-01 13:08:18Z assmann $
 
 SUBROUTINE BESSEL(NK,LDNK,BK,NMT,RAD,LMAX2,F,DF)
   use const
@@ -24,8 +24,11 @@ SUBROUTINE BESSEL(NK,LDNK,BK,NMT,RAD,LMAX2,F,DF)
   END DO
 END SUBROUTINE BESSEL
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-05-23 19:58:48 elias>

@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_wplot/auggen.f
 !!!
-!!! $Id: auggen.f 166 2014-02-03 09:39:24Z assmann $
+!!! $Id: auggen.f 385 2015-06-01 13:08:18Z assmann $
 
       SUBROUTINE AUGGEN(REL,NAT,WHPSI)
       use struct
@@ -153,7 +153,7 @@
             ei=elo(l,nloat)/2.d0
             kappa=l
             CALL diracout(rel,vr,RM(1,JATOM),dx(jatom),IMAX,    &
-                          ei,fl,kappa,uv,duv,nodes,znuc1)
+                          ei,kappa,uv,duv,nodes,znuc1)
             CALL dergl(a,b,RM(1,jatom),dx(jatom),IMAX)
             DO m=1,IMAX
              r_m=RM(1,JATOM)*exp(dx(jatom)*(m-1))
@@ -248,8 +248,11 @@
 !
       END
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-05-23 19:58:48 elias>

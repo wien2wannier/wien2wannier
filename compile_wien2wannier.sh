@@ -1,5 +1,13 @@
 #!/bin/bash
 
+### wien2wannier/compile_wien2wannier.sh
+###
+###    A primitive compile script for wien2wannier
+###
+### Copyright 2014-2015 Elias Assmann
+###
+### $Id: compile_wien2wannier.sh 385 2015-06-01 13:08:18Z assmann $
+
 w2wdir=$(dirname $0)
 
 ask_continue () {
@@ -49,3 +57,6 @@ make -C SRC_wplot all || exit
 cp SRC_wplot/wplot{,c} .
 
 make -C SRC_trig clean all
+
+
+## Time-stamp: <2015-06-01 12:38:19 assman@faepop23.tu-graz.ac.at>

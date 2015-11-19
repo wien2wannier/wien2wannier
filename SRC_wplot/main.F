@@ -1,8 +1,8 @@
 !!! wien2wannier/SRC_wplot/main.F
 !!!
-!!! $Id: main.F 201 2014-04-11 17:01:58Z assmann $
+!!! $Id: main.F 436 2015-09-01 06:27:31Z assmann $
 
-SUBROUTINE MAIN2()
+subroutine MAIN2()
   use struct
   use radgrd
   use latt
@@ -15,7 +15,8 @@ SUBROUTINE MAIN2()
   use work
   use grid
   use const, only: DPk, R8, C16, BUFSZ, error_unit, PI
-  use util,  only: paropen
+  use util,  only: paropen, uppercase
+  use clio,  only: croak
   use param
 
   IMPLICIT none
@@ -53,7 +54,7 @@ SUBROUTINE MAIN2()
   integer,allocatable ::  KX(:),KY(:),KZ(:)
   complex(c16), allocatable :: uu(:), rotmatrix(:,:)
   real(r8),allocatable :: tmprot(:)
-  LOGICAL :: REL,ORTHO,PRIM,ORTH,ISPSI,ISRE,ISIM,ISABS,ISARG, &
+  LOGICAL :: REL,ORTHO,PRIM,ORTH, &
        &     ALLKPT,ALLEIG,KFOUND,DEPHAS,GETABC,PUTABC,WAN,rotate
 
   integer :: i, ie, ieabs, ierr, iG, ik, il, il1, imax, index, index1, irf
@@ -86,38 +87,46 @@ SUBROUTINE MAIN2()
 !!! the output file before we call grdgen() and latgen()
   read(unit_in, '(A3)') switch
 
-  if (switch == '3D') then
+  select case (uppercase(switch))
+  case ('3D')
      nskip = 5
-  else if (switch == '2D') then
+  case ('2D')
      nskip = 4
-  else if (switch == '1D') then
+  case ('1D')
      nskip = 3
-  else
+  case default
      nskip = 1
-  end if
+  end select
 
   do i=1,nskip
      read(unit_in, *)
   end do
 
 !     << read in wave function options >>
-  READ (unit_in,1080) SWITCH
-  IF(SWITCH.NE.'DEP'.AND.SWITCH.NE.'NO ') &
-       STOP 'ERROR: UNKNOWN POST-PROCESSING TOOL'
-  DEPHAS = SWITCH.EQ.'DEP'
-  READ (unit_in,1090) SWITCH,IUNIT,WHPSI
-  IF(SWITCH.NE.'RE '.AND.SWITCH.NE.'WAN'.AND.SWITCH.NE.'IM '.AND. &
-       SWITCH.NE.'ABS'.AND.SWITCH.NE.'ARG'.AND.SWITCH.NE.'PSI') &
-       STOP 'ERROR: UNKNOWN WAVE FUNCTION OPTION'
-  ISPSI = SWITCH .EQ. 'PSI'
-  WAN   = SWITCH .EQ. 'WAN'
-  ISRE  = SWITCH .EQ. 'RE'
-  ISIM  = SWITCH .EQ. 'IM'
-  ISABS = SWITCH .EQ. 'ABS'
-  ISARG = SWITCH .EQ. 'ARG'
-  IF(IUNIT.EQ.'   '.OR.IUNIT.EQ.'ATU')IUNIT='AU '
-  IF(IUNIT.NE.'ANG'.AND.IUNIT.NE.'AU ') &
-       STOP 'ERROR: UNKNOWN UNITS OPTION'
+  read (unit_in,1080) SWITCH
+  select case (uppercase(switch))
+  case ('DEP')
+     switch = 'DEP'
+     dephas = .true.
+  case ('NO')
+     switch = 'NO'
+     dephas = .false.
+  case default
+     call croak("unknown postprocessing option "//switch)
+  end select
+
+  read (unit_in, *) IUNIT,WHPSI
+  select case (uppercase(iunit))
+  case ('', 'AU', 'ATU')
+     iunit = 'AU'
+     prefac = 1
+  case ('ANG')
+     iunit = 'ANG'
+     prefac = 1 / sqrt( 0.529177_DPk**3 )
+  case default
+     call croak("unknown units option "//iunit)
+  end select
+
   IF(WHPSI.EQ.'     ')WHPSI='LARGE'
   IF(WHPSI.NE.'SMALL'.AND.WHPSI.NE.'LARGE') &
        STOP 'ERROR: UNKNOWN REL. COMPONENT OPTION'
@@ -157,7 +166,7 @@ SUBROUTINE MAIN2()
        STOP 'STORE/READ option only allowed for single state selection'
 
 !!! Read chk file for num_wann, u_matrix, and friends
-  wannier: IF(WAN) THEN
+  wannier: if(WAN) then
      write(unit_out,*)"read-in chk file from Wannier90"
      read(unit_chk) header    ! Date and time
      write(*,*)header
@@ -208,7 +217,7 @@ SUBROUTINE MAIN2()
              &number of Wannier functions is smaller than given index"
         call exit(1)
      endif
-  ENDIF wannier
+  endif wannier
 
   close(unit_chk)
 
@@ -351,7 +360,7 @@ SUBROUTINE MAIN2()
 ! NPG        -- the total number of grid points of the evaluation grid
 ! RGRID(:,i) -- the i-th grid point in primitive fractional coordinates
 ! -------------------------------------------------------------------------
-  CALL GRDGEN(GridMode,NP,NPO)
+  CALL GRDGEN(GridMode,NP)
   allocate (psi(npg))
   allocate (tot(npg))
   tot=0
@@ -436,20 +445,14 @@ SUBROUTINE MAIN2()
 !     << write wave function options to output >>
   WRITE(unit_out,2130) WHPSI
   IF(DEPHAS)WRITE(unit_out,2131)
-  IF(ISPSI)THEN
-     WRITE(unit_out,2135) 'PSI',IUNIT
-     WRITE(TITEL(1:67),3000) 'PSI',IUNIT,WHPSI
-  ELSE
-     WRITE(unit_out,2135) SWITCH//'(PSI)',IUNIT
-     WRITE(TITEL(1:67),3000) SWITCH//'(PSI)',IUNIT,WHPSI
-  ENDIF
+  write(unit_out,2135) SWITCH//'(PSI)',IUNIT
+  write(TITEL(1:67),3000) SWITCH//'(PSI)',IUNIT,WHPSI
 
 !     << set up constants and prefactors >>
 ! -----------------------------------------
 !     prefactor = 1/sqrt( vol(UC) )
 ! -----------------------------------------
-  PREFAC = 1.0D0 / SQRT(VUC)
-  IF(IUNIT.EQ.'ANG') PREFAC = PREFAC / SQRT( 0.529177D0**3 )
+  PREFAC = PREFAC / SQRT(VUC)
 !
 !     << scale reciprocal basis vectors with 2pi >>
   BR3 = 2*PI*BR3
@@ -459,13 +462,13 @@ SUBROUTINE MAIN2()
 !     MAIN LOOP
 !     ---------
   IF(.NOT.PUTABC)THEN
-     IF(GridMode.EQ.'ANY ')THEN
-        WRITE(unit_out,2150)'according to the grid point input file'
-     ELSEIF(GridMode(1:2).EQ.'2D')THEN
-        WRITE(unit_out,2150)'((psi(ix,iy),ix=1,nx),iy=1,ny)'
-     ELSEIF(GridMode(1:2).EQ.'3D')THEN
-        WRITE(unit_out,2150)'(((psi(ix,iy,iz),ix=1,nx),iy=1,ny),iz=1,nz)'
-     ENDIF
+     if(GridMode(1:3) == 'ANY') then
+        write(unit_out,2150)'according to the grid point input file'
+     elseif(GridMode(1:2) == '2D') then
+        write(unit_out,2150) '((psi(ix,iy),ix=1,nx),iy=1,ny)'
+     elseif(GridMode(1:2) == '3D') then
+        write(unit_out,2150) '(((psi(ix,iy,iz),ix=1,nx),iy=1,ny),iz=1,nz)'
+     endif
      WRITE(unit_tmp,2190)
   ENDIF
 
@@ -487,7 +490,7 @@ SUBROUTINE MAIN2()
 
         KKK = KKK + 1
 
-        IF(WAN) THEN
+        if(WAN) then
            do j=1,num_bands
               local_contribution = dcmplx(0d0,0d0)
               if (have_disentangled) then
@@ -515,7 +518,7 @@ SUBROUTINE MAIN2()
               endif
               uu(j)=local_contribution
            enddo
-        ENDIF
+        endif
         
         IF(IERR.GT.0) KKKABS = KKK
         NPW = NMATK - NLO
@@ -544,11 +547,7 @@ SUBROUTINE MAIN2()
            WRITE(unit_out,2160)KKKABS,BNAME,(FK(I),I=1,3)
            WRITE(unit_tmp,2200)KKKABS,BNAME,(FK(I),I=1,3)
            IF(ALLEIG)THEN
-              IF(ISPSI)THEN
-                 WRITE(unit_tmp,2210)
-              ELSE
-                 WRITE(unit_tmp,2210)'min','max'
-              ENDIF
+              write(unit_tmp,2210)
               fmt_out = fmt_short
            ELSE
               fmt_out = fmt_fancy
@@ -617,7 +616,6 @@ SUBROUTINE MAIN2()
            DO JNEQ=1,MULT(JATOM)
               LATOM = LATOM + 1
               CALL AUGPW(LATOM,NPW,ALM,ROTLOC,Y,bk,coef,nmatk)
-
 
               IL=IL1
               CALL AUGLO(LATOM,IL,ALM,ROTLOC,Y,bk,coef,nmatk)
@@ -694,65 +692,12 @@ SUBROUTINE MAIN2()
 
         WRITE(TITEL(1:20),3010) KKKABS,IEABS
         WRITE(unit_psink,'(A)') TITEL(1:67)
-        IF(ISPSI)THEN
-           WRITE(unit_psink,3025) (PSI(IG),IG=1,NPG)
-        ELSE
-           IF(ISRE) then
-              WRITE(unit_psink,3020) (dble(psi(IG)),IG=1,NPG)
-           elseIF(ISim) then
-              WRITE(unit_psink,3020) (dimag(psi(IG)),IG=1,NPG)
-           elseIF(ISabs) then
-              WRITE(unit_psink,3020) (abs(psi(IG)),IG=1,NPG)
-           elseIF(ISarg) then
-              WRITE(unit_psink,3020) &
-                   (datan2(dimag(psi(IG)),dble(psi(ig))),IG=1,NPG)
-           endif
-        ENDIF
-
-!         << find range of output data >>
-        IF(ISPSI)THEN
-           WRITE(unit_tmp,fmt_out)IEABS,E
-        ELSE
-           DATMIN = +1.0D+20
-           DATMAX = -1.0D+20
-           DO IG=1,NPG
-              IF(ISRE) then
-                 DATMIN = MIN(DATMIN,dble(psi(IG)))
-                 DATMAX = MAX(DATMAX,dble(psi(IG)))
-              elseIF(ISim) then
-                 DATMIN = MIN(DATMIN,dimag(psi(IG)))
-                 DATMAX = MAX(DATMAX,dimag(psi(IG)))
-              elseIF(ISabs) then
-                 DATMIN = MIN(DATMIN,abs(psi(IG)))
-                 DATMAX = MAX(DATMAX,abs(psi(IG)))
-              elseIF(ISarg) then
-                 DATMIN = MIN(DATMIN,datan2(dimag(psi(IG)),dble(psi(ig))))
-                 DATMAX = MAX(DATMAX,datan2(dimag(psi(IG)),dble(psi(ig))))
-              endif
-           end DO
-           WRITE(unit_tmp,fmt_out)IEABS,E,DATMIN,DATMAX
-        ENDIF
 
 !         << echo wave functions to the output >>
         WRITE(unit_out,2170)IEABS,E,KKKABS
-        IF(GridMode.EQ.'ANY ')THEN
-           IF(ISPSI)THEN
-              WRITE(unit_out,2185)' ',(PSI(IG),IG=1,NPG,NPO(0))
-           ELSE
-              IF(ISRE) then
-                 WRITE(unit_out,2180)' ',(dble(psi(IG)),IG=1,NPG,NPO(0))
-              elseIF(ISim) then
-                 WRITE(unit_out,2180)' ',(dimag(psi(IG)),IG=1,NPG,NPO(0))
-              elseIF(ISabs) then
-                 WRITE(unit_out,2180)' ',(abs(psi(IG)),IG=1,NPG,NPO(0))
-              elseIF(ISarg) then
-                 WRITE(unit_out,2180) ' ', &
-                      (datan2(dimag(psi(IG)),dble(psi(ig))),IG=1,NPG,NPO(0))
-              endif
-           ENDIF
+        IF(GridMode(1:3) .EQ. 'ANY')THEN
            WRITE(unit_out,'()')
         ELSE
-
 !           << data stored in gnuplot order                 >>
 !           << POS = IZ + (IY-1)*NP(3) + (IX-1)*NP(3)*NP(2) >>
            NPY = NP(3)
@@ -760,24 +705,6 @@ SUBROUTINE MAIN2()
            DO IZ=0,NP(3)-1,NPO(3)
               DO IY=0,NP(2)-1,NPO(2)
                  IG = 1 + IZ + IY*NPY
-                 IF(ISPSI)THEN
-                    WRITE(unit_out,2185) &
-                         'o',(PSI(IG+IX*NPX),IX=0,NP(1)-1,NPO(1))
-                 ELSE
-                    IF(ISRE) then
-                       WRITE(unit_out,2180)'o',&
-                            (dble(psi(IG+IX*NPX)),IX=0,NP(1)-1,NPO(1))
-                    elseIF(ISim) then
-                       WRITE(unit_out,2180)'o',&
-                            (dimag(psi(IG+IX*NPX)),IX=0,NP(1)-1,NPO(1))
-                    elseIF(ISabs) then
-                       WRITE(unit_out,2180)'o',&
-                            (abs(psi(IG+IX*NPX)),IX=0,NP(1)-1,NPO(1))
-                    elseIF(ISarg) then
-                       WRITE(unit_out,2180)'o',(datan2(dimag(psi(IG+IX*NPX)),&
-                            dble(psi(ig+IX*NPX))),IX=0,NP(1)-1,NPO(1))
-                    endif
-                 ENDIF
               end DO
               WRITE(unit_out,'()')
            end DO
@@ -819,7 +746,6 @@ SUBROUTINE MAIN2()
  1060 FORMAT(I4)
  1070 FORMAT(3(3I2,F10.5/))
  1080 FORMAT(A3)
- 1090 FORMAT(A3,1X,A3,1X,A5)
  1100 FORMAT(A4)
 !
  2000 FORMAT(/A/)
@@ -929,8 +855,11 @@ contains
   end subroutine wfopen
 END subroutine main2
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-09-24 15:07:06 assman@faepop36.tu-graz.ac.at>

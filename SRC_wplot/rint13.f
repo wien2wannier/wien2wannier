@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_wplot/rint13.f
 !!!
-!!! $Id: rint13.f 166 2014-02-03 09:39:24Z assmann $
+!!! $Id: rint13.f 385 2015-06-01 13:08:18Z assmann $
 
       SUBROUTINE RINT13(REL,A,B,X,Y,S,JATOM)
       use radgrd                     
@@ -67,8 +67,11 @@
       RETURN
       END
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-05-23 19:58:48 elias>

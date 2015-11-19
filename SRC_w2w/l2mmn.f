@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_w2w/l2mmn.f
 !!!
-!!! $Id: l2mmn.f 167 2014-02-03 09:43:33Z assmann $
+!!! $Id: l2mmn.f 420 2015-06-30 20:58:59Z assmann $
 
 SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
   USE param
@@ -14,7 +14,7 @@ SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
   INTEGER          pair_index, r_index
   REAL(R8)           KX1,KY1,KZ1                       ! k-points in u.c. coordinates k and k+b
   COMPLEX(C16)       YLB((LMAX2+1)*(LMAX2+1))       ! spherical harmonics expansion of b
-  COMPLEX(C16)       PHSHEL,IMAG,CZERO,tmp,tmp1
+  COMPLEX(C16)       PHSHEL,tmp,tmp1
   COMMON /GENER/   BR1(3,3),BR2(3,3)              ! transformation between u.c. and cartesian coordinates
   COMMON /ATSPDT/  P(0:LMAX2,nrf),DP(0:LMAX2,nrf) ! radial function and its slope at RMT
   logical          loor(0:lomax),lapw(0:lmax2)    ! local orbitals options
@@ -23,18 +23,18 @@ SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
   common /lolog/   nlo,nlov,nlon,loor,ilo(0:lomax),lapw,n_rad(0:lmax2)  
 
   !...............................
-  complex(c16), allocatable :: alm(:,:,:,:),blm(:,:,:,:)
-  !      complex(c16) blm((LMAX2+1)*(LMAX2+1),nb,ndif,nrf)
+  complex(C16), allocatable :: alm(:,:,:,:),blm(:,:,:,:)
   !...............................
 
-  DATA             CZERO/(0.0D0,0.0D0)/,IMAG/(0.0D0,1.0D0)/         
+  integer :: k1_prog_itvl
+  k1_prog_itvl = min(max(num_kpts/10, 1), 100)
 
   !------------------------------------------------------------------     
 
   TWOPI=2.D0*PI  
   FOURPI=4*PI
 
-  OVERLAP=CZERO
+  OVERLAP = 0
 
   !     ------------------
   !     LOOP FOR ALL ATOMS
@@ -43,6 +43,8 @@ SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
   READ(unit_vsp,2032) ISCF    
   LFIRST=1
   atoms: DO JATOM=1,NAT 
+     write(unit_out, "(/, '===== atom', I5, ' /', I5, ' =====' /)") jatom, nat
+
      ALLOCATE(ALM(NB,NRF,(LMAX2+1)*(LMAX2+1),MULT(JATOM)),  &
           BLM(NB,NRF,(LMAX2+1)*(LMAX2+1),MULT(JATOM)))
      talm=0.
@@ -57,12 +59,10 @@ SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
      CALL ATPAR(JATOM,LFIRST,itape,jtape)      ! calculate radial functions for atoms JATOM
      FAC=4.0D0*PI*RMT(JATOM)**2/SQRT(VOL)
      rewind(itape)
-     write(unit_out,*)'******************************************'
+
      !................................
      pair_index=0
      k1loop: DO k1=1,num_kpts      !   loop over k1
-        if (mod(k1, 500) == 1) &
-             write(unit_out, "('k1=', I5, ' /', I5, ' (', I3, '%)')") k1, num_kpts, (100*k1)/num_kpts
         pair_index=pair_index+1
         kkk=KP(pair_index)
         KX1=XK(kkk)
@@ -75,7 +75,7 @@ SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
            kkk=KPB(pair_index)
            call cputim(tt0)
            CALL almgen(BLM,JATOM,LFIRST,NB,KKK)
-           BLM=dconjg(BLM)
+           BLM=conjg(BLM)
            call cputim(tt1)
            BX=XK(kkk)-KX1+BQX(pair_index)                 ! calculate b=k2-k1 add BQ if going around BZ
            BY=YK(kkk)-KY1+BQY(pair_index)
@@ -91,7 +91,7 @@ SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
            DO LJ=0,LJMAX
               DO MJ=-LJ,LJ
                  indexj=indexj+1
-                 YLB(indexj)=dconjg(YLB(indexj))*imag**LJ
+                 YLB(indexj)=conjg(YLB(indexj))*(0,1)**LJ
               ENDDO
            ENDDO
            call cputim(tt2)
@@ -100,13 +100,15 @@ SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
               ARG1=BX*POS(1,LATOM)*TWOPI
               ARG2=BY*POS(2,LATOM)*TWOPI
               ARG3=BZ*POS(3,LATOM)*TWOPI
-              PHSHEL=EXP(IMAG*(ARG1+ARG2+ARG3))*FOURPI 
+              PHSHEL=EXP((0,1)*(ARG1+ARG2+ARG3))*FOURPI 
 
               ! overlap=conjg(alm(2))*alm(1)*gaunt(2,j,1)*rad_int(2,j,1)
               L_index=0
               l1loop: DO L1=0,LMAX2
-                 l2loop: DO L2=0,LMAX2
+                 l2loop: do L2=0,LMAX2
                     ljloop: DO LJ = abs(L1-L2), min(L1+L2, LJMAX), 2
+           IF (MOD((L1+L2+LJ),2) .EQ. 1) cycle
+           IF ((L1+L2-LJ).LT.0.OR.(L1-L2+LJ).LT.0.OR.(-L1+L2+LJ).LT.0) cycle
                        L_index=L_index+1
                        m1loop: DO M1=-L1,L1
                           mjloop: DO MJ = max(-LJ, -L2-M1), min(LJ, L2-M1)
@@ -117,16 +119,18 @@ SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
                              tmp=YLB(indexj)*PHSHEL*GAUNT1(L2,LJ,L1,M2,MJ,M1)
                              R_index=0
                              DO irf1=1,n_rad(L1)
-                                DO irf2=1,n_rad(L2)
+                                do irf2=1,n_rad(L2)
                                    R_index=R_index+1
                                    tmp1=ri_mat(R_index,L_index)*tmp
-                                   forall (num1=1:NB, num2=1:NB)
-                                      overlap(num2,num1,pair_index) = &
-                                           overlap(num2,num1,pair_index) + &
-                                           BLM(num2,irf2,INDEX2,mu) * &
-                                           ALM(num1,irf1,INDEX1,mu) * &
-                                           tmp1
-                                   end forall
+                                   do num1=1,NB
+                                      do num2=1,NB
+                                         overlap(num2,num1,pair_index) = &
+                                              overlap(num2,num1,pair_index) + &
+                                              BLM(num2,irf2,INDEX2,mu) * &
+                                              ALM(num1,irf1,INDEX1,mu) * &
+                                              tmp1
+                                      end do
+                                   end do
                                 ENDDO
                              ENDDO
                           ENDDO mjloop
@@ -140,12 +144,20 @@ SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
            tmeas1=tmeas1+tt2-tt1
            tmeas2=tmeas2+tt3-tt2
         END DO k2loop
+
+        if (mod(k1, k1_prog_itvl) == 0) &
+             write(unit_out, "('k1=', I5, ' /', I5, ' (', I3, '%)')") &
+             &    k1, num_kpts, (100*k1)/num_kpts
      END DO k1loop
      DEALLOCATE(ALM,BLM)
      call cputim(t2)
      talm=talm*(NNTOT+1)/NNTOT
      write(unit_out,*) 'CPU time used for atom ',JATOM,' ='&
           ,t2-t1,talm,tmeas1,tmeas2
+
+        if (mod(k1, k1_prog_itvl) == 0) &
+             write(unit_out, "('k1=', I5, ' /', I5, ' (', I3, '%)')") &
+             &    k1, num_kpts, (100*k1)/num_kpts
   END DO atoms
 
   ! ....END LOOP OVER ALL ATOMS     
@@ -192,8 +204,11 @@ SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
      end subroutine ptime
 END SUBROUTINE l2MMN
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-06-30 22:39:45 assman@faepop23.tu-graz.ac.at>

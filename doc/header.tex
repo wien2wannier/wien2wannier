@@ -1,0 +1,246 @@
+%%% shared-files/header.tex
+%%%
+%%%    Header for wien2wannier and woptic UGs.
+%%%
+%%% $Id: header.tex 432 2015-08-13 13:11:12Z assmann $
+
+\documentclass[
+   a4paper,
+%   oneside,
+   twoside,
+%   draft
+]{wien}
+\usepackage[utf8]{inputenc}
+\usepackage[osf,sc,slantedGreek]{mathpazo}
+\linespread{1.05}
+\usepackage[scaled=1.05]{zlmtt}
+\usepackage[T1]{fontenc}
+\usepackage[protrusion=true,
+            expansion=true,
+            auto=true,
+%            kerning=true,
+            spacing=true,
+            tracking=false]
+           {microtype}
+
+\usepackage{amsmath, amssymb, graphicx, alphabeta, braket, titlepic,
+  xspace, minitoc, longtable, siunitx, fancyvrb, enumitem, tabu,
+  upgreek, placeins, maybemath}
+
+\usepackage[breaklinks,colorlinks,
+            linkcolor=black,
+            citecolor=black,
+            urlcolor=black,
+            ]{hyperref}
+
+\usepackage[textsize=small,colorinlistoftodos]{todonotes}
+% TODOs
+\newcommand*\tdContent[2][]{\todo[color=orange!30,#1]{#2}}
+\newcommand*\tdRef    [2][]{\todo[color=green!30,#1]{#2}}
+
+% \include{texdefine}
+\addtolength{\textwidth}{2.5cm}
+\addtolength{\oddsidemargin}{-1cm}
+\addtolength{\evensidemargin}{-1.6cm}
+
+\newcommand*\name  [1]{\textsc{#1}}
+\newcommand*\file  [1]{\texttt{#1}}
+\newcommand*\fileit[1]{\texttt{\textit{#1}}}
+\newcommand*\code  [1]{\texttt{#1}}
+\newcommand*\codeit[1]{\texttt{\textit{#1}}}
+% for defaults and the like
+\newcommand*\rem   [1]{\textit{\liningnums{#1}}}
+\newcommand*\usgrem[1]{\textit{\textrm{#1}}}
+
+\newcommand{\liningnums}[1]{%
+  {\fontfamily{pplx}\selectfont #1}}
+
+% lining numbers should go with uppercase
+\let\tmp\MakeUppercase
+\renewcommand\MakeUppercase[1]{\fontfamily{pplx}\selectfont \tmp{#1}}
+
+\newcommand\MyTOC{
+  {
+    \linespread{1.1}
+    \tableofcontents
+  }
+}
+
+\newcommand*{\abbrev}[1]{\textsc{#1}}
+\newcommand*{\Abbrev}[1]{
+  \expandafter\newcommand\csname#1\endcsname{\abbrev{#1}\xspace}
+}
+
+\Abbrev{woptic}
+\Abbrev{Woptic}
+\Abbrev{cgs}
+\Abbrev{dos}
+\Abbrev{soc}
+\Abbrev{dft}
+\Abbrev{Dft}
+\Abbrev{mlwf}
+\Abbrev{Mlwf}
+\Abbrev{lapw}
+\Abbrev{Lapw}
+\Abbrev{dmft}
+\Abbrev{Dmft}
+\Abbrev{uc}
+\Abbrev{bz}
+\Abbrev{wf}
+\newcommand*\wfs{\wf{}s}
+
+\newcommand*\listnote{%
+  This file is read using Fortran list-oriented reads, i.e., items are
+  separated by white space.%
+}
+
+\newcommand\ProgName[2][]{
+  \def\myarg{#1}
+  \ifx\empty\myarg
+     \ProgNameII{#2}{#2}
+  \else
+     \ProgNameII{#1}{#2}
+  \fi
+}
+\newcommand\ProgNameII[2]{
+  \expandafter\newcommand\csname#2\endcsname{%
+    \hyperref[sec:#2]{\file{#1}}%
+    \xspace%
+  }
+  \expandafter\newcommand\csname#2Hd\endcsname{%
+    \texttt{#1}%
+    \xspace%
+  }
+}
+
+\newcommand\ProgSec[2][]{
+  \def\myarg{#1}
+  \ifx\empty\myarg
+     \def\separator{}
+  \else
+     \def\separator{---}
+  \fi
+  \section[\csname#2Hd\endcsname{} \separator{} #1]
+  {\csname#2Hd\endcsname{} \separator{} #1}
+  \label{sec:#2}
+}
+
+\newcommand*\siunits {\abbrev{si}\xspace}
+
+\newcommand*\case    {\texttt{\itshape case}\xspace}
+\newcommand*\deffile {\texttt{\itshape def}\xspace}
+
+\newcommand*\wtow   {\href{http://www.ifp.tuwien.ac.at/forschung/arbeitsgruppen/cms/software-download/wien2wannier/}{\textsc{wien2wannier}}\xspace}
+\newcommand*\Wtow   {\href{http://www.ifp.tuwien.ac.at/forschung/arbeitsgruppen/cms/software-download/wien2wannier/}{\textsc{Wien2Wannier}}\xspace}
+\newcommand*\wien   {\href{http://www.wien2k.at}{\textsc{Wien}2k}\xspace}
+\newcommand*\Wien   {\href{http://www.wien2k.at}{\textsc{Wien}2k}\xspace}
+\newcommand*\wannier{\href{http://www.wannier.org}{\textsc{wannier90}}\xspace}
+\newcommand*\Wannier{\href{http://www.wannier.org}{\textsc{Wannier90}}\xspace}
+\newcommand*\xcrys  {\href{http://www.xcrysden.org}{XCrySDen}\xspace}
+\newcommand*\vesta  {\href{http://jp-minerals.org/vesta/en/}{\textsc{vesta}}\xspace}
+\newcommand*\Vesta  {\href{http://jp-minerals.org/vesta/en/}{\textsc{Vesta}}\xspace}
+\newcommand*\gnuplot{\href{http://www.gnuplot.info}{gnuplot}\xspace}
+
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\sgn}{sgn}
+\renewcommand*\Re{\mathop{\operatorname{Re}}}
+
+\newcommand*\dd      {\text{d}}
+\newcommand*\ii      {\text{i}}
+\newcommand*\ee      {\text{e}}
+
+\newcommand{\mb}{\boldsymbol}
+
+%%%% Including template files %%%%
+%%%% User code must set \TemplateDir
+\newcommand*\FancyVerbStopString{} % empty line ends template inclusion
+
+%%% begin deep magic %%%
+\expandafter\def\expandafter\setCatCode\expandafter{
+  \catcode35 = 13 % # = active
+}
+\expandafter\def\expandafter\resetCatCode\expandafter{
+  \catcode35 =  6 % # = argument
+}
+\setCatCode
+\def#{\color{gray}\itshape\char35}
+\resetCatCode
+\newcommand{\Template}[2][]{%
+  \\[\baselineskip]
+  \begin{minipage}{\linewidth}
+    \VerbatimInput[%
+    codes={ \setCatCode },
+    label={%
+      [\raisebox{-.5\height}{\case.#2}]%
+      \raisebox{-.5\height}{end of \case.#2}%
+    },
+    frame=lines, framesep=3mm,
+    numbers=left,
+    #1
+    ]{\TemplateDir/case.#2}
+  \end{minipage}
+  \\[\baselineskip]
+}
+%%% end deep magic %%%
+
+\newenvironment{usage}{%
+  \list{}{
+    \leftmargin    .5\parindent
+    \listparindent 0em
+    \itemindent    \listparindent
+    \linespread{1.1}
+  }
+  \item\relax\ttfamily%
+}{\endlist}
+
+\newlist{options}{description}{1}
+\setlist[options]{
+  font=\ttfamily, itemsep=0em,
+  labelindent=.5\parindent, leftmargin=!, labelsep=1em
+}
+
+\newlist{linesI}{enumerate}{1}
+\setlist[linesI]{
+  font=\bfseries,
+  label={line \arabic*}
+}
+
+\newenvironment{lines}{%
+  \begin{linesI}%
+    \newcommand*\T[1]{\texttt{\textit{##1}}}
+    \newcommand*\U[1]{\si{##1}}
+    \newenvironment{flin}[3][V]{%
+      \newcolumntype V {>{\ttfamily}l}
+      \newcolumntype T {>{\ttfamily\itshape}l}
+      \newcolumntype U {s}
+      \def\argIII{##3}
+      \ifx\empty\argIII
+      \else
+        \def\argIII{ --- ##3}
+      \fi
+      \item \code{##2}\argIII
+      \vskip-.5\baselineskip    % longtabu produces an inordinately
+                                % large separation
+      \begin{longtabu} to \linewidth { V ##1 X}
+    }{%
+      \end{longtabu}%
+    }%
+    % \newcommand{\flinbrk}{% — does not work
+    %   \endtabu\endgroup
+    %   \begingroup\tabu to \linewidth { *2{ >{\ttfamily}l } X}%
+    % }%
+  }{%
+  \end{linesI}%
+}
+
+\setcounter{minitocdepth}{1}
+\setcounter{secnumdepth}{1}
+\setcounter{tocdepth}{1}
+\dominitoc
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% End: 
+
+%%% Time-stamp: <2015-08-13 13:34:12 assman@faepop23.tu-graz.ac.at>

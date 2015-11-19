@@ -1,26 +1,30 @@
-!!! wien2wannier/SRC_trig/convert_hamiltonian.f
+!!! wien2wannier/SRC_trig/convham.f
 !!!
 !!!    Program to Fourier transform the real space Hamiltonian given
-!!!    in case_hr.dat to k space H(k) where the k list is given by
+!!!    in case_hr.dat to k space H(k) where the k-list is given by
 !!!    case.klist
 !!!
 !!! Copyright 2009-2012 Philipp Wissgott
-!!!                2014 Elias Assmann
+!!!           2014-2015 Elias Assmann
 !!!
-!!! $Id: convham.f 206 2014-05-13 17:44:31Z assmann $
+!!! $Id: convham.f 385 2015-06-01 13:08:18Z assmann $
 
-PROGRAM convert_Hamiltonian
+program convert_hamiltonian
   use wien2k,    only: gtfnam, errflg, errclr
   use kpoints,   only: get_kmesh_klist
   use clio,      only: croak
   use const,     only: DPk, PI, BUFSZ
-  use structmod, only: struct, struct_read
+  use structmod, only: struct_t, struct_read
 
   implicit none
 
   integer, parameter :: unit_klist=4, unit_struct=8, unit_hr=9, unit_hk=10
 
-  type(struct) :: stru
+  character(len=*), parameter ::                         &
+       fmt_hk_head = '(I10,2I6," #kpoints wann bands")', &
+       fmt_hk_num  = 'E21.12'
+
+  type(struct_t) :: stru
 
   real(DPk),    allocatable :: kpts(:,:), rweights(:), rvec(:,:)
   complex(DPk), allocatable :: Hr(:,:,:), Hk(:,:)
@@ -62,10 +66,10 @@ PROGRAM convert_Hamiltonian
      end do
   end do
 
-  write(unit_hk, '(I10,2I6," #kpoints wann bands")') &
+  write(unit_hk, fmt_hk_head) &
        size(kpts, 1), num_wann, num_wann
 
-  write(hkfmt, '("(", I0, "E21.12)")') 2*num_wann
+  write(hkfmt, '("(", I0, A, ")")') 2*num_wann, fmt_hk_num
 
   do ik = 1,size(kpts,1)
      Hk = 0
@@ -83,10 +87,13 @@ PROGRAM convert_Hamiltonian
   end do
 
   call errclr(errfn)
-end PROGRAM convert_Hamiltonian
+end program convert_hamiltonian
+
 
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-05-23 19:58:48 elias>

@@ -1,15 +1,13 @@
-###############################################################################
-#                                                                             #
-#                            SRC_w2w/Makefile                                 #
-#                                                                             #
-#  make           ... generate executable for the real-valued version         #
-#  make complex   ... generate executable for the complex-valued version      #
-#  make all       ... generate both the above                                 #
-#  make clean     ... delete unnecessary files                                #
-#                                                                             #
-#  $Id: Makefile 287 2014-10-09 14:11:17Z assmann $	                      #
-###############################################################################
-#
+### wien2wannier/SRC_w2w/Makefile
+###
+###    make         ... generate executable for the real-valued version
+###    make complex ... generate executable for the complex-valued version
+###    make all     ... generate both the above
+###    make clean   ... delete unnecessary files
+###
+### $Id: Makefile 385 2015-06-01 13:08:18Z assmann $
+
+
 # FC ........... compiler name
 # FOPT ......... optimization flags
 # FGEN ......... code generation flags (flags not related to optimization)
@@ -58,7 +56,7 @@ C_DIR := libc
 
 ###############################################################################
 
-FFLAGS = $(FGEN) $(FOPT) -I$(O_DIR)
+FFLAGS+= $(FGEN) $(FOPT) -I$(O_DIR)
 R_EXEC = $(DESTDIR)/$(R_EXECNAME)
 C_EXEC = $(DESTDIR)/$(C_EXECNAME)
 
@@ -146,10 +144,15 @@ $(C_EXEC): $(objs) $(c_objs) Makefile
 #
 #  Real and complex need to be kept separate!
 #
-$(O_DIR)/%.o $(R_DIR)/%.o: %.f Makefile
+$(O_DIR)/%.o: %.f Makefile
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(O_DIR)
-$(O_DIR)/%.o $(R_DIR)/%.o: %.F Makefile
+$(O_DIR)/%.o: %.F Makefile
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(O_DIR)
+
+$(R_DIR)/%.o: %.f Makefile
+	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(R_DIR)
+$(R_DIR)/%.o: %.F Makefile
+	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(R_DIR)
 
 $(C_DIR)/%.o: %.f Makefile
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(C_DIR) -D_COMPLEX_
@@ -173,3 +176,6 @@ $(foreach o, $(mod_users), $(C_DIR)/$o): $(C_DIR)/modules.o
 # versions, or not
 $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
 	$(foreach o, $(util_users), $d/$o)): $(O_DIR)/util_w2w.o
+
+
+## Time-stamp: <2015-06-01 12:44:33 assman@faepop23.tu-graz.ac.at>

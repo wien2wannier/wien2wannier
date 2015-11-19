@@ -1,11 +1,11 @@
-!!! wien2wannier/SRC_trig/find_bands.f
+!!! wien2wannier/SRC_trig/findbands.f
 !!!
 !!!    Finds the bands which are within an energy interval
 !!!
 !!! Copyright 2009-2012 Philipp Wissgott
-!!!           2013-2014 Elias Assmann
+!!!           2013-2015 Elias Assmann
 !!!
-!!! $Id: findbands.f 191 2014-03-03 09:16:46Z assmann $
+!!! $Id: findbands.f 385 2015-06-01 13:08:18Z assmann $
 
 program find_bands
   use const,  only: BUFSZ, DPk, Ryd_eV
@@ -101,8 +101,11 @@ program find_bands
   call errclr(errfn)
 end program find_bands
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-05-23 19:58:48 elias>

@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_wplot/wavsph.f
 !!!
-!!! $Id: wavsph.f 166 2014-02-03 09:39:24Z assmann $
+!!! $Id: wavsph.f 385 2015-06-01 13:08:18Z assmann $
 
       SUBROUTINE WAVSPH(R,BFAC,IAT,IR,PSI,Y)
       use struct
@@ -77,8 +77,11 @@
       RETURN
       END
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-05-23 19:58:48 elias>

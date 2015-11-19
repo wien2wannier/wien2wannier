@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_w2w/almgen.F
 !!!
-!!! $Id: almgen.F 167 2014-02-03 09:43:33Z assmann $
+!!! $Id: almgen.F 417 2015-06-29 14:48:13Z assmann $
 
      SUBROUTINE almgen(alm,jatom,lfirst,NB,kkk)
      USE param
@@ -12,7 +12,7 @@
      real(r8)     h_al(iblock),h_bl(iblock)
 
      COMPLEX(C16)       YL((LMAX2+1)*(LMAX2+1))
-     COMPLEX(C16)       PHSHEL,CFAC,IMAG,CZERO
+     COMPLEX(C16)       PHSHEL,CFAC
      complex(c16) h_yl((LMAX2+1)*(LMAX2+1),iblock)
      complex(c16) h_alyl((LMAX2+1)*(LMAX2+1),iblock)
      complex(c16) h_blyl((LMAX2+1)*(LMAX2+1),iblock)
@@ -26,12 +26,11 @@
      COMMON /loabc/   alo(0:lomax,nloat,nrf)
      COMMON /lolog/   nlo,nlov,nlon,loor(0:lomax),ilo(0:lomax),lapw(0:lmax2),n_rad(0:lmax2)
 
-     DATA             CZERO/(0.0D0,0.0D0)/,IMAG/(0.0D0,1.0D0)/
      TWOPI=2.D0*PI
      FAC=4.0D0*PI*RMT(JATOM)**2/SQRT(VOL)
 
      N=size(kkk)
-     ALMt=CZERO
+     ALMt=0
      DO I=1,N
       BKX(I)=XK(kkk)+GX(I,kkk)                    ! plane wave Q+k
       BKY(I)=YK(kkk)+GY(I,kkk)
@@ -51,7 +50,7 @@
         ARG1=BKX(I)*POS(1,LATOM)*TWOPI
         ARG2=BKY(I)*POS(2,LATOM)*TWOPI
         ARG3=BKZ(I)*POS(3,LATOM)*TWOPI
-        PHSHEL=EXP(IMAG*(ARG1+ARG2+ARG3))                       ! exp(i(Q+k)R_j)
+        PHSHEL=EXP((0,1)*(ARG1+ARG2+ARG3))                       ! exp(i(Q+k)R_j)
         INDEX=0
         DO  L=0,LMAX2
          MAX=2*L+1
@@ -122,7 +121,7 @@
            BK(3)=BKX(I)*BR1(3,1)+BKY(I)*BR1(3,2)+BKZ(I)*BR1(3,3)
            CALL YLM (BK,LOMAX,YL)
            ARG=BKX(I)*POS(1,LATOM)+BKY(I)*POS(2,LATOM)+BKZ(I)*POS(3,LATOM)
-           PHSHEL=EXP(IMAG*(ARG*TWOPI))
+           PHSHEL=EXP((0,1)*(ARG*TWOPI))
            DO NUM=1,NB
             PHS(NUM)=PHSHEL*A(I,NUM,kkk)
            ENDDO
@@ -145,7 +144,7 @@
       DO L=0,LMAX2
        mirf=n_rad(l)
        MAX=2*L+1
-       CFAC=IMAG**L
+       CFAC=(0,1)**L
        DO M=1,MAX
         INDEX=INDEX+1
         DO irf=1,mirf
@@ -159,8 +158,11 @@
      RETURN
      END
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-06-29 16:15:35 assman@faepop23.tu-graz.ac.at>

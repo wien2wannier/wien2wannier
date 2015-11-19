@@ -3,9 +3,9 @@
 !!!    Main program ‘wplot’
 !!!
 !!! Copyright 2010-2012 Jan Kuneš, Philipp Wissgott
-!!!                2014 Elias Assmann
+!!!           2014-2015 Elias Assmann
 !!!
-!!! $Id: wplot.f 206 2014-05-13 17:44:31Z assmann $
+!!! $Id: wplot.f 385 2015-06-01 13:08:18Z assmann $
 
 !!/--- Files expected in ‘def’ ---
 !!  5 inwplot	  'old'		'formatted'
@@ -61,8 +61,11 @@ PROGRAM WPLOT
   CALL MAIN2(iproc)
 END PROGRAM WPLOT
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-05-23 20:50:35 elias>

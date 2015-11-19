@@ -1,20 +1,33 @@
-### wien2wannier/make.sys                                            ###
+### wien2wannier/make.sys
 #
 #   Default options for Makefiles in subdirectories
 #
 # The main purpose of this file is to allow compilation in a non-WIEN
 # environment (i.e., the placeholders in Makefile.orig have not been
 # replaced to create Makefile)
+#
+# Copyright 2014-2015 Elias Assmann
+#
+# $Id: make.sys 420 2015-06-30 20:58:59Z assmann $
 
 ifeq "$(origin FC)" "default"
 #FC      = ifort
+#FC      = gfortran-4.9.2
 FC      = gfortran
 endif
 
-FOPT   	?= -O2
-#R_LIBS 	?= -lmkl_lapack -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -openmp -lpthread -lguide
+FOPT   	?= -C -ffree-form -O3 #-ffpe-trap=invalid,zero,overflow
 #R_LIBS 	?= -lmkl_lapack95_lp64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -openmp -lpthread
-R_LIBS 	?= -llapack -lf77blas -lcblas -latlas
+R_LIBS 	?= -llapack -lblas
+#R_LIBS 	?= -lmkl_lapack -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -openmp -lpthread -lguide
+#R_LIBS 	?= -llapack -lf77blas -lcblas -latlas
+
+# R_LIBS 	?= $(MKLROOT)/lib/intel64/libmkl_lapack95_lp64.a -Wl,--no-as-needed \
+# 	   -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_core             \
+# 	   -lmkl_sequential -lpthread -lm
+# FFLAGS += -I$(MKLROOT)/include/intel64/lp64 -I$(MKLROOT)/include
+
+#R_LIBS 	?= -llapack -lf77blas -lcblas -latlas
 #R_LIBS 	?= -llapack 
 
 # $(MODOPT) should be the option that tells the compiler where to put
@@ -23,12 +36,12 @@ R_LIBS 	?= -llapack -lf77blas -lcblas -latlas
 # gfortran: -J
 # ifort:    -module
 ifneq "$(findstring gfortran,$(FC))" ""
-FFLAGS += -Wall -ffree-form -g  -pedantic -Wcharacter-truncation #-fbounds-check
 # suppress gfortran's stupid warnings about uninitialized array bounds
-FFLAGS += -Wno-maybe-uninitialized -Wconversion -Wextra -Wcharacter-truncation
+FFLAGS += -Wall -ffree-form -g -pedantic -Wno-maybe-uninitialized #-fbounds-check
+FFLAGS += -Wcharacter-truncation -Wextra -Wcharacter-truncation #-Wconversion
 MODOPT ?= -J
 else ifneq "$(findstring ifort,$(FC))" ""
-FFLAGS += -free -traceback -g #-debug all -gen-interface nosource -traceback -check format,uninit,output_conversion -warn all # -check bounds
+FFLAGS += -warn all -free -traceback -g #-check bounds #-debug all -gen-interface nosource -traceback -check format,uninit,output_conversion -warn all # -check bounds
 #FOPT   += -ipo
 ## -check bounds can cost a lot of time (at least in woptic).
 ## -warn all has sometimes caused errors in compiling w2w!
@@ -43,8 +56,15 @@ else ifneq "$(findstring icc,$(CC))" ""
 CFLAGS 	+= -Wall -O3
 endif
 
-# /---
-#| Local Variables:
-#| mode: Makefile
-#| End:
-# \---
+
+## For woptic — this is the path to the directory containing SRC_w2w/,
+## if relative, it should be taken from woptic/src
+W2W_DIR  = ../../wien2wannier/
+
+
+##/---
+## Local Variables:
+## End:
+##\---
+##
+## Time-stamp: <2015-09-23 15:48:54 assman@faepop06.tu-graz.ac.at>

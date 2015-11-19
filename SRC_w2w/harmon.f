@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_w2w/harmon.f
 !!!
-!!! $Id: harmon.f 167 2014-02-03 09:43:33Z assmann $
+!!! $Id: harmon.f 385 2015-06-01 13:08:18Z assmann $
 
       SUBROUTINE HARMON(N,X,Y,Z,LMAX2,F,DF,RI)                           
       use const
@@ -24,8 +24,11 @@
       RETURN                                                            
       END                                                               
 
+
 !!/---
 !! Local Variables:
-!! mode: fortran
+!! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-05-23 19:58:48 elias>

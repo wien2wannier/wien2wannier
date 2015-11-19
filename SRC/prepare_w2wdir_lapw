@@ -5,9 +5,9 @@
 ###    Prepare subdirectory for ‘w2w’ calculation
 ###
 ### Copyright 2009-2012 Nikolaus Frohner, Philipp Wissgott
-###           2013-2014 Elias Assmann
+###           2013-2015 Elias Assmann
 ###
-### $Id: prepare_w2wdir_lapw 287 2014-10-09 14:11:17Z assmann $
+### $Id: prepare_w2wdir_lapw 385 2015-06-01 13:08:18Z assmann $
 
 ## Some definitions ##
 # Option variables
@@ -34,7 +34,7 @@ if [[ -s .processes ]]; then
 fi
 
 # copied from x_lapw
-c=$(cut -b -6 "$file.struct" |
+c=$(cut -b -6 "$file.struct" 2>/dev/null |
     awk 'BEGIN{c="c"};
          {if ($0 == "-1 0 0") {
             getline;
@@ -52,11 +52,13 @@ PROGRAM:        $0
 PURPOSE:        prepare a separate working directory for wien2wannier
                 copies necessary files
 
-USAGE:          $name [OPTIONS] [CASE] TARGET
+USAGE:          $name [OPTIONS] TARGET
 
 FLAGS:
 -efermi ->      give Fermi energy directly
 -scf    ->      alternative \`scf' file (for Fermi energy)
+-f FILE ->      set casename
+-hf     ->      for Hartree-Fock calculations
 -[no]c	->	complex [real] calculation
 -[no]sp	->	[non-] spin-polarized calculation
 -[no]so	->	[no] spin-orbit coupling
@@ -104,7 +106,7 @@ fermigrep () {
         if [[ $scf ]]; then
             s=$scf
         elif [[ ! -s $s ]]; then
-            s=( $(addsp $file.scf2) )
+            s=( $(addsp $file.scf2$hf) )
 
             if [[ -s $s ]]; then    # if sp, this probes the first file
                 warn "taking Fermi energy from ${s[@]} -- make sure it is correct [caveat: -band]"
@@ -156,6 +158,7 @@ addsp () {
 ## Option handling ##
 while true; do
     case $1 in
+        # standard options
         -[hH]|-help|--help)
             usage
             exit 0;;
@@ -164,14 +167,19 @@ while true; do
         -q|-quiet)
             q="-q";;
 
+        -f)
+            shift
+            file="$1";;
         -scf)
             shift
             scf="$1";;
-
         -efermi)
             shift
             fermi="$1";;
+        -hf)
+            hf=hf;;
 
+        # things that are normally autodetected
         -sp)
             sp="up dn";;
         -so)
@@ -180,7 +188,7 @@ while true; do
             c=c;;
         -p)
             p=p;;
-
+        # and the converse
         -nosp)
             sp=;;
         -noso)
@@ -233,7 +241,7 @@ fi
 should="klist_band $out1suf"
 can="$(addsp vorb)"
 
-if [[ $sp ]]; then
+if [[ $sp && ! $so ]]; then
     should+=" spaghettiup_ene spaghettidn_ene"
 else
     should+=" spaghetti_ene"
@@ -284,3 +292,6 @@ done
 for suf in $should $can; do
     mycp $file.$suf $target/$base.$suf
 done
+
+
+## Time-stamp: <2015-10-20 15:22:58 assman@faepop36.tu-graz.ac.at>

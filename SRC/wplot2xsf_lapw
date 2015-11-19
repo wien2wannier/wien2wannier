@@ -7,9 +7,9 @@
 ###    wploutout/psink/struct/wout/xyz file
 ###
 ### Copyright 2010 Nikolaus Frohner, Philipp Wissgott
-###      2011,2014 Elias Assmann
+### 2011,2014-2015 Elias Assmann
 ###
-### $Id: wplot2xsf_lapw 287 2014-10-09 14:11:17Z assmann $
+### $Id: wplot2xsf_lapw 385 2015-06-01 13:08:18Z assmann $
 
 '''
 Translate `psink'/`psiarg' files from `wplot' to XCrysDen's `xsf'
@@ -26,7 +26,8 @@ import math
 import glob
 import numpy as np
 
-__version__ = '1.1 $Rev: 287 $'
+__svn_rev_str = '$Rev: 385 $'
+__version__ = '1.1-r' + re.search('\$Rev: (.*) \$', __svn_rev_str).group(1)
 
 #####################
 # Argument Handling #
@@ -431,3 +432,6 @@ for i, N, psink, psiarg, xsf, wplot in \
 
     print>>xsf, "  END_DATAGRID_3D"
     print>>xsf, "END_BLOCK_DATAGRID_3D"
+
+
+## Time-stamp: <2015-05-28 16:22:09 assman@faepop23.tu-graz.ac.at>

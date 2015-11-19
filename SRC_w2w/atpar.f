@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_w2w/atpar.f
 !!!
-!!! $Id: atpar.f 167 2014-02-03 09:43:33Z assmann $
+!!! $Id: atpar.f 417 2015-06-29 14:48:13Z assmann $
 
 SUBROUTINE ATPAR (JATOM,LATOM,itape,jtape)
   USE param
@@ -23,7 +23,7 @@ SUBROUTINE ATPAR (JATOM,LATOM,itape,jtape)
   !---------------------------------------------------------------------  
 2022 FORMAT(3X,4E19.12) 
 
-  dummy=latom                   ! silence warning
+  dummy=latom                   ! silence unused variable warning
 
   !.....READ TOTAL SPHERICAL POTENTIAL V(0,0) OF TAPEjtape=VSP               
   !     NORM OF V(0,0)=V00(R)*R/SQRT(4.D0*PI)     
@@ -232,8 +232,11 @@ SUBROUTINE ATPAR (JATOM,LATOM,itape,jtape)
 2031 FORMAT(/)
 END SUBROUTINE ATPAR
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-06-29 15:57:06 assman@faepop23.tu-graz.ac.at>

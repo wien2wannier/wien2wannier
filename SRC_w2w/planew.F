@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_w2w/planew.F
 !!!
-!!! $Id: planew.F 167 2014-02-03 09:43:33Z assmann $
+!!! $Id: planew.F 420 2015-06-30 20:58:59Z assmann $
 
       SUBROUTINE PLANEW(NB,num_kpts,NNTOT,maxx,maxy,maxz)     
   USE param
@@ -15,15 +15,12 @@
       INTEGER          pair_index
       COMPLEX(C16)       SUM(NB),SUMA(NB,NB),FF
       complex(c16), allocatable, dimension(:,:,:) :: FAC
-      COMPLEX(C16)       PHSHEL,IMAG,CZERO
+      COMPLEX(C16)       PHSHEL
       COMPLEX(C16), allocatable, dimension(:,:,:) :: A_
       COMPLEX(C16), allocatable, dimension(:,:) :: B_
  
       COMMON /GENER/  BR1(3,3),BR2(3,3)                                 
       common /lolog/  nlo,nlov,nlon,loor,ilo(0:lomax),lapw  
-
-
-      DATA            CZERO/(0.0D0,0.0D0)/,IMAG/(0.0D0,1.0D0)/         
 
       !allocate memory to arrays
       allocate(FAC(-(2*maxx+1):(2*maxx+1),-(2*maxy+1):(2*maxy+1),-(2*maxz+1):(2*maxz+1)) )
@@ -42,7 +39,7 @@
      t_prod=0.d0
        
       call cputim(t1)  
-      A_=CZERO
+      A_=0
       a_null=.false.
       a_null_fin=.false.
       pair_index=0
@@ -72,7 +69,7 @@
        ENDDO
       ENDDO       
       
-      FAC=czero
+      FAC=0
       LFIRST=1
       DO JATOM=1,NAT
        IF (JATOM.GT.1) LFIRST=LFIRST+MULT(JATOM-1)
@@ -84,13 +81,13 @@
           BY=I*BR1(2,1)+J*BR1(2,2)+K*BR1(2,3)
           BZ=I*BR1(3,1)+J*BR1(3,2)+K*BR1(3,3)
           X=RMT(JATOM)*SQRT(BX*BX+BY*BY+BZ*BZ)
-          PHSHEL=czero
+          PHSHEL=0
           DO MU=1,MULT(JATOM)
            LATOM=LFIRST+MU-1
            ARG=I*POS(1,LATOM)  &
               +J*POS(2,LATOM)  &
               +K*POS(3,LATOM)
-           PHSHEL=PHSHEL+EXP(-IMAG*ARG*TWOPI)
+           PHSHEL=PHSHEL+exp(-(0,1)*ARG*TWOPI)
           ENDDO
           IF ((I*I+J*J+K*K).eq.0) THEN
            FAC(I,J,K)=FAC(I,J,K)-MULT(JATOM)*VV/VOL
@@ -112,10 +109,10 @@
        pair_index=pair_index+1
        kkk=KP(pair_index)
        call cputim(tt1)
-       b_=czero
+       b_=0
        DO J=0,max
         if (a_null_fin(J,kkk)) then
-         SUM=CZERO
+         SUM=0
          JJ=J/m2x
          iz2=jj/m2y
          iy2=jj-iz2*m2y
@@ -140,7 +137,7 @@
         !bugfix 07/23 p.wissgott 
    !    id=-(BQZ(pair_index)*m2y+BQY(pair_index))*m2z-BQX(pair_index)-1
         id=-(BQZ(pair_index)*m2y+BQY(pair_index))*m2x-BQX(pair_index)-1
-        SUMA=CZERO
+        SUMA=0
 !debug
  !id=0
         DO J=0,max   
@@ -158,15 +155,13 @@
         ENDDO
 
  
-        overlap(1:nb,1:nb,pair_index)=overlap(1:nb,1:nb,pair_index)+SUMA
+        overlap(1:nb,1:nb,pair_index) = overlap(1:nb,1:nb,pair_index) + SUMA
         write(unit_mmn,235)KP(pair_index),KPB(pair_index),BQX1(pair_index),BQY1(pair_index), &
                    BQZ1(pair_index)
-!       DO NUM1=1,NB
-!        write(91,234)(cdabs(overlap(num2,num1,pair_index)),num2=1,NB)
-!       ENDDO
+
         DO NUM2=1,NB
          DO NUM1=1,NB
-          write(unit_mmn,236)real(overlap(num2,num1,pair_index)),-dimag(overlap(num2,num1,pair_index))
+          write(unit_mmn,236) conjg(overlap(num2,num1,pair_index))
          ENDDO
         ENDDO
  4     CONTINUE
@@ -192,8 +187,11 @@
 
       END                                                               
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-06-30 21:37:47 assman@faepop23.tu-graz.ac.at>

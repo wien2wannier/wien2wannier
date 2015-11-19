@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_w2w/l2amn.F
 !!!
-!!! $Id: l2amn.F 167 2014-02-03 09:43:33Z assmann $
+!!! $Id: l2amn.F 385 2015-06-01 13:08:18Z assmann $
 
 SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
   USE param
@@ -261,8 +261,11 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
   RETURN
 END SUBROUTINE l2AMN
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-05-23 19:58:48 elias>

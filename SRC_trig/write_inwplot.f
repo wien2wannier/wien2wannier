@@ -1,11 +1,11 @@
-!!! wien2wannier/SRC_trig/write_wplotin.f90
+!!! wien2wannier/SRC_trig/write_inwplot.f
 !!!
 !!!    Prepares input seed.wplotin for wplot
 !!!
 !!! Copyright 2009-2012 Philipp Wissgott
-!!!                2014 Elias Assmann
+!!!           2014-2015 Elias Assmann
 !!!
-!!! $Id: write_inwplot.f 289 2014-10-10 12:18:40Z assmann $
+!!! $Id: write_inwplot.f 385 2015-06-01 13:08:18Z assmann $
 
 PROGRAM write_wplotin
   use const, only: BUFSZ
@@ -93,8 +93,11 @@ PROGRAM write_wplotin
   write(1, fmt_A)"1 1", "# k-point, Wannier index"
 END PROGRAM write_wplotin
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-05-23 19:58:48 elias>

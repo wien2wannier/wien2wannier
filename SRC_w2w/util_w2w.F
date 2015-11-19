@@ -1,11 +1,11 @@
 !!! wien2wannier/SRC_w2w/util_w2w.F
 !!!
-!!!    Collection of routines for wien2wannier & woptic
+!!!    Collection of routines for wien2wannier
 !!!
 !!! Copyright 2010-2012 Philipp Wissgott
-!!!           2013-2014 Elias Assmann
+!!!           2013-2015 Elias Assmann
 !!!
-!!! $Id: util_w2w.F 285 2014-10-06 16:14:51Z assmann $
+!!! $Id: util_w2w.F 424 2015-07-14 11:17:35Z assmann $
 
 
 !!/=== Things that are exported here =============
@@ -13,18 +13,19 @@
 !! const: Constants mathematical and configurational
 !!
 !!    BUFSZ, DPk, IPk, R4, R8, C16
-!!    PI, ORTHO_TEST, SQ3
+!!    PI, ORTHO_TEST, SQ3, Ryd_eV, Ang_Bohr
 !!
 !!
-!! reallocate: Reallocation of various arrays
+!! reallocate: Reallocation of arrays of various types
 !!
 !!    realloc()
 !!
 !!
 !! util: Assorted miscellanea
 !!
-!!    string(), uppercase(), lowercase(),
-!!    inverse3x3(), ptime(), line_count(), paropen(), newunit()
+!!    string(), uppercase(), lowercase(), inverse3x3()
+!!    ptime(), type(ptimer), ptick(), ptock(), ptot(),
+!!    line_count(), paropen(), newunit()
 !!
 !!
 !! clio: Helper procedures for command line interface
@@ -32,9 +33,14 @@
 !!    croak(), carp(), cluck(), fetcharg(), type(argstr)
 !!
 !!
-!! structmod: ‘struct’ type and associated procedures
+!! structmod: ‘struct_t’ type and associated procedures
 !!
-!!    type(struct), struct_read()
+!!    type(struct_t), struct_read()
+!!
+!!
+!! inwfmod: ‘inwf_t’ type and associated procedures
+!!
+!!    type(inwf_t), inwf_read(), type(proj)
 !!
 !!
 !! kpoints: Reading ‘klist’ files
@@ -45,17 +51,7 @@
 !!
 !! wannier90: Reading ‘chk’ files
 !!
-!!    type(chk_file), chk_read()
-!!
-!!
-!! woptic: Things specific to woptic
-!!
-!!    get_mommat(), get_mommat_1k(), type(inwop), inwop_read()
-!!
-!!
-!! woptic_io: Files and units for woptic
-!!
-!!    fn_*, unit_*, suf_*; print1or3(), set_casename()
+!!    type(chk_t), chk_read()
 !!
 !!
 !! wien2k: Procedures nicked from Wien2k
@@ -72,22 +68,23 @@ module const
   implicit none
   public
 
-  integer, parameter  :: BUFSZ = 256
+  integer, parameter   :: BUFSZ = 256
   !! Default kinds
-  integer, parameter  :: DPk = kind(1.0d0) ! inherited from W90 2.0.0
-  integer, parameter  :: IPk = selected_int_kind(8)
+  integer, parameter   :: DPk = kind(1.0d0) ! inherited from W90 2.0.0
+  integer, parameter   :: IPk = selected_int_kind(8)
   !! Kinds for WIEN-compatibility
-  real*4,     private :: four_real
-  real*8,     private :: eight_real
-  complex*16, private :: sixteen_complex
-  integer, parameter  :: R4 = kind(four_real)
-  integer, parameter  :: R8 = kind(eight_real)
-  integer, parameter  :: C16= kind(sixteen_complex)
+  real*4,     private  :: four_real
+  real*8,     private  :: eight_real
+  complex*16, private  :: sixteen_complex
+  integer, parameter   :: R4 = kind(four_real)
+  integer, parameter   :: R8 = kind(eight_real)
+  integer, parameter   :: C16= kind(sixteen_complex)
 
-  real(DPk), parameter:: PI         = 3.1415926535897932_DPk
-  real(DPk), parameter:: ORTHO_TEST = 1.e-12_DPk
-  real(DPk), parameter:: SQ3        = sqrt(3._DPk)
-  real(DPk), parameter:: Ryd_eV     = 13.605698_DPk ! value for WIEN compat.
+  real(DPk), parameter :: PI         = acos(-1._DPk)
+  real(DPk), parameter :: ORTHO_TEST = 1.e-12_DPk
+  real(DPk), parameter :: SQ3        = sqrt(3._DPk)
+  real(DPk), parameter :: Ryd_eV     = 13.605698_DPk ! value for WIEN compat.
+  real(DPk), parameter :: Ang_Bohr   = 1.8897261246_DPk
 end module const
 
 
@@ -422,28 +419,78 @@ end module reallocate
 
 !---------------  Assorted miscellanea                        ---------------
 MODULE util
-  use const, only: DPk, BUFSZ
+  use const, only: DPk, BUFSZ, ERROR_unit
   implicit none
 
   private
-  public :: string, inverse3x3, ptime, uppercase, lowercase, line_count, &
-       &    paropen, newunit
+  public :: string, inverse3x3, ptime, ptimer, ptick, ptock, ptot, &
+       &    uppercase, lowercase, line_count, paropen, newunit
 
   interface string
-     module procedure int2str, real2str
+     module procedure int2str, ints2str, real2str, reals2str
   end interface string
+
+  interface ptime
+!!! Ptime() takes and outputs CPU and wall time measurements.  Typical
+!!! usage is
+!!!
+!!!	ptime([UNIT=…])
+!!!
+!!! to set output unit and initialize the timers; then
+!!!
+!!!	… do stuff …
+!!!
+!!!	call ptime("doing stuff")
+!!!
+!!!	… do other stuff …
+!!!
+!!!	call ptime("other stuff")
+     module procedure ptime_setunit, ptime_print, ptick
+  end interface
+
+  type ptimer
+     real(DPk)            :: cpu1 =0, cputot =0
+     integer              :: wall1=0, walltot=0, countrate=0
+     character(len=BUFSZ) :: &
+          fmt = "('Times for ',A,T33,'(sec):',F8.3,' wall;',F9.3,' CPU')"
+     integer              :: unit=ERROR_UNIT
+     ! flush after every write? -- initialized to F here because we do
+     ! not know if the target unit will support it
+     logical              :: flush=.false.
+  end type ptimer
+
+  type(ptimer), target, save :: default_timer
+
 contains
-  character(len=10) function int2str(n)
+  pure character(len=15) function int2str(n)
     integer, intent(in) :: n
     write(int2str,"(I0)") n
   end function int2str
 
-  character(len=15) function real2str(r)
+  pure character(len=BUFSZ) function ints2str(na)
+    integer, intent(in) :: na(:)
+
+    character(BUFSZ) :: fmt
+
+    write(fmt, '( "( ''[ ''", I0, "(I0,1X)", "'' ]'' )" )') size(na)
+    write(ints2str, fmt) na
+  end function ints2str
+
+  pure character(len=15) function real2str(r)
     real(DPk), intent(in) :: r
     write(real2str,"(E15.8)") r
   end function real2str
 
-  subroutine inverse3x3(a, ainv)
+  pure character(len=BUFSZ) function reals2str(ra)
+    real(DPk), intent(in) :: ra(:)
+
+    character(BUFSZ) :: fmt
+
+    write(fmt, '( "( ''[''", I0, "(F0.4,1X)", "'' ]'' )" )') size(ra)
+    write(reals2str, fmt) ra
+  end function reals2str
+
+  pure subroutine inverse3x3(a, ainv)
     !inverse of th 3x3 matrix A
     implicit none
 
@@ -466,61 +513,105 @@ contains
     ainv(3,3) = (  a(1,1)*a(2,2) - a(1,2)*a(2,1) ) / det
   end subroutine inverse3x3
 
-  subroutine ptime(descr, unit)
-!!! Ptime() takes and outputs CPU and wall time measurements.  Typical
-!!! usage is
-!!!
-!!!	ptime([UNIT=…])
-!!!
-!!! to set output unit and initialize the timers; then
-!!!
-!!!	… do stuff …
-!!!
-!!!	call ptime("doing stuff")
-!!!
-!!!	… do other stuff …
-!!!
-!!!	call ptime("other stuff")
-    use iso_fortran_env, only: ERROR_UNIT
-    implicit none
+!!! ptime stuff
+  subroutine ptime_setunit(unit, timer, flush)
+    integer,              intent(in)              :: unit
+    type(ptimer), target, intent(inout), optional :: timer
+    logical,              intent(in),    optional :: flush
 
-    character(len=*), intent(in), optional :: descr
-    integer,          intent(in), optional :: unit
+    integer               :: ios
+    type(ptimer), pointer :: t
+    t                     => default_timer
+    if (present(timer)) t => timer
 
-    character(len=*), parameter :: fmt = "('Times for ', A, T33, '(sec):', &
-         & F8.3, ' wall;', F9.3)"!, ' cpu =', F8.3, ' user +', F8.3, ' sys')"
+    t%unit = unit
+    if (present(flush)) then
+       t%flush = flush
+    else                ! by default, we flush if possible
+       flush(UNIT=unit, IOSTAT=ios)
 
-    real(DPk),  save :: cputime1, cputime2
-    integer,    save :: walltime1, walltime2, count_rate
-    integer,    save :: default_lun=ERROR_UNIT
-    integer          :: lun
-
-    if (.not. present(descr)) then
-       call cpu_time(cputime1)
-       call system_clock(walltime1, count_rate)
-
-       if (present(unit)) default_lun=unit
-
-       return
+       t%flush = ios==0 ! ios>0 signals error, ios<0 means flush not supported
     end if
+       
+    call ptick(t)
+  end subroutine ptime_setunit
 
-    if (present(unit)) then
-       lun=unit
-    else
-       lun=default_lun
-    end if
+  subroutine ptick(timer)
+    type(ptimer), target, intent(inout), optional :: timer
+    
+    type(ptimer), pointer :: t
+    t                      => default_timer
+    if (present(timer)) t  => timer
 
-    call cpu_time(cputime2)
-    call system_clock(walltime2)
+    call cpu_time    (t% cpu1)
+    call system_clock(t%wall1, t%countrate)
+  end subroutine ptick
 
-    write(lun, fmt) descr, real(walltime2-walltime1)/count_rate, &
-         & (cputime2-cputime1)
+  subroutine ptock(timer)
+    type(ptimer), target, intent(inout), optional :: timer
+    
+    real(DPk)             :: cpu2
+    integer               :: wall2
+    type(ptimer), pointer :: t
+    t                      => default_timer
+    if (present(timer)) t  => timer
 
-    walltime1 = walltime2
-    cputime1  = cputime2
-  end subroutine ptime
+    call cpu_time    ( cpu2)
+    call system_clock(wall2)
 
-  pure function uppercase(str)
+    t% cputot = t% cputot +  cpu2 - t% cpu1
+    t%walltot = t%walltot + wall2 - t%wall1
+
+    t% cpu1 =  cpu2
+    t%wall1 = wall2
+  end subroutine ptock
+
+  subroutine ptot(descr, timer, unit)
+    character(len=*),     intent(in)              :: descr
+    type(ptimer), target, intent(inout), optional :: timer
+    integer,              intent(in),    optional :: unit
+
+    integer               :: lun
+    type(ptimer), pointer :: t
+    t                      => default_timer
+    if (present(timer)) t  => timer
+    lun                    =  t%unit
+    if (present(unit)) lun =  unit
+
+    write(lun, t%fmt) descr, real(t%walltot, DPk)/t%countrate, &
+         &                       (t% cputot)
+    if (t%flush) flush(lun)
+  end subroutine ptot
+
+  subroutine ptime_print(descr, timer, unit)
+    character(len=*),     intent(in)              :: descr
+    type(ptimer), target, intent(inout), optional :: timer
+    integer,              intent(in),    optional :: unit
+
+    real(DPk)             :: cpu2
+    integer               :: wall2, lun
+    type(ptimer), pointer :: t
+
+    t                      => default_timer
+    if (present(timer)) t  => timer
+    lun                    =  t%unit
+    if (present(unit)) lun =  unit
+
+    call cpu_time    (cpu2)
+    call system_clock(wall2)
+    t% cputot = t% cputot +  cpu2 - t% cpu1
+    t%walltot = t%walltot + wall2 - t%wall1
+
+    write(lun, t%fmt) descr, real(wall2-t%wall1, DPk)/t%countrate, &
+         &                       (cpu2 -t% cpu1)
+    if (t%flush) flush(lun)
+
+    t% cpu1 =  cpu2
+    t%wall1 = wall2
+  end subroutine ptime_print
+!!! end ptime stuff
+
+  pure elemental function uppercase(str)
     character(*), intent(in) :: str
     character(len(str))      :: uppercase
 
@@ -536,7 +627,7 @@ contains
     end do
   end function uppercase
 
-  pure function lowercase(str)
+  pure elemental function lowercase(str)
     character(*), intent(in) :: str
     character(len(str))      :: lowercase
 
@@ -622,7 +713,7 @@ contains
   integer function newunit(unit)
     integer, intent(out), optional :: unit
     ! local
-    integer, parameter :: LUN_MIN=10, LUN_MAX=1000
+    integer, parameter :: LUN_MIN=1000, LUN_MAX=10000
     logical :: opened
     integer :: lun
     ! begin
@@ -875,7 +966,7 @@ contains
 end module clio
 
 
-!---------------- ‘struct’ type and associated procedures   -----------------
+!---------------- ‘struct_t’ type and associated procedures   ---------------
 !
 ! NB: individual wien2wannier programs may still use their own
 ! struct-related modules
@@ -885,7 +976,7 @@ module structmod
   implicit none
 
   private
-  public :: struct, struct_read
+  public :: struct_t, struct_read
 
   interface struct_read
      module procedure struct_read_unit, struct_read_fname
@@ -895,7 +986,7 @@ module structmod
      integer, allocatable :: p(:)
   end type intptr
 
-  type struct
+  type struct_t
      !! Structure to represent a ‘struct’ file
      !!
      !! The conventions here follow mostly those of ‘structeditor’
@@ -910,9 +1001,11 @@ module structmod
      real(DPk)         :: brlat(3,3)   ! Bravais lattice (row is a vector)
      real(DPk)         :: lat2car(3,3) ! lattice to cartesian transformation
                                        ! (different from brlat in some cases)
-     logical           :: ortho
+     real(DPk)         :: stru2frac(3,3)!‘struct’ to “fractional” coords. 
+     logical           :: ortho        ! orthogonal axes?
      real(DPk)         :: vol          ! u.c. volume
-     integer, allocatable, dimension(:,:,:) :: rsym, ksym  ! symmetry operations from struct
+     integer, allocatable, dimension(:,:,:) &
+                       :: rsym, ksym   ! symmetry operations from struct
                                        ! (as ‘outputkgen’)
 
      ! positions (3 × nat); local rotation matrices (3 × 3 × nneq)
@@ -923,15 +1016,15 @@ module structmod
      type(intptr),      allocatable :: at2neq(:)
      character(len=10), allocatable :: aname(:)
      real(DPk),         allocatable :: r0(:), rmt(:), Z(:)
-  end type struct
+  end type struct_t
 contains
   subroutine struct_read_unit(lun, stru)
     use const, only: PI, SQ3, ORTHO_TEST
     use clio,  only: croak
     use util,  only: inverse3x3
 
-    integer,      intent(in)  :: lun
-    type(struct), intent(out) :: stru
+    integer,        intent(in)  :: lun
+    type(struct_t), intent(out) :: stru
 
     integer   :: iat, ineq, N
     ! “Bravais lattice” and “lattice->cartesian” transformation
@@ -1120,13 +1213,14 @@ contains
        call croak('unknown lattice type `' // trim(stru%lattic) // "'")
     end select lattic
 
-    call inverse3x3(br1_rec, br1_dir); br1_dir = br1_dir*2*PI
-    call inverse3x3(br2_rec, br2_dir); br2_dir = br2_dir*2*PI
+    call inverse3x3(br1_rec, br1_dir);
+    call inverse3x3(br2_rec, br2_dir);
 
     stru%vol = product(stru%a) / rvfac
-    stru%gbas    = br2_rec
-    stru%lat2car = br1_dir
-    stru%brlat   = br2_dir
+    stru%gbas      = br2_rec
+    stru%lat2car   = br1_dir*2*PI
+    stru%brlat     = br2_dir*2*PI
+    stru%stru2frac = matmul(br1_dir, br2_rec)
 
     ! make_ksym() needs gbas and friends
     call read_rsym()
@@ -1196,8 +1290,8 @@ contains
   subroutine struct_read_fname(fname, stru)
     use util, only: newunit
 
-    character(*), intent(in)  :: fname
-    type(struct), intent(out) :: stru
+    character(*),   intent(in)  :: fname
+    type(struct_t), intent(out) :: stru
 
     integer :: lun
 
@@ -1208,10 +1302,109 @@ contains
 end module structmod
 
 
+!---------------- ‘inwf_t’ type and associated procedures   -----------------
+module inwfmod
+  use const, only: DPk
+
+  implicit none
+
+  private
+  public :: inwf_t, inwf_read
+
+  interface inwf_read
+     module procedure inwf_read_unit, inwf_read_fname, inwf_read_argstr
+  end interface inwf_read
+
+  type proj
+     integer                                 :: NY
+     integer,      allocatable, dimension(:) :: iat, l, m
+     complex(DPk), allocatable, dimension(:) :: coeff
+  end type proj
+
+  type inwf_t
+     !! Structure to represent a ‘inwf’ file
+     character(len=4)    :: mode
+     logical             :: Mmn, Amn
+     integer             :: bmin, bmax, Nproj, LJmax
+     type(proj), pointer :: projections(:)
+  end type inwf_t
+
+contains
+  subroutine inwf_read_unit(lun, inwf)
+    use clio,  only: croak
+    use util,  only: uppercase
+
+    integer,      intent(in)  :: lun
+    type(inwf_t), intent(out) :: inwf
+
+    integer             :: w, y, NY
+    real(DPk)           :: re, im
+    type(proj), pointer :: p
+
+    read(lun, *) inwf%mode
+
+    select case (uppercase(inwf%mode))
+    case('AMN')
+       inwf%amn = .true.
+    case('MMN')
+       inwf%mmn = .true.
+    case('BOTH')
+       inwf%amn = .true.
+       inwf%mmn = .true.
+    case default
+       call croak('unknown MODE in inwf, '//inwf%mode)
+    end select
+       
+    read(lun, *) inwf%bmin, inwf%bmax
+    if (inwf%bmax < inwf%bmin) &
+         call croak('bmin > bmax in inwf')
+
+    read(lun,*) inwf%LJmax, inwf%Nproj
+
+    if (inwf%Amn) then
+       allocate(inwf%projections(inwf%Nproj))
+       do w = 1, inwf%Nproj
+          read(lun, *) NY
+          p => inwf%projections(w)
+          p%NY = NY
+          allocate(p%iat(NY), p%l(NY), p%m(NY), p%coeff(NY))
+
+          ylm: do y = 1,NY
+             read(lun, *) p%iat(y), p%l(y), p%m(y), re, im
+             p%coeff(y) = cmplx(re, im, DPk)
+          end do ylm
+       end do
+    end if
+  end subroutine inwf_read_unit
+
+  subroutine inwf_read_fname(fname, inwf)
+    use util, only: newunit
+
+    character(*), intent(in)  :: fname
+    type(inwf_t), intent(out) :: inwf
+
+    integer :: lun
+
+    open(unit=newunit(lun), file=fname, status='old')
+    call inwf_read_unit(lun, inwf)
+    close(lun)
+  end subroutine inwf_read_fname
+
+  subroutine inwf_read_argstr(arg, inwf)
+    use clio, only: argstr
+
+    type(argstr), intent(in)  :: arg
+    type(inwf_t), intent(out) :: inwf
+
+    call inwf_read_fname(arg%s, inwf)
+  end subroutine inwf_read_argstr
+end module inwfmod
+
+
 !---------------- Reading ‘klist’ files            --------------------------
 module kpoints
   use const,     only: BUFSZ, DPk
-  use structmod, only: struct
+  use structmod, only: struct_t
   use util,      only: string, newunit
   use clio,      only: croak
 
@@ -1235,18 +1428,26 @@ module kpoints
   interface count_kmesh_band
      module procedure count_kmesh_band_unit, count_kmesh_band_fname
   end interface count_kmesh_band
+
+  character(len=*), parameter :: &
+       fmt_klist_old   = "(A10,4I 5)",         &
+       fmt_klist_new   = "(A10,4I10)",         &
+       fmt_klist_old_1 = "(10X,4I 5,35X,3I3)", &
+       fmt_klist_new_1 = "(10X,4I10,35X,3I3)"
+  integer,      parameter :: fmt_klist_len = len(fmt_klist_new)
 contains
 !!! Read standard ‘klist’
   subroutine get_kmesh_klist_unit(unit, kpoints, stru, mp_grid)
-    integer,      intent(in)               :: unit
-    real(DPk),    intent(out), allocatable :: kpoints(:,:)
-    type(struct), intent(in)               :: stru
-    integer,      intent(out), optional    :: mp_grid(3)
+    integer,        intent(in)               :: unit
+    real(DPk),      intent(out), allocatable :: kpoints(:,:)
+    type(struct_t), intent(in)               :: stru
+    integer,        intent(out), optional    :: mp_grid(3)
 
-    integer          :: nk, ik
-    character(BUFSZ) :: buf
-    integer          :: kfrac(3), div
-    real(DPk)        :: RR(3,3)
+    integer                  :: nk, ik
+    character(fmt_klist_len) :: fmt
+    character(10)            :: kname
+    integer                  :: kfrac(3), div
+    real(DPk)                :: RR(3,3)
 
     if (stru%ortho) then
        RR(1,:) = stru%brlat(1,:) / stru%a
@@ -1254,21 +1455,22 @@ contains
        RR(3,:) = stru%brlat(3,:) / stru%a
     end if
 
+    if (present(mp_grid)) then
+       call klist_detect_fmt(unit, fmt, mp_grid)
+    else
+       call klist_detect_fmt(unit, fmt)
+    end if
+
     nk = count_kmesh_klist(unit)
     allocate(kpoints(nk, 3))
 
     ik = 0
     readk: do
-       read(unit, '(A)') buf
-       if (trim(buf) == "END") exit
+       read(unit, fmt) kname, kfrac, div
+       if (kname == "END") exit
 
        ik = ik+1
 
-       if (ik == 1 .and. present(mp_grid)) then
-          read(buf, '(T86, 3I3)') mp_grid
-       end if
-
-       read(buf(11:), *) kfrac, div ! skip running number
        kpoints(ik,:) = real(kfrac, DPk)/real(div, DPk)
 
        if (stru%ortho) kpoints(ik,:) = matmul(RR, kpoints(ik,:))
@@ -1288,13 +1490,14 @@ contains
 
     integer,                intent(in)  :: unit
     real(DPk), allocatable, intent(out) :: kpoints(:,:)
-    type(struct),           intent(in)  :: stru
+    type(struct_t),         intent(in)  :: stru
     character, allocatable, intent(out) :: knames(:)
 
-    integer          :: nk, ik
-    character(BUFSZ) :: buf
-    integer          :: kfrac(3), div
-    real(DPk)        :: RR(3,3)
+    integer                  :: nk, ik
+    character(fmt_klist_len) :: fmt
+    character(10)            :: kname
+    integer                  :: kfrac(3), div
+    real(DPk)                :: RR(3,3)
 
     if (stru%ortho) then
        RR(1,:) = stru%brlat(1,:) / stru%a
@@ -1302,20 +1505,21 @@ contains
        RR(3,:) = stru%brlat(3,:) / stru%a
     end if
 
+    call klist_detect_fmt(unit, fmt)
     nk = count_kmesh_band(unit)
 
     allocate(kpoints(nk, 3), knames(nk))
 
     ik  = 0
     readk: do
-       read(unit, '(A)') buf
-       if (trim(buf) == "END") exit
-       if (buf(1:6)  == "")    cycle
+       read(unit, fmt) kname, kfrac, div
+       if (kname == "END") exit
+       if (kname == "")    cycle
 
        ! now we have a k-vector we should save
        ik = ik+1
-       knames(ik) = buf(1:1)
-       read(buf(7:), *) kfrac, div
+       knames(ik) = kname(1:1)
+
        kpoints(ik,:) = real(kfrac, DPk)/real(div, DPk)
 
        if (stru%ortho) &
@@ -1337,7 +1541,7 @@ contains
     nk = 0
     countk: do
        read(unit, '(A)') buf
-       if (trim(buf) == "END") exit
+       if (buf == "END") exit
        nk = nk+1
     end do countk
     rewind(unit)
@@ -1353,7 +1557,7 @@ contains
     nk = 0
     countk: do
        read(unit, '(A)') buf
-       if (trim(buf) == "END") exit
+       if (buf == "END") exit
        ! we only count k-points with a label, assuming that these
        ! delimit "paths" that will be passed to wannier90
        if (buf /= "") nk = nk+1
@@ -1363,10 +1567,10 @@ contains
 
 !!! Wrappers for calling the above with a filename instead of an open unit
   subroutine get_kmesh_klist_fname(fname, kpoints, stru, mp_grid)
-    character(*), intent(in)               :: fname
-    real(DPk),    intent(out), allocatable :: kpoints(:,:)
-    type(struct), intent(in)               :: stru
-    integer,      intent(out), optional    :: mp_grid(3)
+    character(*),   intent(in)               :: fname
+    real(DPk),      intent(out), allocatable :: kpoints(:,:)
+    type(struct_t), intent(in)               :: stru
+    integer,        intent(out), optional    :: mp_grid(3)
 
     integer :: lun
 
@@ -1378,7 +1582,7 @@ contains
   subroutine get_kmesh_band_fname(fname, kpoints, stru, knames)
     character(*),           intent(in)  :: fname
     real(DPk), allocatable, intent(out) :: kpoints(:,:)
-    type(struct),           intent(in)  :: stru
+    type(struct_t),         intent(in)  :: stru
     character, allocatable, intent(out) :: knames(:)
 
     integer :: lun
@@ -1409,6 +1613,46 @@ contains
     nk = count_kmesh_band_unit(lun)
     close(lun)
   end function count_kmesh_band_fname
+
+!!! Try to figure out which format our klist file follows, optionally
+!!! reading ‘mp_grid’ in the process.
+  subroutine klist_detect_fmt(unit, fmt, mp_grid)
+    integer,                  intent(in)  :: unit
+    character(fmt_klist_len), intent(out) :: fmt
+    integer,        optional, intent(out) :: mp_grid(3)
+
+    character(BUFSZ) :: iom
+    integer          :: idum(4), ios
+
+    ! First, we try the new format:
+    if (present(mp_grid)) then
+       read(unit, fmt_klist_new_1, iostat=ios, iomsg=iom) idum, mp_grid
+    else
+       read(unit, fmt_klist_new_1, iostat=ios, iomsg=iom) idum
+    end if
+    if (ios == 0) then
+       ! Success — new format it is
+       fmt = fmt_klist_new
+    else if (ios < 0) then
+       call croak('get_kmesh_klist(): EOF encountered while reading first&
+            & line of ‘klist’ file: '//trim(iom))
+    else
+       ! Error in read, try old format
+       if (present(mp_grid)) then
+          read(unit, fmt_klist_old_1, iostat=ios, iomsg=iom) idum, mp_grid
+       else
+          read(unit, fmt_klist_old_1, iostat=ios, iomsg=iom) idum
+       end if
+       if (ios == 0) then
+          fmt = fmt_klist_old
+       else
+          call croak('get_kmesh_klist(): something went wrong while reading&
+               & first line of ‘klist’ file: '//trim(iom))
+       end if
+    end if
+
+    rewind(unit)
+  end subroutine klist_detect_fmt
 end module kpoints
 
 
@@ -1421,13 +1665,13 @@ module Wannier90
 
   implicit none
   private
-  public :: chk_file, chk_read
+  public :: chk_t, chk_read
 
   interface chk_read
      module procedure chk_read_fname, chk_read_unit, chk_read_argstr
   end interface chk_read
 
-  type chk_file
+  type chk_t
      character(len=33)          :: header ! usually, date and time
      character(len=20)          :: checkpoint
      !                             #k,       #WF       #B
@@ -1438,7 +1682,7 @@ module Wannier90
      ! selection of the optimal subspace (#B × #WF × #k)
      complex(DPk), allocatable  :: u_matrix_opt(:,:,:)
      ! rotation to the optimally smooth states in subspace (#WF × #WF × #k)
-     complex(DPk), allocatable  :: u_matrix    (:,:,:)
+     complex(DPk), pointer      :: u_matrix    (:,:,:)
      ! overlaps M_mn are stored in ‘chk’ for restart (#WF × #WF × #nn × #k)
      complex(DPk), allocatable  :: m_matrix(:,:,:,:)
      !                            [Å] (3 × #WF),        [Å²] (#WF) 
@@ -1457,12 +1701,12 @@ module Wannier90
 
      real(DPk), dimension(3, 3) :: real_lattice, recip_lattice
      integer,   dimension(3)    :: mp_grid
-  end type chk_file
+  end type chk_t
 
 contains
   subroutine chk_read_unit(lun, chk, read_mmn)
     integer,           intent(in)  :: lun
-    type(chk_file),    intent(out) :: chk
+    type(chk_t),       intent(out) :: chk
     logical, optional, intent(in)  :: read_mmn
 
     logical   :: rm
@@ -1524,7 +1768,7 @@ contains
     use util, only: newunit
 
     character(*),      intent(in)  :: fname
-    type(chk_file),    intent(out) :: chk
+    type(chk_t),       intent(out) :: chk
     logical, optional, intent(in)  :: read_mmn
 
     integer :: lun
@@ -1545,7 +1789,7 @@ contains
     use clio, only: argstr
 
     type(argstr),      intent(in)  :: arg
-    type(chk_file),    intent(out) :: chk
+    type(chk_t),       intent(out) :: chk
     logical, optional, intent(in)  :: read_mmn
 
     logical :: rm
@@ -1559,405 +1803,6 @@ contains
     call chk_read_fname(arg%s, chk, rm)
   end subroutine chk_read_argstr
 end module Wannier90
-
-
-!---------------- Things specific to woptic            ----------------------
-module woptic
-  use const,     only: DPk
-
-  implicit none
-  private
-  public :: get_mommat, get_mommat_1k, inwop, inwop_read
-
-  interface get_mommat
-     module procedure get_mommat_unit, get_mommat_fname
-  end interface get_mommat
-
-  interface inwop_read
-     module procedure inwop_read_fname, inwop_read_unit, inwop_read_argstr
-  end interface inwop_read
-
-!!! Type representing ‘inwop’ files
-  type inwop
-     character(4)         :: mode
-     integer              :: matelmode
-     logical              :: intrahop
-     real(DPk)            :: Emax, dE, deltino, beta
-     integer              :: NEmin, NEmax, NEmin_w2k, NEmax_w2k
-     real(DPk)            :: chempot
-     real(DPk)            :: drudesep
-     logical              :: orbresolv
-     logical              :: selfE
-     integer, allocatable :: iself(:)
-     logical              :: wfrot
-     real(DPk)            :: Eshift
-     integer, allocatable :: ishift(:)
-     ! “derived” options
-     logical              :: optcond, dos, joint, peierls, need_umatrix
-     logical              :: read_mommat, read_vk, read_energy, read_ham
-  end type inwop
-
-  integer, public, parameter :: &
-       MODE_PEIERLS=1, MODE_INTERP=2, MODE_FULL=3, MODE_BLOCH=4, MODE_LDA=5
-contains
-  subroutine get_mommat_unit(unit, Vx, Vy, Vz, nk, nbmin, nbmax)
-    integer,      intent(in)                    :: unit, nk, nbmin, nbmax
-    complex(DPk), intent(out), dimension(:,:,:) :: Vx, Vy, Vz
-
-    integer :: jk
-
-    read(unit,*)
-
-    do jk=1,nk
-       call get_mommat_1k(unit, &
-            &             Vx(:,:,jk), Vy(:,:,jk), Vz(:,:,jk), &
-            &             nbmin, nbmax)
-    end do
-  end subroutine get_mommat_unit
-
-  subroutine get_mommat_1k(unit, Vkx, Vky, Vkz, nbmin, nbmax)
-    integer,      intent(in)                  :: unit, nbmin, nbmax
-    complex(DPk), intent(out), dimension(:,:) :: Vkx, Vky, Vkz
-
-    integer   :: nbminloc, nbmaxloc, i, j, nb
-
-    nb = nbmax - nbmin + 1
-
-    read(unit,*)
-    read(unit,"(T28, 2I5)") nbminloc, nbmaxloc
-    read(unit,*)
-
-    ! skip leading junk
-    do i = 1, &               ! "little Gauss":
-         & (nbmin - nbminloc)*(2*nbmaxloc-nbmin-nbminloc+3)/2
-       read(unit,*)
-    end do
-
-    ! here comes the juicy part
-    do i=nbmin,nbmax
-       do j=i,nbmaxloc
-          ! skip intermediate junk
-          if ((j.lt.nbmin) .or. (j.gt.nbmax)) then
-             read(unit, *)
-             cycle
-          end if
-
-          ! read what we need
-          read(unit, '(11X,6E13.6)') Vkx(i-nbmin+1, j-nbmin+1), &
-               &                     Vky(i-nbmin+1, j-nbmin+1), &
-               &                     Vkz(i-nbmin+1, j-nbmin+1)
-       end do
-    end do
-
-    ! skip trailing junk up to next k-point
-    do i = 1, &
-         & (nbmaxloc-nbmax)*(nbmaxloc-nbmax+1)/2
-       read(unit,*)
-    end do
-
-    !! Complete V by hermiticity
-    forall (i=1:nb, j=1:nb, j>i)
-       Vkx(j, i) = conjg(Vkx(i, j))
-       Vky(j, i) = conjg(Vky(i, j))
-       Vkz(j, i) = conjg(Vkz(i, j))
-    end forall
-  end subroutine get_mommat_1k
-
-!!! Wrapper for calling the above with a filename instead of an open
-!!! unit
-  subroutine get_mommat_fname(fname, Vx, Vy, Vz, nk, nbmin, nbmax)
-    use util, only: newunit
-
-    integer,      intent(in)                    :: nk, nbmin, nbmax
-    complex(DPk), intent(out), dimension(:,:,:) :: Vx, Vy, Vz
-    character(*), intent(in)                    :: fname
-
-    integer :: lun
-
-    open(unit=newunit(lun), file=fname, status='old')
-    call get_mommat_unit(lun, Vx, Vy, Vz, nk, nbmin, nbmax)
-    close(lun)
-  end subroutine get_mommat_fname
-
-
-!!! Read and check ‘inwop’ file
-  subroutine inwop_read_unit(lun, inw)
-    use clio, only: croak
-    use util, only: uppercase, string
-
-    integer,     intent(in)  :: lun
-    type(inwop), intent(out) :: inw
-
-    integer :: Nshift, Nself, Nb
-    logical :: scissors, mixed
-
-    read(lun,*) inw%mode, inw%matelmode, inw%intrahop
-    read(lun,*) inw%Emax, inw%dE, inw%deltino, inw%beta
-    read(lun,*) inw%NEmin_w2k, inw%NEmax_w2k, inw%NEmin, inw%NEmax
-    read(lun,*) inw%chempot
-    read(lun,*) inw%drudesep, inw%orbresolv
-
-    read(lun,*) inw%selfE, Nself
-    if (.not. inw%selfE) Nself=0
-    inw%selfE = Nself/=0
-    allocate(inw%iself(Nself))
-    read(lun,*) inw%iself
-
-    read(lun,*) inw%wfrot, scissors, inw%Eshift, Nshift
-    if (.not. scissors .or. inw%Eshift==0) Nshift=0
-    allocate(inw%ishift(Nshift))
-    if (Nshift>0) read(lun,*) inw%ishift
-
-    !! consistency checks and derived options
-    inw%optcond = .true.
-    inw%dos     = .true.
-    inw%joint   = .false.
-    select case (uppercase(inw%mode))
-    case('OPT') ;
-    case('DOS') ; inw%optcond = .false.
-    case('JOIN'); inw%joint   = .true.
-    case default; call croak("unknown MODE: "//inw%mode)
-    end select
-
-    mixed = inw%NEmin/=inw%NEmin_w2k .or. inw%NEmax/=inw%NEmax_w2k
-
-    inw%read_energy  = mixed .or. inw%matelmode >= MODE_LDA
-    inw%read_mommat  = inw%matelmode >= MODE_FULL .or. &
-             &        (inw%matelmode == MODE_INTERP .and. mixed)
-    inw%read_vk      = inw%matelmode == MODE_INTERP
-    inw%read_ham     = inw%matelmode <  MODE_LDA
-    inw%need_umatrix = inw%matelmode >  MODE_INTERP .and. &
-             &         inw%matelmode <  MODE_LDA
-    inw%peierls      = inw%matelmode == MODE_PEIERLS
-
-    if (Nshift==0) inw%Eshift = 0
-
-    if (inw%matelmode /= 1) inw%intrahop = .false.
-
-    if (inw%matelmode < MODE_PEIERLS .or. inw%matelmode > MODE_LDA) &
-         call croak("unknown matelmode: "//trim(string(inw%matelmode)))
-    if (inw%Emax <= 0) &
-         call croak("Emax should be >0, not " // trim(string(inw%Emax)))
-    if (inw%dE <= 0) &
-         call croak("dE should be >0, not " // trim(string(inw%dE)))
-    if (inw%beta < 0) &
-         call croak("beta should be ≥0, not " // trim(string(inw%beta)))
-    if (inw%deltino <= 0) &
-         call croak("deltino should be >0, not" // trim(string(inw%deltino)))
-    if ( inw%Nemin_w2k<=0            .or. &
-         inw%Nemin<inw%Nemin_w2k     .or. inw%NEmax<inw%NEmin .or. &
-         inw%Nemax_w2k<inw%Nemin_w2k .or. inw%Nemax>inw%Nemax_w2k) &
-         call croak("1 ≤ Nemin_w2k ≤ Nemin ≤ Nemax ≤ Nemax_w2k must hold")
-    if (inw%drudesep < 0) &
-         call croak("drudesep should be ≥0, not "//trim(string(inw%drudesep)))
-    Nb = inw%Nemax_w2k - inw%Nemin_w2k + 1
-    if (any(inw%ishift<= 0)) call croak("shift indices must be ≥ 1")
-    if (any(inw%iself <= 0)) call croak("interacting indices must be ≥ 1")
-    if (any(inw%ishift> Nb)) call croak("shift indices must be ≤ #bands")
-    if (any(inw%iself > Nb)) call croak("interacting indices must be ≤ #bands")
-    if (Nshift > Nb) call croak("more shift indices than bands given")
-    if (Nself  > Nb) call croak("more interacting indices than bands given")
-  end subroutine inwop_read_unit
-
-!!! Wrappers for calling the above with a filename instead of an open
-!!! unit
-  subroutine inwop_read_fname(fname, inw)
-    use util, only: newunit
-
-    character(*), intent(in)  :: fname
-    type(inwop),  intent(out) :: inw
-
-    integer :: lun
-
-    open(unit=newunit(lun), file=fname, status='old')
-    call inwop_read_unit(lun, inw)
-    close(lun)
-  end subroutine inwop_read_fname
-
-  subroutine inwop_read_argstr(arg, inw)
-    use util, only: newunit
-    use clio, only: argstr
-
-    type(argstr), intent(in)  :: arg
-    type(inwop),  intent(out) :: inw
-
-    call inwop_read_fname(arg%s, inw)
-  end subroutine inwop_read_argstr
-end module woptic
-
-!--------------- Files and units for woptic          ------------------------
-module woptic_io
-  use const, only: BUFSZ
-  implicit none
-  public
-
-  integer,          parameter   :: unit_inwop=10
-  character(*),     parameter   ::  suf_inwop='.inwop'
-  character(BUFSZ)              ::   fn_inwop
-  integer,          parameter   :: unit_fermi=11
-  character(*),     parameter   ::  suf_fermi='.fermi'
-  character(BUFSZ)              ::   fn_fermi
-  integer,          parameter   :: unit_ham=12
-  character(*),     parameter   ::  suf_ham='.hk'
-  character(BUFSZ)              ::   fn_ham
-  integer,          parameter   :: unit_intrahop=13
-  character(*),     parameter   ::  suf_intrahop='.intrahop'
-  character(BUFSZ)              ::   fn_intrahop
-  integer,          parameter   :: unit_wfrot=14
-  character(*),     parameter   ::  suf_wfrot='.wfrot'
-  character(BUFSZ)              ::   fn_wfrot
-  integer,          parameter   :: unit_hr=15
-  character(*),     parameter   ::  suf_hr='_hr.dat'
-  character(BUFSZ)              ::   fn_hr
-  integer,          parameter   :: unit_chk=16
-  character(*),     parameter   ::  suf_chk='.chk'
-  character(BUFSZ)              ::   fn_chk
-  integer,          parameter   :: unit_struct=20
-  character(*),     parameter   ::  suf_struct='.struct'
-  character(BUFSZ)              ::   fn_struct
-  integer,          parameter   :: unit_symop=21
-  character(*),     parameter   ::  suf_symop='.symop'
-  character(BUFSZ)              ::   fn_symop
-  integer,          parameter   :: unit_energy=22
-  character(*),     parameter   ::  suf_energy='.energy'
-  character(BUFSZ)              ::   fn_energy
-  integer,          parameter   :: unit_mommat=23
-  character(*),     parameter   ::  suf_mommat='.mommat2'
-  character(BUFSZ)              ::   fn_mommat
-  integer,          parameter   :: unit_vk(3)=(/ 24, 25, 26 /)
-  character(*),     parameter   ::  suf_vk(3)= (/ '.vkx', '.vky', '.vkz' /)
-  character(BUFSZ)              ::   fn_vk(3)
-  integer,          parameter   :: unit_vr=27
-  character(*),     parameter   ::  suf_vr='.vr'
-  character(BUFSZ)              ::   fn_vr
-  integer,          parameter   :: unit_klist=30
-  character(*),     parameter   ::  suf_klist='.klist'
-  character(BUFSZ)              ::   fn_klist
-  integer,          parameter   :: unit_fklist=31
-  character(*),     parameter   ::  suf_fklist='.klist_full'
-  character(BUFSZ)              ::   fn_fklist
-  integer,          parameter   :: unit_kadd=32
-  character(*),     parameter   ::  suf_kadd='.klist_add'
-  character(BUFSZ)              ::   fn_kadd
-  integer,          parameter   :: unit_tet=40
-  character(*),     parameter   ::  suf_tet='.tetra'
-  character(BUFSZ)              ::   fn_tet
-  integer,          parameter   :: unit_ftet=41
-  character(*),     parameter   ::  suf_ftet='.tetra_full'
-  character(BUFSZ)              ::   fn_ftet
-  integer,          parameter   :: unit_map=42
-  character(*),     parameter   ::  suf_map='.map'
-  character(BUFSZ)              ::   fn_map
-  integer,          parameter   :: unit_voe=43
-  character(*),     parameter   ::  suf_voe='.voe'
-  character(BUFSZ)              ::   fn_voe
-  integer,          parameter   :: unit_optcond=51
-  character(*),     parameter   ::  suf_optcond='.optcondw'
-  character(BUFSZ)              ::   fn_optcond
-  integer,          parameter   :: unit_optorb(6)=(/511,512,513,514,515,516/)
-  character(*),     parameter   ::  suf_optorb(6)= &
-       (/ suf_optcond//'_orbxx', suf_optcond//'_orbxy', suf_optcond//'_orbxz',&
-       &  suf_optcond//'_orbyy', suf_optcond//'_orbyz', suf_optcond//'_orbzz'/)
-  character(BUFSZ)              ::   fn_optorb(6)
-  integer,          parameter   :: unit_contr=52
-  character(*),     parameter   ::  suf_contr='.kcontribw'
-  character(BUFSZ)              ::   fn_contr
-  integer,          parameter   :: unit_wdos=53
-  character(*),     parameter   ::  suf_wdos='.wdos'
-  character(BUFSZ)              ::   fn_wdos
-  integer,          parameter   :: unit_doscontr=54
-  character(*),     parameter   ::  suf_doscontr='.wdoskcontribw'
-  character(BUFSZ)              ::   fn_doscontr
-  integer,          parameter   :: unit_K1=55
-  character(*),     parameter   ::  suf_K1='.K1w'
-  character(BUFSZ)              ::   fn_K1
-  integer,          parameter   :: unit_selfE=56
-  character(*),     parameter   ::  suf_selfE='.selfE'
-  character(BUFSZ)              ::   fn_selfE
-  integer,          parameter   :: unit_outwop=60
-  character(*),     parameter   ::  suf_outwop='.outputwop'
-  character(BUFSZ)              ::   fn_outwop
-  integer,          parameter   :: unit_outvr=61
-  character(*),     parameter   ::  suf_outvr='.vrout'
-  character(BUFSZ)              ::   fn_outvr
-  integer,          parameter   :: unit_outref=62
-  character(*),     parameter   ::  suf_outref='.outputref'
-  character(BUFSZ)              ::   fn_outref
-contains
-  subroutine print1or3(lun, label, unit, tensor)
-    use const, only: DPk
-    implicit none
-
-    integer,      intent(in) :: lun
-    character(*), intent(in) :: label, unit
-    real(DPk),    intent(in) :: tensor(3,3)
-
-    character(*), parameter :: &
-         fmt1 = '(A12, " [", A, "]", F12.3)', &
-         fmt3 = '(A11, "(xx,yy,zz) [", A, "]", 3F12.3)'
-
-    real(DPk) :: xx, yy, zz
-
-    xx=tensor(1,1); yy=tensor(2,2); zz=tensor(3,3)
-
-    if (max(abs((xx-yy)/xx), abs((xx-zz)/xx), abs((zz-yy)/xx)) > 1e-3) then
-       write(lun, fmt3) label, unit, xx, yy, zz
-    else
-       write(lun, fmt1) label, unit, xx
-    end if
-  end subroutine print1or3
-
-  subroutine set_casename(file, band)
-    use clio,  only: argstr
-
-    implicit none
-
-    type(argstr), intent(in)           :: file
-    logical,      intent(in), optional :: band
-
-    character(5) :: suf
-    integer      :: i
-    suf=''
-    if (present(band)) then
-       if (band) suf='_band'
-    end if
-
-    fn_inwop    =trim(file%s)//trim(suf_inwop    )
-    fn_fermi    =trim(file%s)//trim(suf_fermi    )
-    fn_ham      =trim(file%s)//trim(suf_ham      )
-    fn_intrahop =trim(file%s)//trim(suf_intrahop )
-    fn_wfrot    =trim(file%s)//trim(suf_wfrot    )
-    fn_hr       =trim(file%s)//trim(suf_hr       )
-    fn_chk      =trim(file%s)//trim(suf_chk      )
-    fn_struct   =trim(file%s)//trim(suf_struct   )
-    fn_symop    =trim(file%s)//trim(suf_symop    )
-    fn_energy   =trim(file%s)//trim(suf_energy   )
-    fn_mommat   =trim(file%s)//trim(suf_mommat   )
-    fn_klist    =trim(file%s)//trim(suf_klist    )//suf
-    fn_vr       =trim(file%s)//trim(suf_vr       )
-    fn_fklist   =trim(file%s)//trim(suf_fklist   )
-    fn_kadd     =trim(file%s)//trim(suf_kadd     )
-    fn_tet      =trim(file%s)//trim(suf_tet      )
-    fn_ftet     =trim(file%s)//trim(suf_ftet     )
-    fn_map      =trim(file%s)//trim(suf_map      )
-    fn_voe      =trim(file%s)//trim(suf_voe      )
-    fn_optcond  =trim(file%s)//trim(suf_optcond  )
-    fn_contr    =trim(file%s)//trim(suf_contr    )//suf
-    fn_wdos     =trim(file%s)//trim(suf_wdos     )//suf
-    fn_doscontr =trim(file%s)//trim(suf_doscontr )
-    fn_K1       =trim(file%s)//trim(suf_K1       )//suf
-    fn_selfE    =trim(file%s)//trim(suf_selfE    )//suf
-    fn_outwop   =trim(file%s)//trim(suf_outwop   )
-    fn_outvr    =trim(file%s)//trim(suf_outvr    )
-    fn_outref   =trim(file%s)//trim(suf_outref   )
-    do i=1,size(fn_optorb)
-       fn_optorb(i)=trim(file%s)//trim(suf_optorb(i))
-    end do
-    do i=1,size(fn_vk)
-       fn_vk(i)    =trim(file%s)//trim(suf_vk(i)    )
-    end do
-  end subroutine set_casename
-end module woptic_io
 
 
 !--------------- Procedures nicked from Wien2k       ------------------------
@@ -2199,8 +2044,11 @@ module wien2k
       END SUBROUTINE
 END MODULE wien2k
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-07-07 09:53:16 assman@faepop23.tu-graz.ac.at>

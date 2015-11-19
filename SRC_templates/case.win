@@ -23,6 +23,11 @@
  translate_home_cell    = .true.
  hr_plot                = .true.
 !fermi_surface_plot     = .true.
+!dos                    = .false.
+!dos_project            =
+!dos_kmesh              = 50 50 1
+!dos_energy_min         = -1.8
+!dos_energy_max         = +1.5
 
 !!! Band structure !!!
 !!! needs `kpoint_path' block

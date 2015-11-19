@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_wplot/latgen.f
 !!!
-!!! $Id: latgen.f 166 2014-02-03 09:39:24Z assmann $
+!!! $Id: latgen.f 385 2015-06-01 13:08:18Z assmann $
 
 SUBROUTINE LATGEN(LATTIC,A,ALP,BET,GAM,ORTHO,PRIM)
   use const
@@ -333,8 +333,11 @@ SUBROUTINE LATGEN(LATTIC,A,ALP,BET,GAM,ORTHO,PRIM)
  1030 FORMAT(/' PRIMITIVE UNIT CELL :'/(' b',I1,'/2pi = ',3F12.7))
       END
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-05-23 19:58:48 elias>

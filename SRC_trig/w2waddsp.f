@@ -4,14 +4,14 @@
 !!!    amn,mmn by entrywise summation
 !!!
 !!! Copyright 2009-2012 Philipp Wissgott
-!!!                2014 Elias Assmann
+!!!           2014-2015 Elias Assmann
 !!!
-!!! $Id: w2waddsp.f 195 2014-03-14 14:37:24Z assmann $
+!!! $Id: w2waddsp.f 437 2015-09-03 18:21:30Z assmann $
 
 PROGRAM combine_spinfiles
-  use const, only: DPk, bufsz
+  use const,  only: DPk, bufsz
   use wien2k, only: gtfnam, errflg, errclr
-  use util, only: string
+  use util,   only: string
 
   implicit none
 
@@ -77,8 +77,11 @@ PROGRAM combine_spinfiles
   call errclr(errfn)
 END PROGRAM combine_spinfiles
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-09-03 18:38:47 elias@hupuntu>

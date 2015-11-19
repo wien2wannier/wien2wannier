@@ -1,9 +1,19 @@
-3D ORTHO        # mode O(RTHOGONAL)|N(ON-ORTHOGONAL)
--1 -1 -1 1     #x, y, z, divisor of orig
- 0 -1 -1 1     #x, y, z, divisor of x-end
--1  0 -1 1     #x, y, z, divisor of y-end
--1 -1  0 1     #x, y, z, divisor of z-end
- 20 20 20 0 0 0 # grid points and echo increments
-NO              # DEP(HASING)|NO (POST-PROCESSING)
-WAN ANG LARGE   # switch ANG|ATU|AU LARGE|SMALL 
-1  1            # k-point, band index   
+3D ORTHO      # dim.;  O(RTHOGONAL) | N(ON-ORTHOGONAL)
+-1 -1 -1  1   # origin:  x, y, z; idiv
+ 0 -1 -1  1   #  x-end:  x, y, z; idiv
+-1  0 -1  1   #  y-end:  x, y, z; idiv
+-1 -1  0  1   #  z-end:  x, y, z; idiv
+20 20 20      # #(grid points) in x, y, z dir.
+NO            # DEP(HASING) | NO (POST-PROCESSING)
+ANG   LARGE   # units: ANG|ATU;  rel. comp.: LARGE|SMALL 
+ 1            # Wannier function index   
+
+
+##/---
+## Local Variables:
+## mode:                  text
+## comment-start:         "#"
+## End:
+##\---
+##
+## Time-stamp: <2015-06-01 22:18:47 elias@hupuntu>

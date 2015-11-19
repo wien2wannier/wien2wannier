@@ -1,6 +1,6 @@
 /* wien2wannier/SRC_w2w/cputim_pgi.c                   	*
  *                                                     	*
- * $Id: cputim_pgi.c 168 2014-02-03 09:45:36Z assmann $	*/
+ * $Id: cputim_pgi.c 385 2015-06-01 13:08:18Z assmann $	*/
 
 #include <sys/types.h>
 #include <sys/times.h>
@@ -37,3 +37,8 @@ double * dsec;
 { walltim_(dsec);
 }
 
+
+/* Local Variables:                           */
+/* End:                                       */
+
+/* Time-stamp: <2015-05-23 20:37:28 elias>    */

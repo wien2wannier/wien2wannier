@@ -1,8 +1,8 @@
 ### wien2wannier/SRC_trig/Makefile
 ###
-### Copyright 2013 Elias Assmann
+### Copyright 2013-2015 Elias Assmann
 ###
-### $Id: Makefile 287 2014-10-09 14:11:17Z assmann $
+### $Id: Makefile 385 2015-06-01 13:08:18Z assmann $
 
 ####### Configuration variables #######
 
@@ -86,3 +86,6 @@ $(UTIL_USERS): FFLAGS += -I$(UTILDIR)
 
 %.o: %.f
 	$(FC) $(FFLAGS) -c $<
+
+
+## Time-stamp: <2015-05-23 19:58:48 elias>

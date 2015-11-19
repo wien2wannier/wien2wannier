@@ -5,9 +5,9 @@
 ###
 ###     Generate input file for ‘w2w’
 ###
-### Copyright 2013-2014 Elias Assmann <elias.assmann@gmail.com>
+### Copyright 2013-2015 Elias Assmann <elias.assmann@gmail.com>
 ###
-### $Id: write_inwf_lapw 287 2014-10-09 14:11:17Z assmann $
+### $Id: write_inwf_lapw 385 2015-06-01 13:08:18Z assmann $
 
 '''
 Generate input file for `w2w' interactively or from command line
@@ -28,7 +28,7 @@ import numpy as np
 import re
 import traceback
 
-__version__ = "0.2 $Rev: 287 $"
+__version__ = "0.2 $Rev: 385 $"
 
 class Struct(object):
     '''Class representing a crystal structure'''
@@ -891,7 +891,7 @@ try:
             os.stat(args.inwf_file).st_size > 0
         if extant_inwf:
             print "  + `"+args.inwf_file+ \
-                "' already exists, hit Ctrl-D now to keep it +"
+                "' already exists, press Ctrl-D now to keep it +"
             print
 
         try:
@@ -921,7 +921,7 @@ try:
                     (": " if p.N==1 else "s: ")+str(p)
 
             print
-            print "--> %i band%s, %i Wannier function%s"%(
+            print "--> %i band%s, %i initial projection%s"%(
                 args.nband, '' if args.nband==1 else 's',
                 nproj, '' if nproj==1 else 's'
                 )
@@ -946,7 +946,7 @@ else:
 print >>wf, "%-4s             # AMN, MMN, or BOTH"%args.mode
 print >>wf, "%3d %3d          # min band, max band" % \
     (args.bands[0], args.bands[1])
-print >>wf, "%3d %3d          # LJMAX in exp(ibr) expansion, #WF" % \
+print >>wf, "%3d %3d          # LJMAX in exp(ibr) expansion, #proj" % \
     (args.ljmax, nproj)
 
 for p in proj:
@@ -956,3 +956,6 @@ for p in proj:
 if not args.batch and extant_inwf and not args.quiet:
     print "  + updated `"+args.inwf_file+\
         "' -- do not forget to change `win' file, if necessary +"
+
+
+## Time-stamp: <2015-09-04 11:43:54 assman@faepop23.tu-graz.ac.at>

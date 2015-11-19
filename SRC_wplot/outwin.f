@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_wplot/outwin.f
 !!!
-!!! $Id: outwin.f 166 2014-02-03 09:39:24Z assmann $
+!!! $Id: outwin.f 385 2015-06-01 13:08:18Z assmann $
 
 SUBROUTINE OUTWIN(REL,V,RI,DH,JRI,EH,FL,VAL,SLO,Nodes,Z) 
 !     Integration of the scalar-relativistic Schroedinger equation
@@ -113,8 +113,11 @@ SUBROUTINE OUTWIN(REL,V,RI,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
   SLO = (SLO-VAL)/RI(JRI) 
 END SUBROUTINE OUTWIN
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!
+!! Time-stamp: <2015-05-23 19:58:48 elias>

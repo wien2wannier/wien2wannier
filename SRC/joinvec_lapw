@@ -4,9 +4,9 @@
 ###
 ###    Wrapper script for ‘join_vectorfiles’
 ###
-### Copyright 2014 Elias Assmann
+### Copyright 2014-2015 Elias Assmann
 ###
-### $Id: wplotpara_lapw 174 2014-02-03 10:05:36Z assmann $
+### $Id: joinvec_lapw 385 2015-06-01 13:08:18Z assmann $
 
 onintr exit
 set name	= $0
@@ -44,3 +44,6 @@ set maxproc = `grep : .processes | grep  -v -e init: -e residue: | wc -l`
 $bin/vec2old -p -local -$updn
 $exe $def.def $maxproc $cmplx
 exit 0
+
+
+## Time-stamp: <2015-05-28 16:24:39 assman@faepop23.tu-graz.ac.at>
