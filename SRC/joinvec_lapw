@@ -1,0 +1,46 @@
+#!/bin/csh -f
+
+### wien2wannier/SRC/joinvec_lapw
+###
+###    Wrapper script for ‘join_vectorfiles’
+###
+### Copyright 2014 Elias Assmann
+###
+### $Id: wplotpara_lapw 174 2014-02-03 10:05:36Z assmann $
+
+onintr exit
+set name	= $0
+set bin		= $name:h	#default directory for WIEN-executables
+if !(-d $bin) set bin = .
+
+if ($#argv < 1) then
+  echo usage: $0 deffile
+  exit
+endif
+
+set updn cmplx
+
+while ($#argv)
+  switch ($1)
+  case -up:
+    set updn = 'up'
+    shift; breaksw
+  case -dn:
+    set updn = 'dn'
+    shift; breaksw
+  case -c:
+    set cmplx = '-c'
+    shift; breaksw
+  default:
+    set def = $1:r
+    shift; breaksw
+  endsw
+end
+
+set exe = $bin/join_vectorfiles
+
+set maxproc = `grep : .processes | grep  -v -e init: -e residue: | wc -l`
+
+$bin/vec2old -p -local -$updn
+$exe $def.def $maxproc $cmplx
+exit 0

@@ -1,0 +1,433 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+### wien2wannier/SRC/wplot2xsf_lapw
+###
+###    Transforms output of wplot into XCrySDen XSF format needs
+###    wploutout/psink/struct/wout/xyz file
+###
+### Copyright 2010 Nikolaus Frohner, Philipp Wissgott
+###      2011,2014 Elias Assmann
+###
+### $Id: wplot2xsf_lapw 287 2014-10-09 14:11:17Z assmann $
+
+'''
+Translate `psink'/`psiarg' files from `wplot' to XCrysDen's `xsf'
+format.  The complex wave function is mapped to the real axis,
+i.e. what is stored is |w(r)|^2*sgn(Re w(r)).
+'''
+
+import argparse
+import sys
+import os
+import re
+import gzip
+import math
+import glob
+import numpy as np
+
+__version__ = '1.1 $Rev: 287 $'
+
+#####################
+# Argument Handling #
+#####################
+parser = argparse.ArgumentParser(description='''
+but usually just: '''+os.path.basename(sys.argv[0])+''' [-up | -dn] [N]
+''' + __doc__,
+                                 add_help=False,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+
+arg_general = parser.add_argument_group('interface options')
+arg_files   = parser.add_argument_group('required files')
+arg_flags   = parser.add_argument_group('flags')
+
+def verbalize(*things):
+    if args.verbose:
+        sys.stderr.write(' '.join(str(x) for x in things) + '\n')
+
+def warn(*things):
+    if not args.quiet:
+        sys.stderr.write(parser.prog + ': ')
+        sys.stderr.write(' '.join(str(x) for x in things) + '\n')
+
+def int_or_file(x):
+    try:
+        return int(x)
+    except:
+        if x == '-': return sys.stdin
+        else:        return open(x)
+
+def openxsf(x):
+    if x == '-': return sys.stdout
+    else:        return open(x, 'w')
+
+parser.add_argument('num_wann', metavar='N', type=int_or_file, nargs='*',
+                    help="Wannier function(s) to convert (integer or `psink' "
+                    +"filename; default: `*.psink')")
+
+arg_general.add_argument('-h', '-help', action='help',
+                         help="show this help message and exit")
+arg_general.add_argument('-V', '-version', action='version',
+                         version="wplot2xsf_lapw "+__version__)
+arg_general.add_argument('-verbose', '-v', action='store_true')
+arg_general.add_argument('-quiet', '-q', action='store_true')
+
+arg_files.add_argument('-N', dest='num_wann', metavar='N', nargs='*',
+                       type=int, help="indices of WFs to convert (integer)")
+arg_files.add_argument('-case', '-f', metavar='CASE',
+                       default=os.getcwd().split(os.sep)[-1],
+                       help="override `case' name (default: `basename $PWD`)")
+arg_files.add_argument('-struct-file', metavar='STRUCT', type=open,
+                       help="`struct' file to read instead of `CASE.struct'")
+arg_files.add_argument('-psink-file', metavar='PSINK', nargs='+', type=open,
+                       default=[],
+                       help="read |w(r)|^2 from here (default: `CASE_N.psink')")
+arg_files.add_argument('-psiarg-file', metavar='PSIARG', nargs='+', type=open,
+                       default=[], help="read arg(w(r)) from here "
+                       + "(default: `CASE_N.psiarg')")
+arg_files.add_argument('-out-file', metavar='OUTWPLOT', nargs='+', type=open,
+                       default=[],
+                       help="read this file instead of `CASE_N.outputwplot'")
+arg_files.add_argument('-wout-file', metavar='WOUT', type=open,
+                       help="read this file instead of `CASE.wout'")
+arg_files.add_argument('-xyz-file', metavar='XYZ', type=open,
+                       help="read translation vectors from this file "
+                       + "instead of `CASE_N.xyz')")
+arg_files.add_argument('-xsf-file', '-o', metavar='XSF', default=[],
+                       type=openxsf, nargs='+',
+                       help="write output here instead of `CASE_N.xsf'")
+arg_files.add_argument('-gzip', '-z', action='store_true')
+
+arg_flags.add_argument('-nophase', '-abs', action='store_false',
+                       dest='do_phase',
+                       help="store |w(r)|^2 (ignore PSIARG file)")
+arg_flags.add_argument('-noshift', action='store_false', dest='do_shift',
+                       help="do not translate WFs to home cell")
+arg_flags.add_argument('-sqrt', action='store_true', dest='do_sqrt',
+                       help="store |w(r)| instead of |w(r)|^2")
+updn = arg_flags.add_mutually_exclusive_group()
+updn.add_argument('-up', action='store_true')
+updn.add_argument('-dn', action='store_true')
+
+args = parser.parse_args()
+
+if   args.up: args.sp = 'up'
+elif args.dn: args.sp = 'dn'
+else        : args.sp = ''
+
+if not args.num_wann:
+    if args.psink_file:
+        args.num_wann = args.psink_file
+    else:
+        args.num_wann = [open(f) for f in
+                         glob.glob(args.case+'*.psink'+args.sp)]
+
+if not args.num_wann:
+    print "No Wannier functions given and no `psink' files found.  Nothing to do."
+    sys.exit(0)
+
+if args.sp: xsfsuf = '.'+args.sp+'.xsf'
+else:       xsfsuf = '.xsf'
+
+if args.gzip: xsfsuf += '.gz'
+
+files  = [args.psink_file, args.psiarg_file, args.out_file, args.xsf_file]
+desc   = ['PSINK', 'PSIARG', 'OUTWPLOT', 'XSF']
+form   = ['%s_%i.psink'+args.sp, '%s_%i.psiarg'+args.sp,
+          '%s_%i.outputwplot'+args.sp, '%s_%i'+xsfsuf]
+toopen = [ args.psink_file  == [],
+           args.psiarg_file == [] and args.do_phase,
+           args.out_file    == [],
+           args.xsf_file    == [] ]
+modes  = ['r', 'r', 'r', 'w']
+
+nwf = len(args.num_wann)
+for name,val in zip(desc,files):
+    if val:
+        if len(val) != nwf:
+            raise ValueError("number of "+name+" files must match "
+                             "number of WF indices N")
+    else: val.extend(['']*nwf)
+
+for i in range(nwf):
+    iw = args.num_wann[i]
+    if type(iw) == int:
+        for l,o,f,m in zip(files, toopen, form, modes):
+            if o: l[i] = open(f%(args.case, iw), m)
+    else:
+        if toopen[0]: args.psink_file[i] = iw
+
+        mat = re.match('(.*)_(\d+)\.psink', iw.name)
+        if mat:
+            args.num_wann[i] = int(mat.group(2))
+
+            for l,o,f,m in zip(files[1:], toopen[1:], form[1:], modes[1:]):
+                if o:
+                    l[i] = open(f%(mat.group(1), int(mat.group(2))), m)
+        else:
+            raise ValueError("could not determine WF index from filename `" +
+                             iw.name+"'.  Specify WF indices explicitly.  " +
+                             "(Give filenames as `-psink-file'.)")
+
+verbalize(" + wplot2xsf converting", nwf, "Wannier function"
+          + ('s' if nwf>1 else ''), '+')
+verbalize()
+
+if args.struct_file is None: 
+    args.struct_file = open("%s.struct"%(args.case))
+
+## The following two are needed for the shift and are useful only
+## together.
+if args.do_shift:
+    if args.xyz_file is None:
+        try:
+            args.xyz_file = open("%s_centres.xyz%s"%(args.case, args.sp))
+        except IOError:
+            warn("Could not open file `"+
+                 "%s_centres.xyz%s"%(args.case, args.sp)+
+                 "'.  Will proceed without shift.")
+    if args.wout_file is None and args.xyz_file is not None:
+        try:
+            args.wout_file = open("%s.wout%s" %(args.case, args.sp))
+        except IOError:
+            warn("Could not open file `"+
+                 "%s.wout%s"%(args.case, args.sp)+
+                 "'.  Will proceed without shift.")
+            # ‘xyz_file is None’ signals “no shift“
+            args.xyz_file.close()
+            args.xyz_file = None
+else: args.xyz_file = None
+
+if args.gzip:
+    args.xsf_file = [gzip.GzipFile(fileobj=f) for f in args.xsf_file]
+
+verbalize("Will print |w(r)|" + ('' if args.do_sqrt else '^2') +
+          ("*sgn(Re w(r))" if args.do_phase else '') + '.')
+if args.gzip: verbalize("Will produce gzipped output.")
+
+
+###########
+# Globals #
+###########
+bohr2angstrom = 0.52917721092
+
+
+#############
+# Functions #
+#############
+def b2a(x): return x*bohr2angstrom
+def a2b(x): return x/bohr2angstrom
+
+
+def read_struct(f):
+    title = f.readline()
+    nneq = int(f.readline()[27:30])
+    f.readline()                # “rela”
+    f.readline()                # lattice
+
+    amap = {}
+
+    verbalize()
+    verbalize("Reading atoms info from `"+f.name+"':")
+    nat=0
+    for i in range(nneq):
+        f.readline()            # first position
+
+        mult = int(f.readline()[15:18])
+        nat += mult
+
+        for j in range(mult - 1):
+            f.readline()        # other positions
+
+        l = f.readline()
+        aname = l[0:10].strip()
+        Z = float(l[55:60])
+
+        amap[str(i+1)] = str(int(Z))
+        verbalize("   atom", i+1, "``"+aname+"'',", "Z:", Z)
+
+        f.readline()            # LOCROT
+        f.readline()
+        f.readline()
+    verbalize()
+
+    return amap, nat, title
+
+
+def xyz_centers(f):
+    global args
+
+    f.readline()
+    f.readline()
+
+    expect  = max(args.num_wann)
+    centers = np.zeros((0,3))
+
+    for i in range(1, expect+1):
+        s = f.readline()
+        l = s.split()
+
+        if l[0] != 'X':
+            raise ValueError("unexpected line in xyz file `"+f.name+"': "+s)
+
+        if i in args.num_wann:
+            centers = np.vstack((centers, np.array(l[1:], float)))
+
+    return centers
+
+
+def wout_centers(f):
+    global args
+
+    line=''
+    while "Final State" not in line:
+        line = f.readline()
+        if line=='':            # EOF
+            raise IOError("tag `Final State' not found in `"+f.name+"'")
+
+    expect  = max(args.num_wann)
+    centers = np.zeros((0,3))
+
+    for i in range(1, expect+1):
+        line = f.readline()
+
+        if i in args.num_wann:
+            centers = np.vstack(
+                (centers,
+                 np.array(re.search('\(([^\)]+)\)', line).group(1).split(','),
+                          dtype=float))
+                )
+
+    return centers
+
+def printVectors(file,pattern,readLines=3,waitLines=0,printIndices=(2,3,4),
+                 preIndex=None,preMap=None,convB2A=True,wfOffset=None,
+                 out=None):
+    lineCount = 0
+    printVec = False
+
+    for line in file:
+        if lineCount == readLines:
+            break
+
+        if printVec is True:
+            if waitLines is 0:
+                lineCount += 1
+                lineArr = re.split('\s+',line.strip())
+                print>>out, " ",
+                if preIndex is not None:
+                    if preMap is not None and lineArr[preIndex] in preMap.keys():
+                        print>>out, preMap[lineArr[preIndex]]+' ',
+                    else:
+                        print>>out, lineArr[preIndex],
+                print>>out, ' ',
+                for i in printIndices:
+                    if wfOffset is not None:
+                        print>>out, str(b2a(float(lineArr[i])+a2b(wfOffset[i-printIndices[0]])))+' ',
+                        continue
+                    if convB2A is True:
+                        print>>out, str(b2a(float(lineArr[i])))+' ',
+                    else: 
+                        print>>out, str(int(lineArr[i]))+' ',
+                wfOffset=None
+                print>>out
+            elif waitLines > 0:
+                waitLines -= 1
+
+        if line.find(pattern) != -1 and printVec is False:
+            printVec = True
+
+################
+# Preparations #
+################
+
+atom_map, nat, title = read_struct(args.struct_file)
+args.struct_file.close()
+
+if args.xyz_file is None:
+    offsets = np.zeros((len(args.num_wann), 3))
+    verbalize("No offsets read.")
+else:
+    offsets = xyz_centers(args.xyz_file) - wout_centers(args.wout_file)
+    args.xyz_file.close()
+
+    verbalize("Read offsets: " + str(offsets[0, :]))
+    for i in range(1, nwf):
+        verbalize("             ", offsets[i, :])
+    verbalize("from `"+args.xyz_file.name+"' - `"+args.wout_file.name+"'.")
+
+np.set_printoptions(threshold=np.inf)
+
+for i, N, psink, psiarg, xsf, wplot in \
+        zip(range(nwf), args.num_wann, args.psink_file, args.psiarg_file,
+            args.xsf_file, args.out_file):
+
+    verbalize()
+    if args.do_phase:
+        verbalize("Converting WF %4s: (%s, %s) -> %s"
+                  %("#"+str(N), psink.name, psiarg.name, xsf.name))
+    else:
+        verbalize("Converting WF %4s: %s -> %s"
+                  %("#"+str(N), psink.name, xsf.name))
+
+    verbalize("   reading `"+psink.name+"'")
+
+    if psink.readline().split()[0] != '3D':
+        raise AssertionError("only 3D grids are supported")
+    nx = int(psink.readline().split()[0])
+    ny = int(psink.readline().split()[0])
+    nz = int(psink.readline().split()[0])
+    psink.readline()            # “order”
+    data = np.fromfile(psink, sep=' ')
+    psink.close()
+
+    if args.do_phase:
+        verbalize("   reading `"+psiarg.name+"'")
+        data *= np.sign(np.cos(np.fromfile(psiarg, sep=' ')))
+        psiarg.close()
+
+    if args.do_sqrt:
+        data = np.sqrt(data)
+
+    ###################
+    # XSF file output #
+    ###################
+    print>>xsf, "## XSF file written by wplot2xsf version " + __version__
+    print>>xsf, "##"
+    print>>xsf, "## command line:"
+    print>>xsf, "## ", " ".join(sys.argv)
+    print>>xsf
+    print>>xsf, "CRYSTAL"
+    print>>xsf
+    print>>xsf, "CONVVEC"
+    printVectors(wplot, "CONVENTIONAL UNIT CELL :", 3, out=xsf)
+    print>>xsf
+    print>>xsf, "PRIMVEC"
+    printVectors(wplot, "PRIMITIVE UNIT CELL :", 3, out=xsf)
+    print>>xsf
+    print>>xsf, "PRIMCOORD"
+    print>>xsf, " "+str(nat)+" 1"
+    printVectors(wplot, "SYMMETRY ADJUSTED POSITIONS OF THE BASIS ATOMS",
+                 nat, 2, (2,3,4), 0, atom_map, out=xsf)
+    print>>xsf
+    print>>xsf, "BEGIN_BLOCK_DATAGRID_3D"
+    print>>xsf, "  wplot2xsf"
+    print>>xsf, "  BEGIN_DATAGRID_3D_MLWF" + str(N)
+    printVectors(wplot, "3D-NET OF GRID POINTS", 1, 1, (8,9,10),
+                 None, None, False, out=xsf)
+    printVectors(wplot, "PLOTTING AREA", 4, 4, (4,5,6),
+                 None, None, True, offsets[i, :], out=xsf)
+
+    data = data.reshape((nx, ny, nz)).transpose(2,1,0).reshape(nx*ny*nz)
+
+    for i in range(0, nx*ny*nz-5, 5):
+        for j in range(i, i+5):
+            print>>xsf, '% .8e'%data[j],
+        print>>xsf
+
+    for i in range(j+1, nx*ny*nz):
+        print>>xsf, '% .8e'%data[i],
+    print>>xsf
+
+    print>>xsf, "  END_DATAGRID_3D"
+    print>>xsf, "END_BLOCK_DATAGRID_3D"

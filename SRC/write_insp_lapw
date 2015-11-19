@@ -1,0 +1,135 @@
+#!/bin/bash
+
+### wien2wannier/SRC/write_insp_lapw
+###
+###    Writes Fermi energy from scf or scf2 file to insp file
+###
+### Copyright 2009-2012 Philipp Wissgott
+### Copyright 2013-2014 Elias Assmann
+###
+### $Id: write_insp_lapw 287 2014-10-09 14:11:17Z assmann $
+
+bin=$(dirname $0)
+definsp=$bin/SRC_templates/case.insp
+name=$(basename $0)
+file=$(basename $PWD)
+fresh=
+
+usage () {
+    cat <<EOF
+PROGRAM:        $0
+
+PURPOSE:        update  \`case.insp'  with Fermi energy from  \`case.scf'
+                or \`case.scf2'
+
+USAGE:          $name [OPTIONS] TARGET
+
+FLAGS:
+-h,-H	->	this message
+-v,-verbose ->	be verbose about copying &c.
+-q,-quiet ->	do not warn or ask questions
+-f	->	override  \`case'
+-up/-dn ->      choose spin
+-fresh	->	write new \`case.insp', do not update an existing one
+-tmpl	->	choose alternative \`insp' template
+-scf    ->      choose alternative \`scf' file
+-insp	->	choose alternative \`insp' file (output)
+
+If \`case.insp' exists, it will  be updated, otherwise use the template
+\`$definsp'.
+EOF
+}
+
+croak () {
+    echo >&2 "$name: $@"
+    exit 1
+}
+
+warn () {
+    [[ $q ]] && return
+    echo >&2 "$name: $@"
+}
+
+## Get Fermi energy.  We prefer ‘.scf’ over ‘.scf2’ because the latter
+## might be from a -band calculation.
+fermigrep () {
+    local n=1
+    [[ $updn = up ]] && n=2
+    local myv=$v
+    local s=$file.scf
+
+    if [[ $scf ]]; then
+        s=$scf
+        [[ $v ]] && echo -n "taking Fermi energy from \`\`$s'': "
+    elif [[ ! -s $s ]]; then
+        s=$file.scf2$updn
+
+        if [[ -s $s ]]; then
+            warn "taking Fermi energy from ${s[@]} -- make sure it is correct"
+            [[ ! $q ]] && myv=1
+        fi
+    else
+        [[ $v ]] && echo -n "taking Fermi energy from \`\`$s'': "
+    fi
+
+    if [[ -s $s ]]; then
+        fermi=$(tac $s | grep -m $n -e ":FER" | tac | head -n 1 | cut -d= -f2)
+    else
+        croak "no Fermi energy found"
+    fi
+
+    [[ $myv ]] && echo $fermi
+}
+
+
+## Option handling ##
+while true; do
+    case $1 in
+        -[hH]|-help|--help)
+            usage
+            exit 0;;
+        -v|-verbose)
+            v="-v";;
+        -q|-quiet)
+            q="-q";;
+
+        -up)     updn=up;;
+        -dn)     updn=dn;;
+	-f)      file=$2;   shift;;
+	-fresh)  fresh=true;;
+	-tmpl)   tmpl=$2;   shift;;
+	-scf)    scf=$2;    shift;;
+	-insp)   insp=$2;   shift;;
+
+        --) shift; break;;
+
+        -*) croak "unkown option \`\`$1'' (try --help)";;
+
+        *)  break;;
+    esac
+
+    shift
+done
+
+insp=${insp:-$file.insp}
+
+if [[ ! $tmpl ]]; then
+    if [[ ! $fresh && -s $file.insp ]]; then
+        tmpl=$file.insp
+    elif [[ -s $definsp ]]; then
+        tmpl=$definsp
+    else
+        croak "template file not found"
+    fi
+fi
+
+fermigrep
+
+[[ $tmpl -ef $insp ]] || cp $tmpl $insp
+
+perl -i~ -pe \
+'$.==9 or next;
+m/^(\s*\S*\s+)(\S+)(\s*)(.*)$/;
+$_ = $1 . q('"$fermi"') .
+     q( ) x (length($2) + length($3) - '${#fermi}') .
+     $4 . qq(\n)' $insp

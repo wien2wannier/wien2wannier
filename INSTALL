@@ -1,0 +1,54 @@
+
+                Wien2Wannier Installation Instructions
+                **************************************
+            
+
+1. Unpacking
+============
+
+In this directory there is a tarball wien2wannier.tar which should be
+extracted in the Wien2k directory,
+
+   $ cd $WIENROOT
+   $ tar -xvf .../wien2wannier-X.Y/wien2wannier.tar
+
+C a v e a t: This version of wien2wannier is meant to be used with the
+Wien2k version given in `wien2wannier-X.Y/WIEN-VERSION'.  Because
+wien2wannier is integrated into Wien2k's `x' script, this script will
+be replaced when you unpack `wien2wannier.tar'.  This can break things
+if you are using a different Wien2k version.
+
+How to continue depends on whether you have already run `siteconfig'
+to configure and compile Wien2k.
+
+
+2A. You have not run `siteconfig' yet
+=====================================
+
+Just follow the steps in `siteconfig' as you would normally,
+wien2wannier will be compiled together with Wien2k.
+
+
+2B. Wien2k is already configured and compiled
+=============================================
+
+Because wien2wannier reads the binary `vector' file, it needs to be
+compiled with the same compiler as Wien2k.  You can use the
+`siteconfig' script to propagate these settings to wien2wannier's
+makefiles, then compile.  For your convenience, there is a simple
+shell script `wien2wannier-X.Y/compile_wien2wannier.sh' which runs the
+necessary commands.  I.e., in the $WIENROOT directory, run
+
+   $ .../wien2wannier-X.Y/compile_wien2wannier.sh
+
+
+3. Wannier90
+============
+
+Again, Wannier90 should be compiled with the same settings as before,
+because wien2wannier needs to read the binary chk file. You can find
+these settings in `$WIENROOT/{COMPILER,OPTIONS}'.  Wannier90 can be
+downloaded from <http://wannier.org>, and we refer to its
+documentation for installation instructions. To use it together with
+wien2wannier, you need to have the executable `wannier90.x' in your
+$PATH.

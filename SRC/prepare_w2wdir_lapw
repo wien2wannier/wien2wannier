@@ -1,0 +1,286 @@
+#!/bin/bash
+
+### wien2wannier/SRC/prepare_w2wdir_lapw
+###
+###    Prepare subdirectory for ‘w2w’ calculation
+###
+### Copyright 2009-2012 Nikolaus Frohner, Philipp Wissgott
+###           2013-2014 Elias Assmann
+###
+### $Id: prepare_w2wdir_lapw 287 2014-10-09 14:11:17Z assmann $
+
+## Some definitions ##
+# Option variables
+v=
+q=
+so=
+sp=
+c=
+p=
+
+file=$(basename $PWD)
+name=$(basename $0)
+
+if [[ -s $file.inso ]]; then
+    so=so
+fi
+
+if [[ -s $file.clmup ]]; then
+    sp="up dn"
+fi
+
+if [[ -s .processes ]]; then
+    p=p
+fi
+
+# copied from x_lapw
+c=$(cut -b -6 "$file.struct" |
+    awk 'BEGIN{c="c"};
+         {if ($0 == "-1 0 0") {
+            getline;
+            {if ($0 == " 0-1 0"){
+               getline;
+               {if ($0 == " 0 0-1")
+                  {c= ""}
+         }}}}};
+         END{print c}')
+
+usage () {
+    cat <<EOF
+PROGRAM:        $0
+
+PURPOSE:        prepare a separate working directory for wien2wannier
+                copies necessary files
+
+USAGE:          $name [OPTIONS] [CASE] TARGET
+
+FLAGS:
+-efermi ->      give Fermi energy directly
+-scf    ->      alternative \`scf' file (for Fermi energy)
+-[no]c	->	complex [real] calculation
+-[no]sp	->	[non-] spin-polarized calculation
+-[no]so	->	[no] spin-orbit coupling
+-[no]p	->	[do not] use parallel \`output(1|so)'
+-h,-H	->	this message
+-v,-verbose ->	be verbose about copying &c.
+-q,-quiet ->	do not warn or ask questions
+
+The c/sp/so/p  switches are  usually detected automatically;  they are
+necessary in particular when giving  a CASE argument that differs from
+the CWD.
+EOF
+}
+
+croak () {
+    echo >&2 "$name: $@"
+    exit 1
+}
+
+warn () {
+    [[ $q ]] && return
+    echo >&2 "$name: $@"
+}
+
+mycp () {
+    local i
+    [[ $q ]] || i=-i
+
+    if [[ $q ]]; then
+        cp $v $i "$1" "$2" 2>/dev/null
+    else
+        cp $v $i "$1" "$2"
+    fi
+}
+
+## Get Fermi energy.  We prefer ‘.scf’ over ‘.scf2’ because the latter
+## might be from a -band calculation.
+fermigrep () {
+    local f=( $(addsp $target/$base.fermi) )
+    local n=${#f[@]}
+    local myv=$v
+    local s=$file.scf
+
+    if [[ ! $fermi ]]; then
+        if [[ $scf ]]; then
+            s=$scf
+        elif [[ ! -s $s ]]; then
+            s=( $(addsp $file.scf2) )
+
+            if [[ -s $s ]]; then    # if sp, this probes the first file
+                warn "taking Fermi energy from ${s[@]} -- make sure it is correct [caveat: -band]"
+
+            # reverse order of up/dn so that it comes out right at the
+            # end
+                s=( ${s[1]} ${s[0]} )
+
+                [[ ! $q ]] && myv=1
+            fi
+        fi
+
+        [[ $v ]] && echo -n "taking Fermi energy from \`$s': "
+
+        if [[ -s $s ]]; then
+            fermi=( $(tac ${s[@]} | grep -m $n -e ":FER" | cut -d= -f2 | tac) )
+        else
+            warn "\`$s' not found, setting Fermi energy to 0"
+            fermi=( $(yes 0 | head -$n) )
+            [[ ! $q ]] && myv=1
+        fi
+
+        [[ $myv ]] && echo ${fermi[@]}
+    else # -efermi not given
+        # Convert $fermi to array.  If only one word was given, it is
+        # repeated; if two words, they are converted to an array (and
+        # the repitition will be ignored).
+        fermi=( $fermi $fermi )
+    fi
+
+    for (( i=0; i<$n; i++ )); do
+        echo ${fermi[i]} > ${f[i]}
+    done
+}
+
+addsp () {
+    for ext in $@; do
+        if [[ $sp ]]; then
+            for s in $sp; do
+                echo $ext$s
+            done
+        else
+            echo $ext
+        fi
+    done
+}
+
+
+## Option handling ##
+while true; do
+    case $1 in
+        -[hH]|-help|--help)
+            usage
+            exit 0;;
+        -v|-verbose)
+            v="-v";;
+        -q|-quiet)
+            q="-q";;
+
+        -scf)
+            shift
+            scf="$1";;
+
+        -efermi)
+            shift
+            fermi="$1";;
+
+        -sp)
+            sp="up dn";;
+        -so)
+            so=so;;
+        -c)
+            c=c;;
+        -p)
+            p=p;;
+
+        -nosp)
+            sp=;;
+        -noso)
+            so=;;
+        -noc)
+            c=;;
+        -nop)
+            p=;;
+
+        # these are supported for backward-compatibility
+        -spc)
+            sp="up dn"
+            c=c;;
+        -spso)
+            sp="up dn"
+            so=so
+            c=c;;
+
+        --) shift
+            break;;
+
+        -*) croak "unkown option \`$1' (try --help)";;
+
+        *)  break;;
+    esac
+
+    shift
+done
+
+case $# in
+    1)  target=$1;;
+    2)  target=$2
+        file=$1;;
+    *)  croak "bad arguments (try --help)";;
+esac
+
+
+## Construct file suffix lists ##
+must="struct in1$c $(addsp vsp vns)"
+
+if [[ $so ]]; then
+    # we don't copy ksym because we're going to want a full mesh
+    # anyway (woptic??)
+    must+=" inso"
+    out1suf=outputso
+else
+    out1suf="$(addsp output1)"
+fi
+
+should="klist_band $out1suf"
+can="$(addsp vorb)"
+
+if [[ $sp ]]; then
+    should+=" spaghettiup_ene spaghettidn_ene"
+else
+    should+=" spaghetti_ene"
+fi
+
+
+## Check if files exist ##
+for suf in $must; do
+    f="$file.$suf"
+    [[ -s $f ]] || croak "required file \`$f' not found"
+done
+
+if [[ $p ]]; then               # concatenate ‘output1’ files
+    n=$(grep -cEe "^[0-9]+ :" .processes)
+
+    for s in $out1suf; do
+        [[ $n -eq 0 ]] && break
+
+        f=$(seq -f "$file.${s}_%.0f" $n)
+
+        cat $f > $file.$s
+    done
+
+    [[ $v && -s $file.$s ]] && echo $file.$s created from $n parallel files
+fi
+
+for suf in $should; do
+    f="$file.$suf"
+    [[ -s $f ]] || warn "recommended file \`$f' not found (will continue)"
+done
+
+
+## Real Work ##
+mkdir $v -p "$target" || croak "could not create directory \`$target'"
+
+base="$(basename $target)"
+
+fermigrep $sp
+
+for suf in $must; do
+    if [[ $suf != outputkgen ]]; then
+        mycp $file.$suf $target/$base.$suf || croak "could not copy \`$f'"
+    else                        # outputkgen is special
+        mycp $file.$suf $target/$base.${suf}_orig || croak "could not copy \`$f'"
+    fi
+done
+
+for suf in $should $can; do
+    mycp $file.$suf $target/$base.$suf
+done

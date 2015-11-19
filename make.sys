@@ -1,0 +1,50 @@
+### wien2wannier/make.sys                                            ###
+#
+#   Default options for Makefiles in subdirectories
+#
+# The main purpose of this file is to allow compilation in a non-WIEN
+# environment (i.e., the placeholders in Makefile.orig have not been
+# replaced to create Makefile)
+
+ifeq "$(origin FC)" "default"
+#FC      = ifort
+FC      = gfortran
+endif
+
+FOPT   	?= -O2
+#R_LIBS 	?= -lmkl_lapack -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -openmp -lpthread -lguide
+#R_LIBS 	?= -lmkl_lapack95_lp64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -openmp -lpthread
+R_LIBS 	?= -llapack -lf77blas -lcblas -latlas
+#R_LIBS 	?= -llapack 
+
+# $(MODOPT) should be the option that tells the compiler where to put
+# .mod files
+#
+# gfortran: -J
+# ifort:    -module
+ifneq "$(findstring gfortran,$(FC))" ""
+FFLAGS += -Wall -ffree-form -g  -pedantic -Wcharacter-truncation #-fbounds-check
+# suppress gfortran's stupid warnings about uninitialized array bounds
+FFLAGS += -Wno-maybe-uninitialized -Wconversion -Wextra -Wcharacter-truncation
+MODOPT ?= -J
+else ifneq "$(findstring ifort,$(FC))" ""
+FFLAGS += -free -traceback -g #-debug all -gen-interface nosource -traceback -check format,uninit,output_conversion -warn all # -check bounds
+#FOPT   += -ipo
+## -check bounds can cost a lot of time (at least in woptic).
+## -warn all has sometimes caused errors in compiling w2w!
+MODOPT ?= -module
+else ifndef MODOPT
+$(error unknown compiler ``$(FC)'', please specify variables manually)
+endif
+
+ifneq "$(findstring gcc,$(CC))" ""
+CFLAGS 	+= -Wall -O3
+else ifneq "$(findstring icc,$(CC))" ""
+CFLAGS 	+= -Wall -O3
+endif
+
+# /---
+#| Local Variables:
+#| mode: Makefile
+#| End:
+# \---

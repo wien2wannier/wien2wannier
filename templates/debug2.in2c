@@ -1,9 +1,0 @@
-TOT             (TOT,FOR,QTL,EFG,FERMI)
-     -12.0      41.0 0.50 0.05                EMIN, NE, ESEPERMIN, ESEPER0
-TETRA    0.000          (GAUSS,ROOT,TEMP,TETRA,ALL      eval)
-  0 0  2 0  4 0  4 4  6 0  6 4
-  0 0  2 0  4 0  4 4  6 0  6 4
-  0 0  2 0  2 2  4 0  4 2  4 4  6 0  6 2  6 4  6 6
-  0 0  2 0  4 0  4 4  6 0  6 4
- 12.00          GMAX
-NOFILE        FILE/NOFILE  write recprlist

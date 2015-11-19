@@ -1,9 +1,0 @@
-#!/bin/bash
-#
-# w2wup
-# P.Wissgott 10/01/10
-
-SEEDNAME=$1
-write_w2wdef -up $SEEDNAME
-w2w $SEEDNAME
-

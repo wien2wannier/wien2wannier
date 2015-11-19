@@ -1,0 +1,33 @@
+ num_bands       = N
+ num_wann        = N
+
+!!! Disentanglement parameters !!!
+!dis_froz_min     = 7.
+!dis_froz_max     = 9.
+!dis_mix_ratio    = 0.5
+
+!!! Iterations &c. !!!
+ iprint                = 1
+ num_iter              = 10000
+ num_print_cycles      =   100
+ conv_window           = 3
+!conv_tol              = 1e-10
+ dis_num_iter          = 10000
+!dis_conv_window       = 3
+!dis_conv_tol          = 1e-10
+!restart               = default | wannierise | plot | transport
+
+!!! Post-processing options !!!
+ write_proj             = .true.
+ write_xyz              = .true.
+ translate_home_cell    = .true.
+ hr_plot                = .true.
+!fermi_surface_plot     = .true.
+
+!!! Band structure !!!
+!!! needs `kpoint_path' block
+!bands_plot             = .true.
+ bands_num_points       = 50
+!bands_plot_format      = gnuplot xmgrace
+!bands_plot_project     = 1-3
+!bands_plot_mode        = s-k | cut [Slater-Koster | truncate Hamiltonian]

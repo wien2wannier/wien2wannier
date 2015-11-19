@@ -1,9 +1,0 @@
-#!/bin/bash
-#
-# w2wdn
-# P.Wissgott 10/01/10
-
-SEEDNAME=$1
-write_w2wdef -dn $SEEDNAME
-w2w $SEEDNAME
-

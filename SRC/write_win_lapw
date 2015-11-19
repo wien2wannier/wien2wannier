@@ -1,0 +1,135 @@
+#!/bin/bash
+
+### wien2wannier/SRC/write_win_lapw
+###
+###    Wrapper script for ‘write_win_backend’ to prepare the input
+###    file for Wannier90 on the basis of ‘w2w’s input file
+###
+### Copyright 2013 Elias Assmann
+###
+### $Id: write_win_lapw 287 2014-10-09 14:11:17Z assmann $
+
+bin=$(dirname $0)
+defwin=$bin/SRC_templates/case.win
+name=$(basename $0)
+file=$(basename $PWD)
+fresh=
+
+usage () {
+    cat <<EOF
+PROGRAM:	$0
+
+PURPOSE:	prepare input file \`case.win' for Wannier90 based on
+		\`inwf', \`struct', \`klist', and \`klist_band'
+
+USAGE:		$name [OPTIONS] [KEY VALUE] ...
+
+FLAGS:
+-h,-H	->	this message
+-v,-verbose ->	be verbose about copying &c.
+-q,-quiet ->	do not warn or ask questions
+-f	->	override  \`case'
+-fresh	->	write new \`case.win', do not update an existing one
+-tmpl	->	choose alternative \`win' template
+-struct	->	choose alternative \`struct' file
+-inwf	->	choose alternative \`inwf' file
+-klist	->	choose alternative \`klist' file
+-band	->	choose alternative \`klist_band' file
+-win	->	choose alternative \`win' file (output)
+
+If \`case.win' exists,  it will be updated, otherwise  use the template
+\`$defwin'.
+
+Any non-option arguments  should appear as pairs giving  an option and
+value to be set in the \`win' file.
+EOF
+}
+
+croak () {
+    echo >&2 "$name: $@"
+    exit 1
+}
+
+warn () {
+    [[ $q ]] && return
+    echo >&2 "$name: $@"
+}
+
+
+## Option handling ##
+while true; do
+    case $1 in
+        -[hH]|-help|--help)
+            usage
+            exit 0;;
+        -v|-verbose)
+            v="-v";;
+	-q|-quiet)
+	    q="-q";;
+
+	-f)      file=$2;   shift;;
+
+	-tmpl)   tmpl=$2;   shift;;
+
+	-inwf)   inwf=$2;  shift;;
+	-struct) struct=$2; shift;;
+	-klist)  klist=$2;  shift;;
+	-band)   band=$2;   shift;;
+
+	-win)    win=$2;    shift;;
+
+	-fresh) fresh=true;;
+
+	--) shift; break;;
+
+        -*) croak "unkown option \`$1' (try --help)";;
+
+        *)  break;;
+    esac
+
+    shift
+done
+
+inwf=${inwf:-$file.inwf}
+struct=${struct:-$file.struct}
+klist=${klist:-$file.klist}
+band=${band:-$file.klist_band}
+win=${win:-$file.win}
+
+if [[ ! $fresh && -s $file.win ]]; then
+    tmpl=${tmpl:-$file.win}
+elif [[ -s $defwin ]]; then
+    tmpl=${tmpl:-$defwin}
+else
+    [[ $q ]] || warn "template file \`$defwin' not found, will use empty template"
+    tmpl=${tmpl:-/dev/null}
+fi
+
+if [[ $v ]]; then
+    echo "$name: using \`$tmpl' as template"
+    echo "  inwf = \`$inwf'; struct = \`$struct'"
+    echo "  klist = \`$klist'; klist_band = \`$band'"
+    echo -n "  output to "
+    if [[ $win != '-' ]]; then
+	echo "\`$win'"
+    else
+	echo "stdout"
+    fi
+fi
+
+if [[ $win != '-' ]]; then
+    temp=$(mktemp win.XXX)
+
+    $bin/write_win_backend $inwf $struct $klist $band "$@" <$tmpl >$temp
+
+    stat=$?
+    if [[ $stat -ne 0 ]]; then
+	[[ $v ]] && \
+	    warn "something went wrong -- leaving \`win' file as \`$temp'"
+	exit $stat
+    fi
+
+    mv $temp $win
+else
+    $bin/write_win_backend $inwf $struct $klist $band "$@" <$tmpl
+fi

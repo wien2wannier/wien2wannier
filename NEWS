@@ -1,0 +1,214 @@
+                          Wien2Wannier News
+                          *****************
+
+Version 1.0 represents a major overhaul of the user interface.  The
+goal was to integrate it better into Wien2k and make it conform more
+to the expectations of the Wien2k user, as well as to improve
+usability in a more general sense.
+
+To this end, backwards compatibility was sacrificed in several places.
+In particular:
+
+ * Wien2k integration:
+
+   - (most) wien2wannier programs are now called via Wien2k's `x'
+     script
+
+   - wien2wannier is set up to be installed inside the $WIENROOT
+     directory.
+
+ * some names changed to conform to Wien2k conventions, e.g. the
+   `w2win' file is now called `inwf', and the program that produces it
+   is `write_inwf'
+
+Please refer to the user's guide for details on the commands and
+procedures in the new version.
+
+Other changes and new features include:
+
+ * `write_inwf' brings many new features over the old `write_w2win',
+   e.g.
+
+   - flexible selection of initial projections [real-valued spherical
+     harmonics (s through f), s/p/d hybrids, and certain
+     symmetry-related groups (e.g. d-t2g)]
+
+   - an arbitrary rotation can be applied to each initial projection
+
+   - tab-completion, readline, and history support
+
+ * fix handling of k-points for various lattice types
+
+ * `shift_energy' and `join_vectorfiles' are no longer needed (setting
+   the Fermi energy is done by `w2w'; `w2w' and `wplot' can read
+   parallel vector files)
+
+ * wien2wannier may now be used under the GNU GPL (see file `COPYING')
+
+One part of the package has been removed: `woptic', for the
+calculation of the optical conductivity.  If you want to use this
+program, please download wien2wannier 0.97 from
+<http://www.ifp.tuwien.ac.at/forschung/arbeitsgruppen/cms/software-download/wien2wannier/>.
+`woptic' will be released as a package of its own once outstanding
+issues have been resolved.
+
+
+Changes in 1.0 (Wien2k_14.2) include:
+
+* removed all Unicode (non-ASCII) characters from the messages printed
+  by wien2wannier, they were causing problems for some users
+
+* ``guiding centers'' are enabled by default in case.win
+
+* added -efermi, -scf switches (to specify Fermi energy) to
+  `prepare_w2wdir'
+
+* fixed a bug in `wplot2xsf --xsf-files' in the case of multiple files
+
+* fixed a bug in `x' relating to `x joinvec -p'
+
+
+Changes in 1.0-β4 include:
+
+* fixed bug in `write_inwf' that occured for element names starting
+  with `A' or `Z'
+
+* corrected filename for Hamiltonian in `x convham'
+
+* fixed typo in `wplot2xsf' that caused it to abort
+
+
+Changes in 1.0-β3 include:
+
+* fixed handling of -noshift in `wplot2xsf_lapw'
+
+* fixed a bug in convham.f that produced bogus numbers
+
+* fixed a bug in get_kmesh_band() that affected `write_win'
+
+* added option -N to `wplot2xsf' to explicitly give WF numbers
+
+* renamed `x join_vectorfiles' -> `x joinvec'
+
+
+Changes in 1.0-β2 include:
+
+* fixed bug in get_kmesh_klist() that affected `convert_hamiltonian'
+  when compiled with ifort
+
+* fixed handling of empty $SCRATCH in `x_lapw'
+
+* adapted `x w2waddsp' for MMN-only and AMN-only modes
+
+* corrected eV-Ry conversion constant
+
+* fixed atom numbering and Bohr-Angstrom conversion constant in
+  `wplot2xsf'
+
+* renamed convert_hamiltonian -> convham
+
+
+Many thanks to Marc Höppner, Hong Jiang, Oleg Rubel, Yundi Quan, Jiaxu
+Yan, and Jianxin Zhu for their valuable comments on the beta versions.
+
+
+=== Older version information follows.
+
++++Version 0.97(08/07/13)
+1) fixed detection of real/complex case in w2w (it checks the struct file now)
+2) fixed update_FermiEnergy.sh
+
++++Version 0.96(06/10/12) #completely new woptic version
+1) woptic: repaired some bugs and introduced new input file,
+           introduced shape calculation in refine_tetra.f
+           new mode JOIN to compute joined density of states(non-interacting only),
+           new matelmode 4: wien2k only(for non-interacting cases)
+2) repaired a bug in write_w2win for f-states (thanks to P.Novac)
+3) w2w/main.f: changed line 23 from
+   INTEGER CENTERATOM(100)
+to
+   INTEGER CENTERATOM(300)
+to cover larger cases
+4) w2w/read_vec.f increased maxx/maxy/maxz by one solving some bug for
+   FCC cases (thanks to Z. Zhong)
+5) w2w/write_win.f: solved problem for hexagonal systems (thanks to H.Yang)
+
++++Version 0.95(12/13/11) #repaired a bug
+1) updated some of *.frc files which had wrong handling of
+   complex/real versions
+2)plane.frc changed line 131 from
+           sum=sum+a_(1:num,I,k1)*FF
+to
+           sum=sum+a_(1:nb,I,k1)*FF
+3)util.f changed format for struct readin in mult line from A16 to A15
+
++++Version 0.94b(07/20/11) #minor updates
+1)woptic: introduced SO version
+2)woptic: kmesh handling for systems without inversion symmetry
+
++++Version 0.94(06/10/11) #introduced woptic for optical conductivity
+1)woptic: program to compute optical conductivity with Wannier orbitals
+          includes adaptive k-mesh refinement
+          includes option to use the Peierls approximation for opt.cond.
+2)woptic: introduced a new program convert_Hamiltonian which
+          does the Fourier-transform of the real space Hamiltonian
+          H(R) from case_hr.dat to H(k) in case.ham_fine
+          H(k) can be used e.g. for DMFT calculations
+3)util: minor changes in write_win to cover orthorhombic k-meshes
+4)init_w2w: the klist from wannier90 is now stored in case.klist_w90
+
++++Version 0.93(10/21/10) #some bug fixes from PW
+1)wplot/auglo.frc: solved problem with humps in some pictures
+                   connected to local orbital contributions
+2)util: introduced w2wsp -so for SO calculations
+3)util: adapted get_seedname.sh
+4)userguide: introduced FAQ section
+5)all programs: included help flag -h
+
++++Version 0.92(08/12/10) #some bug fixes(thanks to Jian-Xin Zhu) and additional stuff from PW
+1)w2w/l2amm.frc,line 230 changed pi2lo to pi12lo
+2)w2w/planew.frc: changed some variable defs
+3)w2w/main.f: comment out some unneeded read-ins
+4)util: introduced prepare_plotsp.sh for sp runs
+5)util: introduced wplot2xsfsp.py for sp runs
+6)util: minor changes in wannier90.xup/dn
+7)util: introduced combine_spinfiles, fortran program to combine
+        sp files amn,mmn,eig for the use in SO calculations
+8)util: introduced prepare_plotsso.sh/wplotso for SO runs
+9)util: changed write_wplotdef.f to take options soup/sodn for SO runs
+10)util: introduced join_vectorfiles to join vector/energy files from a parallel
+         lapw1 run
+
++++Version 0.9(04/19/10)  #improved user guide, Philipp Wissgott
+1)updated user guide
+2)updated init_lapw
+
++++Version 0.5(04/15/10)  #introduced init_w2w, from P.Wissgott and J.Kunes
+1)init_w2w does now most of the initialization for w2w
+2)exchanges latgen.f in w2w with new version from J. Kunes
+3)introduced the user guide in doc
+4)wplot now reads directly from case.chk, no umat files needed any more
+5)minor changes in most of the utility programs
+
++++Version 0.42(03/17/10) #some new stuff from P.Wissgott
+1)write_w2win: enable f-orbitals
+2)ifort sys files
+
++++Version 0.41(02/15/10) #minor changes
+1) wplot now plots the square not the absolute value of psink
+2) new utility program: rephase to find the correct phases for w2win
+
++++Version: 0.4(12/19/09) #new stuff and bug fixes from P.Wissgott, N.Frohner
+1) included interface to xcrysden via wplot2xsf.py
+2) included interface to gnuplot via psink2gnuplot.py
+3) capability to run spin-polarized problems, expanded utility programs
+4) capability to run spin-orbit(complex) problems
+
++++Version: 0.3(09/28/09) #some bug fixes for utility programs from P.Wissgott
++++Version: 0.2(7/23/09) #bug fix from J. Kunes 
+in planew.frc in w2w
+  bug fix
+old:       id=-(BQZ(pair_index)*m2y+BQY(pair_index))*m2z-BQX(pair_index)-1
+replaced by
+new:       id=-(BQZ(pair_index)*m2y+BQY(pair_index))*m2x-BQX(pair_index)-1
++++Version: 0.1 #first preliminary testversion, no logging or specified output

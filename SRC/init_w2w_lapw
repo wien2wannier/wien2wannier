@@ -1,0 +1,336 @@
+#!/bin/csh -f
+
+### wien2wannier/SRC/init_w2w_lapw
+###
+###    Initialization script for wien2wannier
+###
+###    Based on ‘init_lapw’.
+###
+### Copyright 2009-2012 Philipp Wissgott
+###           2013-2014 Elias Assmann
+###
+### $Id: init_w2w_lapw 287 2014-10-09 14:11:17Z assmann $
+
+#---> path- and file-names
+set file    = `pwd`
+set file    = $file:t           #tail of file-names
+set dayfile = $file.dayfile	#main output-file
+
+set name    = $0
+set bin     = $name:h		#directory of WIEN-executables
+if !(-d $bin) set bin = .
+set name    = $name:t 		#name of this script-file
+set logfile = :log
+set tmp     = (:$name)		#temporary files
+
+#---> functions & subroutines
+alias	testinput	'set fn=\!:1;if (! -e \!:1 || -z \!:1) goto \!:2'
+alias	teststatus	'if ($status) goto error'
+
+alias	teststop	'if (\!:1 == $stopafter ) goto stop;'\
+			'if (-e stop) goto stop'
+
+alias	output		'set date = `date +"(%T)"`;'\
+			'printf ">   %s\t%s \n" "\!:*" "$date" ;'\
+			'printf "\n>   %s\t%s " "\!:*" "$date" >> $dayfile'
+
+alias	exec		'($bin/x \!:*) ;'\
+			'teststatus'
+
+alias	total_exec	'output \!:*;'\
+			'exec  \!:*;'\
+			'teststop \!:*'
+
+alias 	warn            'echo ${0}: \!:* >/dev/stderr'
+
+alias	croak		'echo ${0}: \!:* >/dev/stderr; exit (1)'
+
+
+if ($?EDITOR) then
+    alias editor '$EDITOR'
+else
+    alias editor vi
+endif
+
+#---> default parameters
+set next		#set -> start cycle with $next
+set stopafter
+set updn
+
+#---> default flags
+unset quiet
+unset verbose
+
+# options for batch usage
+unset batch
+set numk=100
+unset sp so
+set spf sof
+unset emin emax
+unset bmin bmax
+unset proj
+set w90opt
+
+if (-s $file.clmup) set sp updn=up
+if (-s $file.inso)  set so
+
+#---> handling of input options
+echo ">   ($name) options: $argv" >> $logfile
+alias sb 'shift; breaksw'	#definition used in switch
+while ($#argv)
+  switch ($1)
+    case -[Hh]:
+    case -help:
+    case --help:
+      goto help			# never returns
+
+    case -up:
+      set sp updn=up; sb
+    case -dn:
+      set sp updn=dn; sb
+    case -nosp:
+      set upd=
+      unset sp; sb
+
+    case -so:
+      set so = so; sb
+    case -noso:
+      unset so; sb
+
+    case -f:
+      shift; set file="$1"; sb
+
+    case -b:
+      set batch; sb
+
+    case -emin:
+      shift; set emin=$1; sb
+    case -emax:
+      shift; set emax=$1; sb
+    case -all:
+      shift;
+      set emin=$1 emax=$2
+      shift; shift; breaksw
+
+    case -bands:
+      shift;
+      set bmin=$1 bmax=$2
+      shift; shift; breaksw
+
+    case -proj:
+      if (! $?proj) set proj
+      shift;
+      while ( $#argv &&  "$1" !~ '-*' )
+	set proj=( $proj:q "$1" )
+        shift
+      end
+      breaksw
+
+    case -w90:
+      shift;
+      while ( $#argv && "$1" !~ '-*' )
+	set w90opt=( $w90opt:q "$1" )
+        shift
+      end
+      breaksw
+
+    case -e: 
+      shift; set stopafter = $1; sb
+    case -s:
+      shift; set next  = $1; sb
+
+    case -k:
+      set stopafter; sb
+
+    default:
+      croak 'option `$1'"' does not exist"
+  endsw
+end
+
+if ($?sp) set spf = -$updn
+if ($?so) set sof = -so
+
+if ($?batch) then
+  if (  $?emin ^ $?emax) then
+    croak "emin and emax must appear paired"
+  endif
+  if (  $?bmin ^ $?bmax) then
+    croak "bmin and bmax must appear paired"
+  endif
+  if (! $?emin ^ $?bmin) then
+    croak "either energy or band range must be given"
+  endif
+  if (! $?proj         ) then
+    croak "initial projections must be given"
+  endif
+endif
+
+
+#---> starting out
+if ($next != "") goto start	#start with optional program
+set next = 'kgen'		#default start with kgen
+if (-e $dayfile) then		#start with last program
+  echo "" >> $dayfile
+  set next =	`grep '>' $dayfile |tail -1l |awk '{print $2}'`
+endif
+if ($next == "") then
+  set next = 'kgen'		#default start with kgen
+else if ($next == 'stop' ) then
+  set next = 'kgen'	        #default start with kgen
+else if !($next == 'kgen') then 
+  set b=r
+  if (! $?batch) then
+    echo "continue with " $next  "or restart with kgen?  (c/r)"
+    set b=($<)
+  endif
+  if ($b == 'r') then 
+    set next='kgen'
+  endif
+endif
+
+
+start:
+printf "\n\n    start \t(%s) " "`date`"	> $dayfile
+echo next is $next 
+goto $next
+
+
+kgen:
+if (! $?batch) then
+  total_exec kgen -fbz
+  echo "-----> check $file.klist for generated K-points" 
+  editor $file.klist 
+  echo "-----> continue with findbands or execute kgen again (c/e)?"
+  set b=($<)
+  if ($b == 'e') goto kgen
+else
+  output kgen -fbz ($numk 0)
+  $bin/x kgen -fbz <<EOF
+$numk
+0
+EOF
+  teststatus
+  cp $file.klist $file.klist_w90
+  cp $file.kgen $file.kgen_w90
+endif
+
+
+findbands:
+find_bands:
+if ($?so) then
+  set out1=$file.outputso
+else if ($?sp) then
+  set out1=$file.output1up
+else
+  set out1=$file.output1
+endif
+
+if (-s $out1) then
+  if (! $?batch) then
+    echo '-----> found `'"$out1' from a previous lapw1 run"
+
+    set b=r
+    while ($b == 'r')
+      echo "-----> enter energy window for findbands [Emin Emax] (eV):"
+      set b=($<)
+      total_exec findbands $sof $spf -all $b
+      head -n8 $file.outputfind$updn
+      echo ' . . .'
+      tail $file.outputfind$updn
+      echo "-----> continue with write_inwf or rerun findbands (c/r)"
+      set b=($<)
+    end
+  else if ( $?emin ) then
+    total_exec findbands $sof $spf -all $emin $emax
+    set bmin=`tail -n2 $file.outputfind$updn | head -n1 \
+	| cut -d: -f2 | awk '{print $1}'`
+    set bmax=`tail -n2 $file.outputfind$updn | head -n1 \
+	| cut -d: -f2 | awk '{print $2}'`
+  endif
+endif
+
+
+write_inwf:
+inwf:
+if (! $?batch) then
+  output write_inwf -f $file
+  $bin/write_inwf -f $file
+  teststatus
+  echo "-----> check $file.inwf for bands, ljmax and projections" 
+  editor $file.inwf
+  echo "-----> continue with write_win or execute write_inwf again (c/e)?"
+  set b=($<)
+  if ($b == 'e') goto inwf
+else
+  output $bin/write_inwf -f $file -bands $bmin $bmax $proj:q
+  $bin/write_inwf -f $file -bands $bmin $bmax $proj:q
+  teststatus
+endif
+
+
+write_win:
+win:
+output write_win $w90opt:q
+$bin/write_win $w90opt:q
+teststatus
+if (! $?batch) then
+  echo "-----> check $file.win for relevant options (disentanglement?)"
+  editor $file.win
+  echo "-----> continue with nnkp or execute write_win again (c/e)?"
+  set b=($<)
+  if ($b == 'e') goto win
+endif
+
+
+wannier90.x:
+wannier90:
+w90:
+nnkp:
+if (! $?batch) echo "-----> wannier90.x -pp computes kmesh..." 
+total_exec wannier90 -pp
+if (! $?batch) echo "-----> wannier90.x done"
+
+
+stop:					#normal exit
+printf "%s\n\n" "init_w2w finished" 	>> $dayfile
+printf "\n   stop\n"			>> $dayfile
+exit 0 
+
+error:					#error exit	
+printf "\n   stop error\n"		>> $dayfile
+exit 1
+
+help:					#help exit 
+cat << theend
+PROGRAM:	$0
+
+PURPOSE:	initialisation of the wien2wannier interface
+		prepares all input files
+
+USAGE:		$name [-up|-dn] [FLAGS] [-b [OPTIONS]]
+
+FLAGS:
+-h,-H	->	this message
+-q,-quiet   ->	less output
+-v,-verbose ->	more output
+-up/-dn ->      choose spin component
+-nosp	->	force non-spin-polarized calculation
+-[no]so	->	[no] spin-orbit coupling
+-s X    ->      start with step X
+-e X    ->      stop after step X
+
+OPTIONS:
+-b	->	batch mode (do not ask questions)
+-numk	->	number of k-points (default: 100; can also use \`\`Nx Ny Nz'')
+-emin,-emax ->	select bands by energy (needs \`output1' file; careful!)
+-all X Y    ->	synonym for \`-emin X -emax Y'
+-bands I J  ->	select bands directly (more robust)
+-proj	->	specification of initial projections (\`\`Amn'')
+-w90	->	Wannier90 options to set
+
+\`OPTIONS'  are only  operative  in batch  mode,  except \`-w90',  which
+accepts as arguments  key-value pairs to be put  into \`case.win'.  The
+sp/so  switches  are  usually  unnecessary  (detected  automatically).
+theend
+
+exit 0

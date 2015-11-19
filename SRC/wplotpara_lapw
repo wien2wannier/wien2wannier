@@ -1,0 +1,50 @@
+#!/bin/csh -f
+
+### wien2wannier/SRC/wplotpara_lapw
+###
+###    Wrapper script for ‘wplot’ when using ‘vector’ files from a
+###    parallel calculation
+###
+### Copyright 2014 Elias Assmann
+###
+### $Id: wplotpara_lapw 196 2014-03-25 15:45:48Z assmann $
+
+onintr exit
+set name	= $0
+set bin		= $name:h	#default directory for WIEN-executables
+if !(-d $bin) set bin = .
+
+if ($#argv < 1) then
+  echo usage: $0 deffile
+  exit
+endif
+
+set updn cmplx
+
+while ($#argv)
+  switch ($1)
+  case -up:
+    set updn = up
+    set dnup = dn
+    shift; breaksw
+  case -dn:
+    set updn = 'dn'
+    set dnup = 'up'
+    shift; breaksw
+  case -c:
+    set cmplx = c
+    shift; breaksw
+  default:
+    set def = $1:r
+    set wf  = $2
+    shift; shift; breaksw
+  endsw
+end
+
+set exe = $bin/wplot$cmplx
+
+set maxproc = `grep : .processes | grep  -v -e init: -e residue: | wc -l`
+
+$bin/vec2old -p -local -$updn
+$exe $def.def $wf $maxproc
+exit 0
