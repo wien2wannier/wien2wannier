@@ -1,0 +1,68 @@
+#!/bin/bash
+# helper script for wannier90, SO calc.
+# P.Wissgott 10/01/10
+
+echo "++Starting a spin-orbit calculation++"
+
+
+if [ $# -eq 1 ]; then
+   if [ $# -eq 1 ] && [ "$1" == "-h" ]; then
+   echo "helper script for wannier90, SO calc."
+   echo "Usage: wannier90.xso case"
+   echo "Requires 3 files:"
+   echo "   1) case.mmnso: k-space overlaps"
+   echo "   2) case.amnso: initial projections"
+   echo "   3) case.eigso: eigenvalues at k-points(band energies)"
+   echo "Optional: case.chkso from a previous wannier90 run"
+   echo "Copies all wannier90 output to files with ending so"
+   echo "e.g. the standard output is copied to case.woutso"
+   exit 0
+   else
+	SEEDNAME=$1
+        if [ -f "$SEEDNAME"".winup" ]; then
+          echo "Info: taking wannier90 input file from up component: ""$SEEDNAME"".winup"
+	  cp $SEEDNAME".winup" $SEEDNAME".win"
+        elif [ -f "$SEEDNAME"".windn" ]; then
+          echo "Info: taking wannier90 input file from up component: ""$SEEDNAME"".windn"
+	  cp $SEEDNAME".windn" $SEEDNAME".win"
+        else
+          echo "Error: Found neither winup nor windn file"
+          exit 0
+        fi
+	cp $SEEDNAME".amnso" $SEEDNAME".amn"
+	cp $SEEDNAME".mmnso" $SEEDNAME".mmn"
+	cp $SEEDNAME".eigso" $SEEDNAME".eig"
+	if [ -f "$SEEDNAME"".chkso" ]; then
+	cp $SEEDNAME".chkso" $SEEDNAME".chk"
+	fi
+	wannier90.x $SEEDNAME 
+	if [ -f "$SEEDNAME"".wout" ]; then
+	tmp=$(grep "Number of Wannier Functions" $SEEDNAME".wout")
+	num_wann=$(echo ${tmp:47:30})
+	#echo "number of Wannier functions is $num_wann"
+	mv $SEEDNAME".wout" $SEEDNAME".woutso"
+        cp $SEEDNAME".woutso" $SEEDNAME".woutup"
+        cp $SEEDNAME".woutso" $SEEDNAME".woutdn"
+	fi
+	if [ -f "$SEEDNAME""_band.dat" ]; then
+	  mv $SEEDNAME"_band.dat" $SEEDNAME"_band.datso"
+	fi
+	if [ -f "$SEEDNAME""_band.gnu" ]; then
+	  mv $SEEDNAME"_band.gnu" $SEEDNAME"_band.gnuso"
+	fi
+	if [ -f "$SEEDNAME""_centres.xyz" ]; then
+	  mv $SEEDNAME"_centres.xyz" $SEEDNAME"_centres.xyzso"
+          cp $SEEDNAME"_centres.xyzso" $SEEDNAME"_centres.xyzup"
+          cp $SEEDNAME"_centres.xyzso" $SEEDNAME"_centres.xyzdn"
+	fi
+	
+	if [ -f "$SEEDNAME"".chk" ]; then
+	mv $SEEDNAME".chk" $SEEDNAME".chkso"
+	fi
+   fi
+
+   
+else
+    echo "Usage: wannier90.xso case"
+fi   
+

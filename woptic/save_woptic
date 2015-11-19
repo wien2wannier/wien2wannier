@@ -1,0 +1,48 @@
+#!/bin/bash
+if [ $# -eq 3 ]; then
+   seed=$1
+   save=$2
+   iter=$3
+# elif [ $# -eq 2 ] && [ "$1" == "-restore" ]; then
+   
+# elif [ $# -eq 3 ] && [ "$1" == "-restart" ]; then
+   
+elif [ $# -eq 1 ] && [ "$1" == "-h" ]; then
+      echo "Usage: save_woptic case savename <#iterationstorestore>"
+      exit 0
+fi
+
+# cp $seed.kgen $seed.kgen0
+# cp $seed.kgen_full $seed.kgen_full0
+# cp $seed.klist $seed.klist0
+# cp $seed.klist_full $seed.klist_full0
+
+for ((  i = 1 ;  i <= $iter;  i++  )) do
+  cp $seed.optcondw$i $save.optcondw$i
+  cp $seed.woptoutw$i $save.woptoutw$i
+  cp $seed.klist$i $save.klist$i
+  cp $seed.klist_refined$i $save.klist_refined$i
+  cp $seed.kgen$i $save.kgen$i
+  cp $seed.klist_full$i $save.klist_full$i
+  cp $seed.kgen_full$i $save.kgen_full$i
+#   cp $seed.kcontribw$i $save.kcontribw$i
+#   cp $seed.ham_fine$i $save.ham_fine$i
+  cp $seed.voe$i $save.voe$i
+  cp $seed.win$i $save.win$i
+  cp $seed.wdosw$i $save.wdosw$i
+#   cp $seed.K1w$i $save.K1w$i
+#   cp $seed.wdoskcontribw$i $save.wdoskcontribw$i
+  cp $seed.map$i $save.map$i
+#    cp $seed.mommat$i $save.mommat$i
+  cp $seed.woptoutref$i $save.woptoutref$i
+done
+cp $seed.woptin $save.woptin
+# # cp $seed.klist $seed.klist2
+# # x lapw1 #work with klist
+# # x optic #work with klist
+# # write_win -renew $seed
+# # wannier90.x $seed
+# # ../optics_tetra $seed
+# # cp $seed.kcontrib $seed.kcontrib2
+# # cp $seed.optcondw $seed.optcondw2
+# # cp $seed.woptoutw $seed.woptoutw2

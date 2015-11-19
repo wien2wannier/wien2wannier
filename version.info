@@ -1,0 +1,97 @@
++++Version 0.97(08/07/13)
+1) fixed detection of real/complex case in w2w (it checks the in1(c) file now)
+
++++Version 0.96(06/10/12) #completely new woptic version
+1) woptic: repaired some bugs and introduced new input file,
+           introduced shape calculation in refine_tetra.f
+           new mode JOIN to compute joined density of states(non-interacting only),
+           new matelmode 4: wien2k only(for non-interacting cases)
+2) repaired a bug in write_w2win for f-states (thanks to P.Novac)
+3) w2w/main.f: changed line 23 from
+   INTEGER CENTERATOM(100)
+to
+   INTEGER CENTERATOM(300)
+to cover larger cases
+4) w2w/read_vec.f increased maxx/maxy/maxz by one solving some bug for
+   FCC cases (thanks to Z. Zhong)
+5) w2w/write_win.f: solved problem for hexagonal systems (thanks to H.Yang)
+
++++Version 0.95(12/13/11) #repaired a bug
+1) updated some of *.frc files which had wrong handling of
+   complex/real versions
+2)plane.frc changed line 131 from
+           sum=sum+a_(1:num,I,k1)*FF
+to
+           sum=sum+a_(1:nb,I,k1)*FF
+3)util.f changed format for struct readin in mult line from A16 to A15
+
++++Version 0.94b(07/20/11) #minor updates
+1)woptic: introduced SO version
+2)woptic: kmesh handling for systems without inversion symmetry
+
++++Version 0.94(06/10/11) #introduced woptic for optical conductivity
+1)woptic: program to compute optical conductivity with Wannier orbitals
+          includes adaptive k-mesh refinement
+          includes option to use the Peierls approximation for opt.cond.
+2)woptic: introduced a new program convert_Hamiltonian which
+          does the Fourier-transform of the real space Hamiltonian
+          H(R) from case_hr.dat to H(k) in case.ham_fine
+          H(k) can be used e.g. for DMFT calculations
+3)util: minor changes in write_win to cover orthorhombic k-meshes
+4)init_w2w: the klist from wannier90 is now stored in case.klist_w90
+
++++Version 0.93(10/21/10) #some bug fixes from PW
+1)wplot/auglo.frc: solved problem with humps in some pictures
+                   connected to local orbital contributions
+2)util: introduced w2wsp -so for SO calculations
+3)util: adapted get_seedname.sh
+4)userguide: introduced FAQ section
+5)all programs: included help flag -h
+
++++Version 0.92(08/12/10) #some bug fixes(thanks to Jian-Xin Zhu) and additional stuff from PW
+1)w2w/l2amm.frc,line 230 changed pi2lo to pi12lo
+2)w2w/planew.frc: changed some variable defs
+3)w2w/main.f: comment out some unneeded read-ins
+4)util: introduced prepare_plotsp.sh for sp runs
+5)util: introduced wplot2xsfsp.py for sp runs
+6)util: minor changes in wannier90.xup/dn
+7)util: introduced combine_spinfiles, fortran program to combine
+        sp files amn,mmn,eig for the use in SO calculations
+8)util: introduced prepare_plotsso.sh/wplotso for SO runs
+9)util: changed write_wplotdef.f to take options soup/sodn for SO runs
+10)util: introduced join_vectorfiles to join vector/energy files from a parallel
+         lapw1 run
+
++++Version 0.9(04/19/10)  #improved user guide, Philipp Wissgott
+1)updated user guide
+2)updated init_lapw
+
++++Version 0.5(04/15/10)  #introduced init_w2w, from P.Wissgott and J.Kunes
+1)init_w2w does now most of the initialization for w2w
+2)exchanges latgen.f in w2w with new version from J. Kunes
+3)introduced the user guide in doc
+4)wplot now reads directly from case.chk, no umat files needed any more
+5)minor changes in most of the utility programs
+
++++Version 0.42(03/17/10) #some new stuff from P.Wissgott
+1)write_w2win: enable f-orbitals
+2)ifort sys files
+
++++Version 0.41(02/15/10) #minor changes
+1) wplot now plots the square not the absolute value of psink
+2) new utility program: rephase to find the correct phases for w2win
+
++++Version: 0.4(12/19/09) #new stuff and bug fixes from P.Wissgott, N.Frohner
+1) included interface to xcrysden via wplot2xsf.py
+2) included interface to gnuplot via psink2gnuplot.py
+3) capability to run spin-polarized problems, expanded utility programs
+4) capability to run spin-orbit(complex) problems
+
++++Version: 0.3(09/28/09) #some bug fixes for utility programs from P.Wissgott
++++Version: 0.2(7/23/09) #bug fix from J. Kunes 
+in planew.frc in w2w
+  bug fix
+old:       id=-(BQZ(pair_index)*m2y+BQY(pair_index))*m2z-BQX(pair_index)-1
+replaced by
+new:       id=-(BQZ(pair_index)*m2y+BQY(pair_index))*m2x-BQX(pair_index)-1
++++Version: 0.1 #first preliminary testversion, no logging or specified output

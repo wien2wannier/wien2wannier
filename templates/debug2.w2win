@@ -1,0 +1,23 @@
+BOTH
+  41  46     # min band Nmin, max band Nmax                         
+  3  6       # LJMAX max in exp(ibr) expansion, #Wannier functions
+2         #d-xy orbital                                      
+ 2 2 -2   0.00000000   0.70710677   # index of atom, L, M, coefficient (complex)
+ 2 2  2   0.00000000  -0.70710677   # index of atom, L, M, coefficient (complex)
+2         #d-yz orbital                                      
+ 2 2 -1   0.00000000   0.70710677   # index of atom, L, M, coefficient (complex)
+ 2 2  1   0.00000000   0.70710677   # index of atom, L, M, coefficient (complex)
+2         #d-xz orbital                                      
+ 2 2 -1   0.70710677   0.00000000   # index of atom, L, M, coefficient (complex)
+ 2 2  1  -0.70710677   0.00000000   # index of atom, L, M, coefficient (complex)
+2         #d-xy orbital                                      
+ 2 2 -2   0.00000000   0.70710677   # index of atom, L, M, coefficient (complex)
+ 2 2  2   0.00000000  -0.70710677   # index of atom, L, M, coefficient (complex)
+2         #d-yz orbital                                      
+ 2 2 -1   0.00000000   0.70710677   # index of atom, L, M, coefficient (complex)
+ 2 2  1   0.00000000   0.70710677   # index of atom, L, M, coefficient (complex)
+2         #d-xz orbital                                      
+ 2 2 -1   0.70710677   0.00000000   # index of atom, L, M, coefficient (complex)
+ 2 2  1  -0.70710677   0.00000000   # index of atom, L, M, coefficient (complex)
+
+

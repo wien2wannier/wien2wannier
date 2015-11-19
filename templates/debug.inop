@@ -1,0 +1,18 @@
+99999 1       number of k-points, first k-point 
+-5.0 3.0 9999 Emin, Emax for matrix elements, NBvalMAX
+3             number of choices (columns in *outmat): 2: hex or tetrag. case
+1             Re xx
+2
+3             Re zz
+ON           ON/OFF   writes MME to unit 4
+
+Choices:
+1......Re <x><x>
+2......Re <y><y>
+3......Re <z><z>
+4......Re <x><y>
+5......Re <x><z>
+6......Re <y><z>
+7......Im <x><y>
+8......Im <x><z>
+9......Im <y><z>

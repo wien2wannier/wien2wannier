@@ -1,0 +1,75 @@
+#!/bin/bash
+
+### wien2wannier/util/w2w
+###
+###    w2w interface main script
+###
+### Copyright 2009-2012 Philipp Wissgott
+###                2013 Elias Assmann
+
+function usage {
+    cat <<EOF
+Usage: w2w [-c | -h] [case]
+
+computes input for wannier90 from a wien2k computation.
+
+Requires 6 files:
+   1) case.w2win: initial projections
+   2) case.vector: eigenvectors
+   3) case.energy: eigenenergies
+   4) case.vsp: potential
+   5) case.struct 
+   6) case.nnkp: nearest neighbor k-points
+Produces 3 (main) files:
+   1) case.mmn: k-space overlaps
+   2) case.amn: initial overlaps
+   3) case.eig: eigenvalues at k-points(band energies)
+
+Note: whether real or complex version is used is determined by
+the case.struct file
+EOF
+}
+
+opts='ch'
+
+while getopts $opts opt
+do
+    case $opt in
+	c) 
+	    rc=c;;
+	h)
+	    usage
+	    exit 0;;
+	?)
+	    usage
+	    exit 1;;
+    esac
+done
+
+shift $(($OPTIND-1))
+
+seed=$(basename $PWD)
+
+case $# in
+    0) ;;
+    1) seed=$1;;
+    *)
+	usage
+	exit 1;;
+esac
+
+if [[ -z $rc ]]
+then
+    # copied from x_lapw
+    rc=$(cut -b -6 "$seed.struct" |
+         awk 'BEGIN{c="c"};
+  	      {if ($0 == "-1 0 0") {
+ 	      getline;
+ 	      {if ($0 == " 0-1 0"){
+ 	      getline;
+ 	      {if ($0 == " 0 0-1")
+ 	      {c= "r"}}}}}};
+ 	      END{print c}')
+fi
+
+w2w$rc w2w.def

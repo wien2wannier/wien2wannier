@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+# wplot script for dn spin
+# P.Wissgott 10/01/10
+
+SEEDNAME=$1
+if [ $# -eq 2 ]; then
+  IDX_WANN=$2
+else 
+  IDX_WANN=0
+fi
+
+write_wplotdef -dn $SEEDNAME
+wplot $SEEDNAME $IDX_WANN
+

@@ -1,0 +1,262 @@
+SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
+  USE param
+  USE struct 
+  USE xa
+  USE xa3
+!  USE bessel
+  USE amn_mmn
+  USE pairs
+      IMPLICIT REAL*8 (A-H,O-Z)
+      CHARACTER *10    BNAME
+      INTEGER          pair_index
+      REAL*8           KX1,KY1,KZ1                       ! k-points in u.c. coordinates k and k+b
+      COMPLEX*16       YL((LMAX2+1)*(LMAX2+1))        ! list of spherical harmics
+      COMPLEX*16       YLB((LMAX2+1)*(LMAX2+1))       ! spherical harmonics expansion of b
+      COMPLEX*16       projection(NB,NPROJ,NUM_KPTS)
+      COMPLEX*16       PHSHEL,CFAC,IMAG,CZERO,tmp,tmp1
+      COMMON /GENER/   BR1(3,3),BR2(3,3)              ! transformation between u.c. and cartesian coordinates
+      COMMON /ATSPDT/  P(0:LMAX2,nrf),DP(0:LMAX2,nrf) ! radial function and its slope at RMT
+      logical          loor(0:lomax),lapw(0:lmax2)    ! local orbitals options
+      COMMON /RADFU/   RF1(NRAD,0:LMAX2,nrf),RF2(NRAD,0:LMAX2,nrf)  ! radial functions large and small component
+      common /loabc/   alo(0:lomax,nloat,nrf)         ! use for local orbitals
+      common /lolog/   nlo,nlov,nlon,loor,ilo(0:lomax),lapw  
+
+!...............................
+      real*8     h_al(iblock),h_bl(iblock)
+      complex*16 h_yl((LMAX2+1)*(LMAX2+1),iblock)
+      complex*16 h_alyl((LMAX2+1)*(LMAX2+1),iblock)
+      complex*16 h_blyl((LMAX2+1)*(LMAX2+1),iblock)
+      complex*16 alm((LMAX2+1)*(LMAX2+1),nb,ndif,nrf)
+!...............................
+                                                                       
+      DATA             CZERO/(0.0D0,0.0D0)/,IMAG/(0.0D0,1.0D0)/         
+                                                                       
+!------------------------------------------------------------------     
+     
+      assign 2022 to iform1
+ 2022 FORMAT(3X,4E19.12)                                                 
+      PI=ACOS(-1.0D0)                                                   
+      TWOPI=2.D0*PI  
+      FOURPI=4*PI
+
+      do k=1,NUM_KPTS
+       do n2=1,NPROJ
+        do n1=1,NB
+         projection(n1,n2,k)=czero
+        enddo
+       enddo
+      enddo
+!     ---------------------------------                                 
+!     START LOOP FOR ALL ATOMS BY DO 50                                 
+!     ---------------------------------                                 
+      rewind(18)                                                                
+      READ(18,2032) ISCF    
+      LFIRST=1 
+      DO 50 JATOM=1,NAT 
+       IF(JATOM.GT.1) LFIRST=LFIRST + MULT(JATOM-1)                      
+       ITAP=30+JATOM                                                     
+       itape=9
+       jtape=18
+       rewind(itape)
+       CALL ATPAR(JATOM,LFIRST,itape,jtape)      ! calculate radial functions for atoms JATOM
+       rewind(itape)
+       write(6,*)'******************************************'
+       do i=1,3
+        write(6,123)(rotloc(i,j,jatom),j=1,3)
+       enddo
+       write(6,*)
+ 123   format(3f12.6)
+!................................
+       DO 3 KKK=1,NUM_KPTS      !   loop over k
+        N=size(kkk)
+        DO I=1,N
+         BKX(I)=XK(kkk)+GX(I,kkk)                    ! plane wave Q+k
+         BKY(I)=YK(kkk)+GY(I,kkk)
+         BKZ(I)=ZK(kkk)+GZ(I,kkk)
+        ENDDO
+        CALL HARMON(N,BKX,BKY,BKZ,LMAX2,FJ,DFJ,RMT(JATOM))    ! calculate Bessel functions j_l(|Q+k|*RMT)        
+        FAC=4.0D0*PI*RMT(JATOM)**2/SQRT(VOL)                              
+        ALM=CZERO
+        DO 777 MU=1,MULT(JATOM)    !  loop over equivalent atoms
+	 latom=lfirst-1+mu  
+         if (kkk.eq.1) then
+	 do i=1,3
+	  write(6,124)(rotij(i,j,latom),j=1,3),tauij(i,latom)
+	 enddo
+         write(6,*)
+	 endif
+ 124     format(3f12.6,4x,f12.4)
+         DO 120 ii=1,N-(nlo+nlon+nlov),iblock                     ! matching of plane wave and atomic functions
+          i3=0
+          DO 121 i=ii,min(ii+iblock-1,N-(nlo+nlon+nlov))
+           i3=i3+1
+           bk(1)=bkx(i)
+           bk(2)=bky(i)
+           bk(3)=bkz(i)
+           CALL ROTATE (bk,rotij(1,1,latom),bkrot)                     ! go to coord. of latom
+           bk(1)=bkrot(1)*br1(1,1)+bkrot(2)*br1(1,2)+bkrot(3)*br1(1,3) ! transform Q+k to cartesian coordinates
+           bk(2)=bkrot(1)*br1(2,1)+bkrot(2)*br1(2,2)+bkrot(3)*br1(2,3)
+           bk(3)=bkrot(1)*br1(3,1)+bkrot(2)*br1(3,2)+bkrot(3)*br1(3,3)
+           CALL ROTATE (bk,rotloc(1,1,jatom),bkrloc)                   ! go to local (rotated) coords
+           CALL YLM (bkrloc,LMAX2,YL)                                      ! calculate Y_lm(Q+k)   
+           arg=bkrot(1)*pos(1,lfirst)+  &
+               bkrot(2)*pos(2,lfirst)+  &
+               bkrot(3)*pos(3,lfirst)+  &
+               bkx(i)*tauij(1,latom)+bky(i)*tauij(2,latom)+bkz(i)*tauij(3,latom)
+           phshel=EXP(imag*(arg*twopi))
+           INDEX=0                                                           
+           DO L=0,LMAX2                                                   
+            MAX=2*L+1                                                         
+            DO M=1,MAX                                                    
+             INDEX=INDEX+1 
+             h_yl(index,i3)=conjg(yl(index))*phshel
+            ENDDO
+           ENDDO 
+  121     CONTINUE
+          INDEX=0                                                           
+          DO L=0,LMAX2
+           i3=0
+           do i=ii,min(ii+iblock-1,N-(nlo+nlon+nlov))
+            i3=i3+1
+            if (lapw(l)) then
+             h_AL(i3)=DFJ(L,I)*P(L,2)-FJ(L,I)*DP(L,2)           
+             h_BL(i3)=FJ(L,I)*DP(L,1)-DFJ(L,I)*P(L,1) 
+            else
+             h_AL(i3)=FJ(L,I)/P(L,1)/RMT(JATOM)**2
+             h_BL(i3) = 0.d0
+            endif
+           enddo
+           MAX=2*L+1
+           DO M=1,MAX                                                    
+            INDEX=INDEX+1                                                     
+            i3=0
+            do i=ii,min(ii+iblock-1,N-(nlo+nlon+nlov))
+             i3=i3+1
+             h_alyl(index,i3)=h_AL(i3)*h_YL(INDEX,i3)
+             h_blyl(index,i3)=h_BL(i3)*h_YL(INDEX,i3)
+            enddo
+           ENDDO
+          ENDDO 
+          ibb=min(iblock,N-(nlo+nlon+nlov)-ii+1)
+!_REAL           lda=2*(LMAX2+1)*(LMAX2+1)
+!_COMPLEX           lda=(LMAX2+1)*(LMAX2+1)
+          ldc=lda
+          ldb=nmat
+!_REAL           call dgemm('N','N',2*index,nb,ibb,1.d0, &
+!_REAL            h_alyl,lda,a(ii,1,kkk),ldb,1.d0, &
+!_REAL            alm(1,1,mu,1),ldc)
+!_REAL           call dgemm('N','N',2*index,nb,ibb,1.d0, &
+!_REAL            h_blyl,lda,a(ii,1,kkk),ldb,1.d0, &
+!_REAL            alm(1,1,mu,2),ldc)
+
+!_COMPLEX           call zgemm('N','N',index,nb,ibb,(1.d0,0.d0), &
+!_COMPLEX            h_alyl,lda,a(ii,1,kkk),ldb,(1.d0,0.d0), &
+!_COMPLEX            alm(1,1,mu,1),ldc)
+!_COMPLEX           call zgemm('N','N',index,nb,ibb,(1.d0,0.d0), &
+!_COMPLEX            h_blyl,lda,a(ii,1,kkk),ldb,(1.d0,0.d0), &
+!_COMPLEX            alm(1,1,mu,2),ldc)
+
+  120    CONTINUE     
+!********  LOCAL ORBITALS *****************************
+         IF (nlo.ne.0) THEN
+          i=n-(nlo+nlon)
+          DO L=0,LoMAX
+           DO jlo=1,ilo(l)
+            DO jneq=1,mult(jatom)
+             DO M1=-l,l
+              i=i+1
+              BK(1)=BKX(I)
+              BK(2)=BKY(I)
+              BK(3)=BKZ(I)
+              CALL ROTATE (BK,ROTIJ(1,1,LATOM),BKROT)
+              BK(1)=BKROT(1)*BR1(1,1)+BKROT(2)*BR1(1,2)+BKROT(3)*BR1(1,3)
+              BK(2)=BKROT(1)*BR1(2,1)+BKROT(2)*BR1(2,2)+BKROT(3)*BR1(2,3)
+              BK(3)=BKROT(1)*BR1(3,1)+BKROT(2)*BR1(3,2)+BKROT(3)*BR1(3,3)
+              CALL ROTATE (BK,ROTLOC(1,1,JATOM),BKRLOC)
+              CALL YLM (BKRLOC,LOMAX,YL)
+              arg=bkrot(1)*pos(1,lfirst)+  &
+                  bkrot(2)*pos(2,lfirst)+  &
+                  bkrot(3)*pos(3,lfirst)+  &
+                  bkx(i)*tauij(1,latom)+bky(i)*tauij(2,latom)+bkz(i)*tauij(3,latom)
+              phshel=EXP(imag*(arg*twopi))
+              DO NUM=1,NB
+               PHS(NUM)=PHSHEL*A(I,NUM,kkk)
+              ENDDO
+              DO M=-l,l
+               index=l*(l+1)+m+1
+               DO NUM=1,NB
+                DO irf=1,nrf
+                 ALM(index,num,mu,irf)=ALM(INDEX,num,mu,irf)+ &
+                 ALo(l,jlo,irf)*dconjg(YL(INDEX))*PHS(NUM)
+                ENDDO
+               ENDDO
+              ENDDO
+             ENDDO
+            ENDDO
+           ENDDO
+          ENDDO
+         ENDIF
+!*********************************************************
+         INDEX=0
+         DO L=0,LMAX2                                                   
+          MAX=2*L+1                                                         
+          CFAC=IMAG**L                                                      
+          DO M=1,MAX                                                    
+           INDEX=INDEX+1                                                     
+           DO NUM=1,NB
+            DO irf=1,nrf     
+             ALM(INDEX,NUM,mu,irf)=ALM(INDEX,NUM,mu,irf)*FAC*CFAC 
+            ENDDO
+           ENDDO
+          ENDDO
+         ENDDO
+  777   CONTINUE
+        DO mu=1,MULT(JATOM)
+         latom=lfirst-1+mu
+         DO num=1,NB
+          INDEX=0
+          DO L=0,LMAX2
+           pi12lo=0.d0
+           if (l.le.lomax) then
+            if (loor(l)) CALL RINT13(rf1(1,l,1),rf2(1,l,1), &
+            rf1(1,l,3),rf2(1,l,3),pi12lo,JATOM)
+           endif
+           MAX=2*L+1
+           DO M=1,MAX
+            INDEX=INDEX+1
+            DO NUM2=1,NPROJ
+             projection(num,num2,kkk)=projection(num,num2,kkk)+  &
+             conjg(ALM(INDEX,num,mu,1))*C(NUM2,INDEX,LATOM)+ &
+             conjg(ALM(INDEX,num,mu,3))*C(NUM2,INDEX,LATOM)*pi2lo
+            ENDDO
+           ENDDO
+          ENDDO
+         ENDDO
+        ENDDO
+ 3     CONTINUE
+ 50   CONTINUE
+
+      DO KKK=1,NUM_KPTS
+       DO num2=1,NPROJ
+	DO num1=1,NB
+	 write(7,235)num1,num2,kkk,real(projection(num1,num2,KKK)), &
+         dimag(projection(num1,num2,KKK))
+        ENDDO
+       ENDDO
+      ENDDO
+
+      RETURN
+ 234  format(10(f10.5,f10.5,4x))    
+ 235  format(2i3,1x,i5,1x,2e18.5)                                                      
+                                                                        
+! ....END LOOP OVER ALL ATOMS     
+567  format(7x,7f9.5)         
+ 998  STOP 'END OF VECTOR FILE'                             
+ 
+      REWIND(itape)                                                     
+      RETURN                    
+ 950  CALL OUTERR('l2main','error reading parallel vectors')
+      STOP 'L2main - Error'
+!
+ 2032 FORMAT(50X,I2,//)                                                        
+      END                                                               

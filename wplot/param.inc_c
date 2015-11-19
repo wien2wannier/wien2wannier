@@ -1,0 +1,30 @@
+!     >> Standard WIEN97 Parameters <<
+!
+!     Constant parameter definition
+!
+      INTEGER   NRAD, NSYM, NRF, NLOAT
+      INTEGER   LOMAX, LMAX7
+      PARAMETER          (NRAD=    981)
+      PARAMETER          (NSYM=     48)
+      PARAMETER          (LMAX7=     8)
+      PARAMETER          (LOMAX=     3)
+      PARAMETER          (NRF = 4)
+      PARAMETER          (NLOAT =3)
+!:17[
+!     There are a couple of optional features in how to set-up the wave
+!     function's augmentation coefficients. None of them are essential
+!     for the wave functions themselves. However, to stay consistent with
+!     LAPW1 and LAPW2 they have been added to LAPW7 as well. To allow
+!     access to these optional features four logical control parameters
+!     have been introduced which have to be set to .TRUE. to activate
+!     the LAPW1/LAPW2 features. Any other choice of these parameters 
+!     is possible as well, but the code has not been optimized for any
+!     of these alternative choices. For more details see the "trick 17"
+!     sections C:17[ ... C:17] in the code (Uwe Birkenheuer)
+!      
+      LOGICAL         KCONJG,USEROT,ADDLOC,MVATOM
+      PARAMETER       (KCONJG=.TRUE.)
+      PARAMETER       (USEROT=.TRUE.)
+      PARAMETER       (ADDLOC=.TRUE.)
+      PARAMETER       (MVATOM=.TRUE.)
+!:17]

@@ -1,0 +1,66 @@
+#!/bin/bash
+#
+# wplot script for spin-pol.
+# P.Wissgott 10/01/10
+
+if [ $# -ne 1 ] && [ $# -ne 2 ] && [ $# -ne 3 ]; then
+   echo "Usage: wplotsp [-up/-dn] <seedname> [wann_idx]"
+   exit
+elif [ $# -eq 1 ] && [ "$1" == "-h" ]; then
+   echo "calculates Wannier orbitals in real space for plotting(spin-pol. version)"
+   echo "Usage: wplotsp -up/-dn case [idx_wann]"
+   echo "if the optional input idx_wann is given, the Wannier function"
+   echo "with this index is plotted, otherwise the index is taken from"
+   echo "the case.wplotin file."
+   echo "Requires 7 files:"
+   echo "   1) case.wplotin[up/dn]: real space mesh vectors"
+   echo "   2) case.chk[up/dn]: U matrices from wannier90"
+   echo "   3) case.vector[up/dn]: eigenvectors"
+   echo "   4) case.energy[up/dn]: eigenenergies"
+   echo "   5) case.vsp[up/dn]: potential"
+   echo "   6) case.struct" 
+   echo "   7) case.w2win[up/dn]: w2w input file"
+   echo "Produces 2 (main) files:"
+   echo "   1) case.psink[up/dn]: |w(r)|^2 for real space mesh"
+   echo "   2) case.psiarg[up/dn]: phi(w(r)) phases on real space mesh"
+   echo "Note: whether real or complex version is used is determined by"
+   echo "the case.dayfile file(if present)"
+   exit 0
+fi
+
+if [ $# -eq 3 ]; then
+  IDX_WANN=$3
+else 
+  IDX_WANN=0
+fi
+
+if [ $# -eq 1 ]; then
+   echo "Warning: start non spin-polarized version of wplot"
+   SEEDNAME=$1
+   wplot $SEEDNAME
+elif [ $# -eq 2 ] || [ $# -eq 3 ]; then
+   if [ "$1" == "-up" ]; then
+      SEEDNAME=$2
+      wplotup $SEEDNAME $IDX_WANN
+      
+    elif [ "$2" == "-up" ]; then
+       SEEDNAME=$1
+       wplotup $SEEDNAME $IDX_WANN
+   
+    elif [ "$1" == "-dn" ]; then
+      SEEDNAME=$2
+      wplotdn $SEEDNAME $IDX_WANN
+
+    elif [ "$2" == "-dn" ]; then
+       SEEDNAME=$1
+       wplotdn $SEEDNAME $IDX_WANN
+       
+    else
+       echo "Error: Unknown option"
+       exit 0
+    fi
+fi
+
+
+
+

@@ -1,0 +1,39 @@
+      SUBROUTINE WAVINT(R,NPW,PSI,bk,coef,nmat)
+!     last changes: 29.08.00 ub (updating comments)
+!
+      IMPLICIT REAL*8 (A-H,O-Z)
+      INCLUDE 'param.inc'
+      DIMENSION  R(3)
+      COMPLEX*16 PSI
+!
+! evaluation of the wave function in the interstitial region:
+! psi(r) = Sum(K) c_K/sqrt(V) e^i(K+k)r 
+! --------------------------------------------------------------
+! Input:
+! R    -- grid point in (gobal) Cartesian coordinates
+! NPW  -- number of PW basis functions
+!
+! COMMON /EIGVEC/
+! BK   -- the PW wave vectors K+k in (gobal) Cartesian coordinates
+! COEF -- the PW coefficients c_K (including 1/sqrt(V))
+!
+! Output:
+! PSI  -- the wavr function psi(r)
+! --------------------------------------------------------------
+! !_REAL         REAL*8     COEF(nmat)  !changed by pwissgott
+! !_COMPLEX      COMPLEX*16 COEF(nmat)  !changed by pwissgott
+      COMPLEX*16 COEF(nmat) !changed by pwissgott
+
+      real*8  BK(3,NMAT)
+!
+      PSI = (0.0D0,0.0D0)
+      DO 10 IPW=1,NPW
+        ARG = R(1)*BK(1,IPW) + R(2)*BK(2,IPW) + R(3)*BK(3,IPW)
+!!_REAL           PSI = PSI + DCMPLX(COEF(IPW)*COS(ARG),COEF(IPW)*SIN(ARG))
+      PSI = PSI + COEF(IPW) * DCMPLX(COS(ARG),SIN(ARG))   !changed by P.wissgott
+! !_REAL           PSI = PSI + DCMPLX(COEF(IPW)*COS(ARG),COEF(IPW)*SIN(ARG))  !changed by P.wissgott
+! !_COMPLEX        PSI = PSI + COEF(IPW) * DCMPLX(COS(ARG),SIN(ARG)) !changed by P.wissgott
+   10 CONTINUE
+!
+      RETURN
+      END
