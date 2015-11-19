@@ -74,7 +74,9 @@ complex: $(C_EXEC)
 
 all: real complex
 
-clean: # we remove ‘*’ because ifort tends to leave other stuff than .mod and .o files
+# we remove ‘*’ because ifort tends to leave other stuff than .mod and
+# .o files
+clean:
 	rm -f $(O_DIR)/* $(R_DIR)/* $(C_DIR)/* 
 
 distclean: clean
@@ -82,7 +84,7 @@ distclean: clean
 
 .PHONY: real complex all clean distclean
 
-#..............................................................................
+#........................................................................
 #
 #  Object files common to both REAL and COMPLEX version
 #  (i.e., these are the same for REAL and COMPLEX)
@@ -94,7 +96,7 @@ OBJS = util_w2w.o dvbes1.o harmon.o inverss.o outerr.o ph.o inth.o	\
 # ‘cputim_*.[fc]’ to ‘cputim.[fc]; the pattern rules below will then
 # make ‘cputim.o’
 
-#..............................................................................
+#........................................................................
 #
 #  These object files have REAL and COMPLEX versions
 #
@@ -104,7 +106,7 @@ OBJS = util_w2w.o dvbes1.o harmon.o inverss.o outerr.o ph.o inth.o	\
 R_OBJS = modules.o almgen.o l2amn.o planew.o
 C_OBJS = $(R_OBJS)
 
-#..............................................................................
+#........................................................................
 #
 #  Object files that depend on REAL/COMPLEX indirectly
 #
@@ -112,7 +114,7 @@ C_OBJS = $(R_OBJS)
 #
 RC_OBJS = $(filter-out $(R_OBJS), $(mod_users))
 
-#..............................................................................
+#........................................................................
 #
 #  Dependency information for object files
 #
@@ -124,7 +126,7 @@ util_users = abc.o atpar.o dergl.o dvbes1.o harmon.o inouh.o inth.o	\
 	     inverss.o latgen.o main.o modules.o outwin.o ph.o		\
 	     read_vec.o rint13.o rotate.o rotdef.o rout.o sphbes.o ylm.o
 
-#..............................................................................
+#........................................................................
 #
 #  “Real” targets
 #
@@ -138,31 +140,38 @@ $(R_EXEC): $(objs) $(r_objs) Makefile
 $(C_EXEC): $(objs) $(c_objs) Makefile
 	$(FC) -o $(C_EXEC) $(objs) $(c_objs) $(LDFLAGS) $(C_LIBS)
 
-#..............................................................................
+#........................................................................
 #
 #  Pattern rules for object files
 #
 #  Real and complex need to be kept separate!
 #
-$(O_DIR)/%.o: %.f Makefile
+$(O_DIR)/%.o: %.f Makefile $(O_DIR)
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(O_DIR)
-$(O_DIR)/%.o: %.F Makefile
+$(O_DIR)/%.o: %.F Makefile $(O_DIR)
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(O_DIR)
 
-$(R_DIR)/%.o: %.f Makefile
+$(R_DIR)/%.o: %.f Makefile $(R_DIR)
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(R_DIR)
-$(R_DIR)/%.o: %.F Makefile
+$(R_DIR)/%.o: %.F Makefile $(R_DIR)
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(R_DIR)
 
-$(C_DIR)/%.o: %.f Makefile
+$(C_DIR)/%.o: %.f Makefile $(C_DIR)
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(C_DIR) -D_COMPLEX_
-$(C_DIR)/%.o: %.F Makefile
+$(C_DIR)/%.o: %.F Makefile $(C_DIR)
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(C_DIR) -D_COMPLEX_
 
-$(O_DIR)/%.o: %.c Makefile
+$(O_DIR)/%.o: %.c Makefile $(O_DIR)
 	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
 
-#..............................................................................
+#........................................................................
+#
+#  lib*/
+#
+$(O_DIR) $(R_DIR) $(C_DIR):
+	mkdir $@
+
+#........................................................................
 #
 #  Dependencies
 #
@@ -178,4 +187,4 @@ $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
 	$(foreach o, $(util_users), $d/$o)): $(O_DIR)/util_w2w.o
 
 
-## Time-stamp: <2015-06-01 12:44:33 assman@faepop23.tu-graz.ac.at>
+## Time-stamp: <2015-11-19 14:55:57 assman@faepop36.tu-graz.ac.at>

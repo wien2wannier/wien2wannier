@@ -54,7 +54,7 @@ O_DIR := lib
 R_DIR := libr
 C_DIR := libc
 
-###############################################################################
+#########################################################################
 
 FFLAGS  = $(FGEN) $(FOPT) -I$(O_DIR)
 R_EXEC  = $(DESTDIR)/$(R_EXECNAME)
@@ -68,7 +68,7 @@ UTILOBJ := $(UTILDIR)/util_w2w.o
 ## site-specific configuration may overwrite the above
 -include ../make.sys
 
-#..............................................................................
+#........................................................................
 #
 #  convenience rules
 #
@@ -80,14 +80,14 @@ complex: $(C_EXEC)
 all: real complex
 
 clean:
-	rm -f $(objmod)
+	rm -f $(O_DIR)/* $(R_DIR)/* $(C_DIR)/* 
 
 distclean: clean
 	rm -f $(R_EXEC) $(C_EXEC)
 
 .PHONY: real complex all clean distclean
 
-#..............................................................................
+#........................................................................
 #
 #  Object files common to both REAL and COMPLEX version
 #  (i.e., these are the same for REAL and COMPLEX)
@@ -97,7 +97,7 @@ OBJS = moduls.o wplot.o latgen.o rotdef.o locdef.o orth.o grdgen.o	\
        trans.o bessel.o gbass.o outwin.o rint13.o ylm.o sphbes.o	\
        dvbes1.o diracout.o dergl.o inouh.o inth.o
 
-#..............................................................................
+#........................................................................
 #
 #  These object files have REAL and COMPLEX versions
 #
@@ -107,7 +107,7 @@ OBJS = moduls.o wplot.o latgen.o rotdef.o locdef.o orth.o grdgen.o	\
 R_OBJS = main.o
 C_OBJS = $(R_OBJS)
 
-#..............................................................................
+#........................................................................
 #
 #  Dependency information for object files
 #
@@ -120,7 +120,7 @@ UTIL_USERS = auggen.o augpw.o auglo.o bessel.o dergl.o dvbes1.o		\
 	     moduls.o orth.o outwin.o rotdef.o spcgen.o sphbes.o	\
 	     trans.o wavint.o wplot.o ylm.o
 
-#..............................................................................
+#........................................................................
 #
 #  “Real” targets
 #
@@ -132,33 +132,42 @@ objmod = $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
          $(foreach s, o mod, $d/*.$s))
 
 $(R_EXEC): $(objs) $(r_objs) $(UTILOBJ) Makefile
-	$(FC) -o $(R_EXEC) $(objs) $(r_objs) $(UTILOBJ) $(LDFLAGS) $(R_LIBS)
+	$(FC) -o $(R_EXEC) $(objs) $(r_objs) $(UTILOBJ) \
+		$(LDFLAGS) $(R_LIBS)
 
 $(C_EXEC): $(objs) $(c_objs) $(UTILOBJ) Makefile
-	$(FC) -o $(C_EXEC) $(objs) $(c_objs) $(UTILOBJ)  $(LDFLAGS) $(C_LIBS)
+	$(FC) -o $(C_EXEC) $(objs) $(c_objs) $(UTILOBJ) \
+		$(LDFLAGS) $(C_LIBS)
 
-#..............................................................................
+#........................................................................
 #
 #  Pattern rules for object files
 #
 #  Real and complex need to be kept separate!
 #
-$(O_DIR)/%.o: %.f Makefile
+$(O_DIR)/%.o: %.f Makefile $(O_DIR)
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(O_DIR)
-$(O_DIR)/%.o: %.F Makefile
+$(O_DIR)/%.o: %.F Makefile $(O_DIR)
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(O_DIR)
 
-$(R_DIR)/%.o: %.f Makefile
+$(R_DIR)/%.o: %.f Makefile $(R_DIR)
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(R_DIR)
-$(R_DIR)/%.o: %.F Makefile
+$(R_DIR)/%.o: %.F Makefile $(R_DIR)
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(R_DIR)
 
-$(C_DIR)/%.o: %.f Makefile
+$(C_DIR)/%.o: %.f Makefile $(C_DIR)
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(C_DIR) -D_COMPLEX_
-$(C_DIR)/%.o: %.F Makefile
+$(C_DIR)/%.o: %.F Makefile $(C_DIR)
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(C_DIR) -D_COMPLEX_
 
-#..............................................................................
+#........................................................................
+#
+#  lib*/
+#
+$(O_DIR) $(R_DIR) $(C_DIR):
+	mkdir $@
+
+#........................................................................
 #
 #  Dependencies
 #
@@ -178,4 +187,4 @@ $(util_users): $(UTILOBJ)
 $(util_users): FFLAGS += -I$(UTILDIR)
 
 
-## Time-stamp: <2015-06-08 15:56:16 assman@faepop23.tu-graz.ac.at>
+## Time-stamp: <2015-11-19 14:59:48 assman@faepop36.tu-graz.ac.at>
