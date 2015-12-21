@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/gaunt1.f
-!!!
-!!! $Id: gaunt1.f 385 2015-06-01 13:08:18Z assmann $
 
       DOUBLE PRECISION FUNCTION GAUNT1(LP,L,LS,MP,M,MS)
 !

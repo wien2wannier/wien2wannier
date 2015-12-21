@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_wplot/locdef.f
-!!!
-!!! $Id: locdef.f 385 2015-06-01 13:08:18Z assmann $
 
 SUBROUTINE LOCDEF(ROT0,IMAT,ROT)
   use const

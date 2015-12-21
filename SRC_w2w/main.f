@@ -4,8 +4,6 @@
 !!!
 !!! Copyright 2010-2012 Jan Kuneš, Philipp Wissgott
 !!!           2013-2015 Elias Assmann
-!!! 
-!!! $Id: main.f 433 2015-08-13 13:12:48Z assmann $
 
 !!/--- Files expected in ‘def’ ---
 !!  5 inwf	'old'	  'formatted'

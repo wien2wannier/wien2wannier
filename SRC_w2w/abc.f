@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/abc.f
-!!!
-!!! $Id: abc.f 385 2015-06-01 13:08:18Z assmann $
 
 subroutine abc(l,jatom,pei,pi12lo,pe12lo,jlo,lapw)                           
   USE param

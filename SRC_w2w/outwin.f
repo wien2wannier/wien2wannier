@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/outwin.f
-!!!
-!!! $Id: outwin.f 385 2015-06-01 13:08:18Z assmann $
 
       SUBROUTINE OUTWIN(REL,V,RNOT,DH,JRI,EH,FL,VAL,SLO,Nodes,Z) 
 !         Integration der skalarrel. Schroedingergleichung

@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_wplot/wavsph.f
-!!!
-!!! $Id: wavsph.f 385 2015-06-01 13:08:18Z assmann $
 
       SUBROUTINE WAVSPH(R,BFAC,IAT,IR,PSI,Y)
       use struct

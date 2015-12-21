@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/cputim_hp.f
-!!!
-!!! $Id: cputim_hp.f 385 2015-06-01 13:08:18Z assmann $
 
       SUBROUTINE CPUTIM(DSEC)
 !

@@ -4,8 +4,6 @@
 !!!
 !!! Copyright 2009-2012 Philipp Wissgott
 !!!           2013-2015 Elias Assmann
-!!!
-!!! $Id: write_win_backend.f 424 2015-07-14 11:17:35Z assmann $
 
 program write_win
   use structmod, only: struct_t, struct_read

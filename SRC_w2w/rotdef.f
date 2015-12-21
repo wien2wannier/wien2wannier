@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/rotdef.f
-!!!
-!!! $Id: rotdef.f 385 2015-06-01 13:08:18Z assmann $
 
 SUBROUTINE ROTDEF
   !                                                                       

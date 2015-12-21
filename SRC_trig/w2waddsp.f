@@ -5,8 +5,6 @@
 !!!
 !!! Copyright 2009-2012 Philipp Wissgott
 !!!           2014-2015 Elias Assmann
-!!!
-!!! $Id: w2waddsp.f 437 2015-09-03 18:21:30Z assmann $
 
 PROGRAM combine_spinfiles
   use const,  only: DPk, bufsz

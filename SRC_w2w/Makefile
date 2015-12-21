@@ -4,9 +4,6 @@
 ###    make complex ... generate executable for the complex-valued version
 ###    make all     ... generate both the above
 ###    make clean   ... delete unnecessary files
-###
-### $Id: Makefile 385 2015-06-01 13:08:18Z assmann $
-
 
 # FC ........... compiler name
 # FOPT ......... optimization flags
@@ -187,4 +184,4 @@ $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
 	$(foreach o, $(util_users), $d/$o)): $(O_DIR)/util_w2w.o
 
 
-## Time-stamp: <2015-11-19 14:55:57 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2015-12-21 13:54:04 assman@faepop36.tu-graz.ac.at>

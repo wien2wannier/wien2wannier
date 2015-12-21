@@ -6,8 +6,6 @@
 ###    file for Wannier90 on the basis of ‘w2w’s input file
 ###
 ### Copyright 2013-2015 Elias Assmann
-###
-### $Id: write_win_lapw 385 2015-06-01 13:08:18Z assmann $
 
 bin=$(dirname $0)
 defwin=$bin/SRC_templates/case.win

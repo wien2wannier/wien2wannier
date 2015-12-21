@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_wplot/trans.f
-!!!
-!!! $Id: trans.f 385 2015-06-01 13:08:18Z assmann $
 
 SUBROUTINE TRANS(NPOS,POS,NSYM,IMAT,TAU)
   use const

@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_wplot/outwin.f
-!!!
-!!! $Id: outwin.f 385 2015-06-01 13:08:18Z assmann $
 
 SUBROUTINE OUTWIN(REL,V,RI,DH,JRI,EH,FL,VAL,SLO,Nodes,Z) 
 !     Integration of the scalar-relativistic Schroedinger equation

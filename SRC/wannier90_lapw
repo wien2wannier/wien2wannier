@@ -27,8 +27,6 @@
 ###    certain files will be where other programs expect them.
 ###
 ### Copyright 2013-2015 Elias Assmann
-###
-### $Id: wannier90_lapw 437 2015-09-03 18:21:30Z assmann $
 
 # Wannier90 executable
 W90=wannier90.x

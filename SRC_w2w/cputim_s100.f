@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/cputim_s100.f
-!!!
-!!! $Id: cputim_s100.f 385 2015-06-01 13:08:18Z assmann $
 
       SUBROUTINE CPUTIM(TIME)
       DOUBLE PRECISION   TIME

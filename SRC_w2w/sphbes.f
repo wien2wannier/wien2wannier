@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/sphbes.f
-!!!
-!!! $Id: sphbes.f 420 2015-06-30 20:58:59Z assmann $
 
       SUBROUTINE SPHBES(N,X,FJ)                                         
       use const

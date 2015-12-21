@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/atpar.f
-!!!
-!!! $Id: atpar.f 417 2015-06-29 14:48:13Z assmann $
 
 SUBROUTINE ATPAR (JATOM,LATOM,itape,jtape)
   USE param

@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/inth.f
-!!!
-!!! $Id: inth.f 385 2015-06-01 13:08:18Z assmann $
 
       SUBROUTINE INTH (DP,DQ,DV,DR)                                     
 !                                                                       

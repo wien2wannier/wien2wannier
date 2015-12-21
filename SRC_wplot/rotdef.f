@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_wplot/rotdef.f
-!!!
-!!! $Id: rotdef.f 385 2015-06-01 13:08:18Z assmann $
 
 SUBROUTINE ROTDEF(NAT,MULT,POS,IOP)
   use const

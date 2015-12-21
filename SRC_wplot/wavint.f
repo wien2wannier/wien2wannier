@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_wplot/wavint.f
-!!!
-!!! $Id: wavint.f 385 2015-06-01 13:08:18Z assmann $
 
 SUBROUTINE WAVINT(R,NPW,PSI,bk,coef,nmat)
   use const

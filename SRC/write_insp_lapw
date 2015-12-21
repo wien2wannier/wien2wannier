@@ -6,8 +6,6 @@
 ###
 ### Copyright 2009-2012 Philipp Wissgott
 ### Copyright 2013-2015 Elias Assmann
-###
-### $Id: write_insp_lapw 385 2015-06-01 13:08:18Z assmann $
 
 bin=$(dirname $0)
 definsp=$bin/SRC_templates/case.insp

@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_wplot/diracout.f
-!!!
-!!! $Id: diracout.f 385 2015-06-01 13:08:18Z assmann $
 
       subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk, &
                           val,slo,nodes,z)

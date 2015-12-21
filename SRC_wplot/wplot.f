@@ -4,8 +4,6 @@
 !!!
 !!! Copyright 2010-2012 Jan Kuneš, Philipp Wissgott
 !!!           2014-2015 Elias Assmann
-!!!
-!!! $Id: wplot.f 385 2015-06-01 13:08:18Z assmann $
 
 !!/--- Files expected in ‘def’ ---
 !!  5 inwplot	  'old'		'formatted'

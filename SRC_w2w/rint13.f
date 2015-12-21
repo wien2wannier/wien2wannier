@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/rint13.f
-!!!
-!!! $Id: rint13.f 385 2015-06-01 13:08:18Z assmann $
 
       SUBROUTINE RINT13(A,B,X,Y,S,JATOM)                            
 !                                                                       

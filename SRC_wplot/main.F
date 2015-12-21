@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_wplot/main.F
-!!!
-!!! $Id: main.F 436 2015-09-01 06:27:31Z assmann $
 
 subroutine MAIN2()
   use struct

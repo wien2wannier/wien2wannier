@@ -1,8 +1,6 @@
 %%% shared-files/wien.cls
 %%%
 %%%    Latex class imported from Wien2k UG.
-%%%
-%%% $Id: wien.cls 403 2015-06-04 11:50:37Z assmann $
 
 
 %% This is file `book.cls',

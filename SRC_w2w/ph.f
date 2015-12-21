@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/ph.f
-!!!
-!!! $Id: ph.f 385 2015-06-01 13:08:18Z assmann $
 
       REAL(R8) FUNCTION PH(N)                                             
       use const

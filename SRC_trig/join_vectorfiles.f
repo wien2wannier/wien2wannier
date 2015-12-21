@@ -6,8 +6,6 @@
 !!!
 !!! Copyright 2010-2012 Philipp Wissgott
 !!!           2013-2015 Elias Assmann
-!!!
-!!! $Id: join_vectorfiles.f 385 2015-06-01 13:08:18Z assmann $
 
 PROGRAM join_vectorfiles
   use const,     only: R8, C16, BUFSZ

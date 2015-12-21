@@ -7,8 +7,6 @@
 # replaced to create Makefile)
 #
 # Copyright 2014-2015 Elias Assmann
-#
-# $Id: make.sys 420 2015-06-30 20:58:59Z assmann $
 
 ifeq "$(origin FC)" "default"
 #FC      = ifort
@@ -68,4 +66,4 @@ W2W_DIR  = ../../wien2wannier/
 ## End:
 ##\---
 ##
-## Time-stamp: <2015-11-30 18:26:49 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2015-12-21 13:57:18 assman@faepop36.tu-graz.ac.at>

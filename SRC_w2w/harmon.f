@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/harmon.f
-!!!
-!!! $Id: harmon.f 385 2015-06-01 13:08:18Z assmann $
 
       SUBROUTINE HARMON(N,X,Y,Z,LMAX2,F,DF,RI)                           
       use const

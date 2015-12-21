@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_wplot/moduls.f
-!!!
-!!! $Id: moduls.f 385 2015-06-01 13:08:18Z assmann $
 
 module param
   use const, only: BUFSZ

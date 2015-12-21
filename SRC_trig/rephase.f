@@ -11,8 +11,6 @@
 !!!
 !!! Copyright 2009-2012 Philipp Wissgott
 !!!           2013-2015 Elias Assmann
-!!!
-!!! $Id: rephase.f 385 2015-06-01 13:08:18Z assmann $
 
 PROGRAM rephase
   use util,  only: line_count

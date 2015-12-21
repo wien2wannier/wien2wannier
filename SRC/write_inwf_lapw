@@ -6,8 +6,6 @@
 ###     Generate input file for ‘w2w’
 ###
 ### Copyright 2013-2015 Elias Assmann <elias.assmann@gmail.com>
-###
-### $Id: write_inwf_lapw 385 2015-06-01 13:08:18Z assmann $
 
 '''
 Generate input file for `w2w' interactively or from command line

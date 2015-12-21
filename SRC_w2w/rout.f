@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/rout.f
-!!!
-!!! $Id: rout.f 385 2015-06-01 13:08:18Z assmann $
 
       SUBROUTINE ROUT(LL)
       USE param

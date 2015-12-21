@@ -4,9 +4,6 @@
 ###    make complex   ... generate executable for the complex-valued version
 ###    make all       ... generate both the above
 ###    make clean     ... delete unnecessary files
-###
-### $Id: Makefile 409 2015-06-09 07:54:07Z assmann $
-
 
 # FC ........... compiler name
 # FOPT ......... optimization flags
@@ -187,4 +184,4 @@ $(util_users): $(UTILOBJ)
 $(util_users): FFLAGS += -I$(UTILDIR)
 
 
-## Time-stamp: <2015-11-19 14:59:48 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2015-12-21 13:55:07 assman@faepop36.tu-graz.ac.at>

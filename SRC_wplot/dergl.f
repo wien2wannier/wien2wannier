@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_wplot/dergl.f
-!!!
-!!! $Id: dergl.f 385 2015-06-01 13:08:18Z assmann $
 
 !rschmid
 !

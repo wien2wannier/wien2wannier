@@ -4,8 +4,6 @@
 !!!
 !!! Copyright 2009-2012 Philipp Wissgott
 !!!           2013-2015 Elias Assmann
-!!!
-!!! $Id: findbands.f 385 2015-06-01 13:08:18Z assmann $
 
 program find_bands
   use const,  only: BUFSZ, DPk, Ryd_eV

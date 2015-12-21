@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_wplot/ylm.f
-!!!
-!!! $Id: ylm.f 385 2015-06-01 13:08:18Z assmann $
 
 SUBROUTINE YLM(V,LMAX,Y)
 ! -----------------------------------------------------------------

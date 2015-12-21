@@ -1,8 +1,6 @@
 !!! wien2wannier/SRC_wplot/grdgen.f
 !!!
 !!!    Generates / reads real-space grid for ‘wplot’.
-!!!
-!!! $Id: grdgen.f 434 2015-08-13 20:38:38Z assmann $
 
 SUBROUTINE GRDGEN(MODE,NP)
 

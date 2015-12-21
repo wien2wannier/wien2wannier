@@ -4,8 +4,6 @@
 !!!
 !!! Copyright 2010-2012 Jan Kuneš, Philipp Wissgott
 !!!           2013-2015 Elias Assmann
-!!!
-!!! $Id: read_vec.f 420 2015-06-30 20:58:59Z assmann $
 
 SUBROUTINE read_vec(NEMIN,NEMAX,kkk,maxx,maxy,maxz,efermi)
   use param

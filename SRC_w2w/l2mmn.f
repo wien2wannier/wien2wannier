@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/l2mmn.f
-!!!
-!!! $Id: l2mmn.f 420 2015-06-30 20:58:59Z assmann $
 
 SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
   USE param

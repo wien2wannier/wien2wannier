@@ -1,6 +1,4 @@
-/* wien2wannier/SRC_w2w/cputim_sgi+pgi.c                   	*
- *                                                         	*
- * $Id: cputim_sgi+pgi.c 385 2015-06-01 13:08:18Z assmann $	*/
+/* wien2wannier/SRC_w2w/cputim_sgi+pgi.c                   	*/
 
 #include <sys/types.h>
 #include <sys/times.h>
@@ -31,4 +29,4 @@ double * dsec;
 /* Local Variables:                           */
 /* End:                                       */
 
-/* Time-stamp: <2015-05-23 20:37:20 elias>    */
+/* Time-stamp: <2015-12-21 13:56:57 assman@faepop36.tu-graz.ac.at>    */

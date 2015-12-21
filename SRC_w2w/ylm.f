@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/ylm.f
-!!!
-!!! $Id: ylm.f 420 2015-06-30 20:58:59Z assmann $
 
       SUBROUTINE YLM(V,LMAX,Y)
       use const

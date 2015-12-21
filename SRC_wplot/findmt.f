@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_wplot/findmt.f
-!!!
-!!! $Id: findmt.f 385 2015-06-01 13:08:18Z assmann $
 
       SUBROUTINE FINDMT(P,ATMS,nato,NAT,IAT,ILAT,IR,R)
       use struct

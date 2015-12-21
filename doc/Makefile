@@ -4,8 +4,6 @@
 ###    Variables.ini).  This Makefile was made using
 ###    <https://github.com/shiblon/latex-makefile>, whose copyright
 ###    notice follows below.
-###
-### $Id: Makefile 409 2015-06-09 07:54:07Z assmann $
 
 # Copyright 2004 Chris Monson (shiblon@gmail.com)
 # Latest version available at http://www.bouncingchairs.net/oss

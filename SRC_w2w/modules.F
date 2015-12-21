@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/modules.F
-!!!
-!!! $Id: modules.F 424 2015-07-14 11:17:35Z assmann $
 
 MODULE param
   use const, only: R8, C16

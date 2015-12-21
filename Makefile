@@ -3,8 +3,6 @@
 ###    wien2wannier main Makefile
 ###
 ### Copyright 2013-2015 Elias Assmann
-###
-### $Id: Makefile 422 2015-07-01 08:24:37Z assmann $
 
 svn-rev := r$(lastword '$Rev: 422 $')
 
@@ -100,4 +98,4 @@ wien-dist: distclean doc/wien2wannier_userguide.pdf $(Morig)
 	rm -rf $(dir) $(Morig)
 
 
-## Time-stamp: <2015-07-01 10:23:12 assman@faepop23.tu-graz.ac.at>
+## Time-stamp: <2015-12-21 14:52:09 assman@faepop36.tu-graz.ac.at>

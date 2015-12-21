@@ -1,7 +1,7 @@
 #!/bin/csh -f
 #
 # This is the wien2wannier version of x_lapw.
-# $Id: x_lapw 437 2015-09-03 18:21:30Z assmann $
+
 unalias rm
 
 set running = ".running.$$.`hostname`.`date +%d%m%H%M%S`"
@@ -2811,4 +2811,4 @@ if (-e $running) rm $running
 exit(1)
 
 
-## Time-stamp: <2015-12-21 12:25:18 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2015-12-21 13:56:42 assman@faepop36.tu-graz.ac.at>

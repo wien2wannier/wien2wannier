@@ -6,8 +6,6 @@
 !!!
 !!! Copyright 2009-2012 Philipp Wissgott
 !!!           2014-2015 Elias Assmann
-!!!
-!!! $Id: convham.f 385 2015-06-01 13:08:18Z assmann $
 
 program convert_hamiltonian
   use wien2k,    only: gtfnam, errflg, errclr

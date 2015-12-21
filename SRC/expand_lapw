@@ -3,8 +3,7 @@
 ### wien2wannier/SRC/expand_lapw
 ###
 ###    This is the wien2wannier version of expand_lapw.
-###
-### $Id: expand_lapw 385 2015-06-01 13:08:18Z assmann $
+
 set name  = $0
 set bin   = $name:h             
 
@@ -129,4 +128,4 @@ endif
 exit(0)
 
 
-## Time-stamp: <2015-06-01 12:54:04 assman@faepop23.tu-graz.ac.at>
+## Time-stamp: <2015-12-21 13:53:05 assman@faepop36.tu-graz.ac.at>

@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_wplot/spcgen.f
-!!!
-!!! $Id: spcgen.f 385 2015-06-01 13:08:18Z assmann $
 
 SUBROUTINE SPCGEN(NAT,RMT,ATMS)
   use const

@@ -5,8 +5,6 @@
 ###    A primitive compile script for wien2wannier
 ###
 ### Copyright 2014-2015 Elias Assmann
-###
-### $Id: compile_wien2wannier.sh 385 2015-06-01 13:08:18Z assmann $
 
 w2wdir=$(dirname $0)
 

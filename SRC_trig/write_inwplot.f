@@ -4,8 +4,6 @@
 !!!
 !!! Copyright 2009-2012 Philipp Wissgott
 !!!           2014-2015 Elias Assmann
-!!!
-!!! $Id: write_inwplot.f 385 2015-06-01 13:08:18Z assmann $
 
 PROGRAM write_wplotin
   use const, only: BUFSZ

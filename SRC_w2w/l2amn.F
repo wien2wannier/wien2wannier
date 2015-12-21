@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/l2amn.F
-!!!
-!!! $Id: l2amn.F 385 2015-06-01 13:08:18Z assmann $
 
 SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
   USE param

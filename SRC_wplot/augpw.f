@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_wplot/augpw.f
-!!!
-!!! $Id: augpw.f 385 2015-06-01 13:08:18Z assmann $
 
       SUBROUTINE AUGPW(LATOM,NPW,ALM,ROTLOC,Y,bk,coef,nmat)
       use struct

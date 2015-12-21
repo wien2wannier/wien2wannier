@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_wplot/bessel.f
-!!!
-!!! $Id: bessel.f 385 2015-06-01 13:08:18Z assmann $
 
 SUBROUTINE BESSEL(NK,LDNK,BK,NMT,RAD,LMAX2,F,DF)
   use const

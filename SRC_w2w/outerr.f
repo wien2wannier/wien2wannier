@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/outerr.f
-!!!
-!!! $Id: outerr.f 385 2015-06-01 13:08:18Z assmann $
 
       SUBROUTINE OUTERR(SRNAME,ERRMSG)
       CHARACTER(len=*)     SRNAME

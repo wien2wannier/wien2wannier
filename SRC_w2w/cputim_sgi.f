@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/cputim_sgi.f
-!!!
-!!! $Id: cputim_sgi.f 385 2015-06-01 13:08:18Z assmann $
 
       SUBROUTINE CPUTIM(TIME)
       real*8 time                                                  

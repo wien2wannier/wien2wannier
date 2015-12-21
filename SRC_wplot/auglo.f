@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_wplot/auglo.f
-!!!
-!!! $Id: auglo.f 385 2015-06-01 13:08:18Z assmann $
 
       SUBROUTINE AUGLO(LATOM,IL,ALM,ROTLOC,Y,bk,coef,nmat)
       use struct

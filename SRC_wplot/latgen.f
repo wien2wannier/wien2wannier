@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_wplot/latgen.f
-!!!
-!!! $Id: latgen.f 385 2015-06-01 13:08:18Z assmann $
 
 SUBROUTINE LATGEN(LATTIC,A,ALP,BET,GAM,ORTHO,PRIM)
   use const

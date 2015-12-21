@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/cputim_dec.f
-!!!
-!!! $Id: cputim_dec.f 385 2015-06-01 13:08:18Z assmann $
 
 	subroutine cputim(cp)
 	real*8 cp

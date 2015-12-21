@@ -5,8 +5,6 @@
 ###    Wrapper script for ‘join_vectorfiles’
 ###
 ### Copyright 2014-2015 Elias Assmann
-###
-### $Id: joinvec_lapw 385 2015-06-01 13:08:18Z assmann $
 
 onintr exit
 set name	= $0

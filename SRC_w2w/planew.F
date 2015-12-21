@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/planew.F
-!!!
-!!! $Id: planew.F 420 2015-06-30 20:58:59Z assmann $
 
       SUBROUTINE PLANEW(NB,num_kpts,NNTOT,maxx,maxy,maxz)     
   USE param

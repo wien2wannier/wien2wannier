@@ -4,9 +4,6 @@
 !!!
 !!! Copyright 2010-2012 Philipp Wissgott
 !!!           2013-2015 Elias Assmann
-!!!
-!!! $Id: util_w2w.F 424 2015-07-14 11:17:35Z assmann $
-
 
 !!/=== Things that are exported here =============
 !!
@@ -2051,4 +2048,4 @@ END MODULE wien2k
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-11-30 17:57:18 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-21 13:54:49 assman@faepop36.tu-graz.ac.at>

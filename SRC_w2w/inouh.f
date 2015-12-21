@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/inouh.f
-!!!
-!!! $Id: inouh.f 385 2015-06-01 13:08:18Z assmann $
 
       subroutine inouh (dp,dq,dr,dq1,dfl,dv,z,test,nuc,nstop)        
 

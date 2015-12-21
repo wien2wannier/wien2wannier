@@ -5,8 +5,6 @@
 !!!
 !!! Copyright 2009-2012 Philipp Wissgott
 !!!           2014-2015 Elias Assmann
-!!!
-!!! $Id: shifteig.f 385 2015-06-01 13:08:18Z assmann $
 
 PROGRAM shift_energy
   use reallocate, only: realloc

@@ -6,8 +6,6 @@
 !!!    Usage: vec2ascii [-up/-dn] [-c] <case> <numberofparallelfiles>
 !!!
 !!! Copyright 2013-2015 Elias Assmann
-!!!
-!!! $Id: vec2ascii.f 385 2015-06-01 13:08:18Z assmann $
 
 PROGRAM vec2ascii
   use util,      only: line_count

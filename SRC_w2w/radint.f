@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_w2w/radint.f
-!!!
-!!! $Id: radint.f 420 2015-06-30 20:58:59Z assmann $
 
       SUBROUTINE RADINT(JATOM,LJMAX,BM)
       USE param

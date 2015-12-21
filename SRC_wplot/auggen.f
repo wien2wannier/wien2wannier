@@ -1,6 +1,4 @@
 !!! wien2wannier/SRC_wplot/auggen.f
-!!!
-!!! $Id: auggen.f 385 2015-06-01 13:08:18Z assmann $
 
       SUBROUTINE AUGGEN(REL,NAT,WHPSI)
       use struct
