@@ -4,9 +4,9 @@
 ###
 ### Copyright 2013-2015 Elias Assmann
 
-svn-rev := r$(lastword '$Rev: 422 $')
+git-describe := $(lastword '$version: v1.0.0-6-gceb0691$')
 
-VERSION := $(svn-rev)
+VERSION := $(git-describe)
 
 SIMPLE      := SRC_trig doc
 REALCOMPLEX := SRC_w2w SRC_wplot
@@ -98,4 +98,4 @@ wien-dist: distclean doc/wien2wannier_userguide.pdf $(Morig)
 	rm -rf $(dir) $(Morig)
 
 
-## Time-stamp: <2015-12-21 14:52:09 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2015-12-21 15:12:35 assman@faepop36.tu-graz.ac.at>

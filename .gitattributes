@@ -1,0 +1,3 @@
+Makefile             filter=version
+SRC/wplot2xsf_lapw   filter=version
+SRC/write_inwf_lapw  filter=version

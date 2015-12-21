@@ -24,8 +24,12 @@ import math
 import glob
 import numpy as np
 
-__svn_rev_str = '$Rev: 385 $'
-__version__ = '1.1-r' + re.search('\$Rev: (.*) \$', __svn_rev_str).group(1)
+__version__ = "$version: v1.0.0-6-gceb0691$"
+
+try:
+    __version__ = re.search(":\s*(.*?)\s*\$", __version__).group(1)
+except:
+    __version__ = "unknown"
 
 #####################
 # Argument Handling #
@@ -432,4 +436,4 @@ for i, N, psink, psiarg, xsf, wplot in \
     print>>xsf, "END_BLOCK_DATAGRID_3D"
 
 
-## Time-stamp: <2015-05-28 16:22:09 assman@faepop23.tu-graz.ac.at>
+## Time-stamp: <2015-12-21 15:22:46 assman@faepop36.tu-graz.ac.at>

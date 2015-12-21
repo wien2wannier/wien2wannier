@@ -26,7 +26,13 @@ import numpy as np
 import re
 import traceback
 
-__version__ = "0.2 $Rev: 385 $"
+__version__ = "$version: v1.0.0-5-gbd5b5e5$"
+
+try:
+    __version__ = re.search(":\s*(.*?)\s*\$", __version__).group(1)
+except:
+    __version__ = "unknown"
+
 
 class Struct(object):
     '''Class representing a crystal structure'''
@@ -956,4 +962,4 @@ if not args.batch and extant_inwf and not args.quiet:
         "' -- do not forget to change `win' file, if necessary +"
 
 
-## Time-stamp: <2015-09-04 11:43:54 assman@faepop23.tu-graz.ac.at>
+## Time-stamp: <2015-12-21 15:19:07 assman@faepop36.tu-graz.ac.at>
