@@ -15,7 +15,7 @@
  dis_num_iter          = 10000
 !dis_conv_window       = 3
 !dis_conv_tol          = 1e-10
-!restart               = default | wannierise | plot | transport
+!restart               = default ! wannierise ! plot ! transport
 
 !!! Post-processing options !!!
  write_proj             = .true.

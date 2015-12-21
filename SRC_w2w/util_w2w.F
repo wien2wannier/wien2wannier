@@ -808,7 +808,7 @@ contains
 
 #ifdef HAVE_VARLEN_STR
   !! This elegant variable-length version of `fetcharg´ does not work
-  !! on pre-4.8 gcc
+  !! on pre-4.8 gfortran
   subroutine fetcharg_alloc(i, str, message, status)
     integer,          intent(in)            :: i
     type(argstr),     intent(out)           :: str
@@ -2051,4 +2051,4 @@ END MODULE wien2k
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-07-07 09:53:16 assman@faepop23.tu-graz.ac.at>
+!! Time-stamp: <2015-11-30 17:57:18 assman@faepop36.tu-graz.ac.at>

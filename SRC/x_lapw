@@ -2232,14 +2232,18 @@ breaksw
 ### w2w stuff ###
 case w2w:
 set exe = w2w$cmplx$para
-if ( $para == para ) set dopara=1
+set suf
+if ( $para == para ) then
+    set dopara = 1
+    set suf    = _1
+endif
 if ( $so == so && $updn == '' ) then
   error "w2w: -so is only allowed with -up/-dn"
 endif
 set soupdn=$so$updn
 set w90updn=$updn
-set vecso   =  $file.vector$sc$hf$so
-set vecsoup = {$file.vector$sc$hf$so}up
+set vecso   =  $file.vector$sc$hf$so$suf
+set vecsoup = {$file.vector$sc$hf$so}up$suf
 if ( $so == so &&                        \
       ( -e $vecso   && ! -z $vecso    ) && \
     ! ( -e $vecsoup && ! -z $vecsoup ))    \
@@ -2251,7 +2255,7 @@ if ( $so == so &&                        \
   endif
   set updn=
 endif
-unset vecso vecsoup
+unset vecso vecsoup suf
 
 cat <<EOF >$def
   5,'$file.inwf$updn',       'old',    'formatted',  0
@@ -2807,4 +2811,4 @@ if (-e $running) rm $running
 exit(1)
 
 
-## Time-stamp: <2015-10-20 15:25:07 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2015-12-21 12:25:18 assman@faepop36.tu-graz.ac.at>
