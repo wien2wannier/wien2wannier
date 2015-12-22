@@ -700,8 +700,8 @@ subroutine MAIN2()
 !           << POS = IZ + (IY-1)*NP(3) + (IX-1)*NP(3)*NP(2) >>
            NPY = NP(3)
            NPX = NP(3)*NP(2)
-           DO IZ=0,NP(3)-1,NPO(3)
-              DO IY=0,NP(2)-1,NPO(2)
+           do IZ=0,NP(3)-1,NPO(3)
+              do IY=0,NP(2)-1,NPO(2)
                  IG = 1 + IZ + IY*NPY
               end DO
               WRITE(unit_out,'()')
@@ -714,8 +714,8 @@ subroutine MAIN2()
   end do vecfiles
 
   IF (WAN) THEN
-     write(unit_psink, 3020)(cdabs(tot(IG))**2/kkk,IG=1,NPG)
-     write(unit_psiarg,3020)(datan2(dimag(tot(IG)),dble(tot(IG))),IG=1,NPG)
+     write(unit_psink, 3020)(abs(tot(IG))**2/kkk,IG=1,NPG)
+     write(unit_psiarg,3020)(atan2(dimag(tot(IG)),real(tot(IG))),IG=1,NPG)
   ENDIF
 
   REWIND(unit_tmp)
@@ -860,4 +860,4 @@ END subroutine main2
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-09-24 15:07:06 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-22 09:45:28 assman@faepop36.tu-graz.ac.at>
