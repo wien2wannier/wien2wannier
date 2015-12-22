@@ -90,7 +90,7 @@ subroutine main()
   end do
 
 !     << read in wave function options >>
-  read (unit_in,1080) SWITCH
+  read (unit_in,'(A)') SWITCH
   select case (uppercase(switch))
   case ('DEP')
      switch = 'DEP'
@@ -134,7 +134,7 @@ subroutine main()
   call wfopen(unit_psiarg, psiargfn, iseig, STATUS='unknown')
   call wfopen(unit_out,    outfn,    iseig, STATUS='unknown')
 
-  write(unit_out,2140) 'Wannier function   ',iseig
+  write(unit_out,"( ' selected ',A7,' :',I5)") 'Wannier function   ', iseig
 
 !!! Read chk file for num_wann, u_matrix, and friends
   call chk_read(unit_chk, chk)
@@ -177,8 +177,8 @@ subroutine main()
 ! ###################################
 !
 !     << set up the lattice >>
-  READ(unit_struct,1000) buf
-  READ(unit_struct,1010) LATTIC,NAT,RelMode
+  READ(unit_struct, '(A)') buf
+  READ(unit_struct, '(A4,23X,I3/13X,A4)') LATTIC,NAT,RelMode
 
   allocate ( POS(3,NAT*48),ZNUC(NAT),RMT(NAT),MULT(NAT),IATNR(NAT*48))
   allocate ( RM(NRAD,NAT),RNOT(NAT),DX(NAT),JRI(NAT) )
@@ -191,14 +191,18 @@ subroutine main()
   allocate ( IOP(NAT*48),nreg(0:NAT*48))
 
   REL = RelMode .EQ. 'RELA'
-  READ(unit_struct,1020) A,ALPHA,BETA,GAMMA
+  READ(unit_struct, '(6F10.5)') A,ALPHA,BETA,GAMMA
   IF(ALPHA.EQ.0.0D0) ALPHA=90.0D0
   IF(BETA .EQ.0.0D0) BETA =90.0D0
   IF(GAMMA.EQ.0.0D0) GAMMA=90.0D0
 
-  WRITE(unit_out,2000) trim(buf)
-  WRITE(unit_out,2010) LATTIC,NAT,RelMode
-  WRITE(unit_out,2020) A,ALPHA,BETA,GAMMA
+  WRITE(unit_out, '(/A/)') trim(buf)
+  WRITE(unit_out,"(1X,A4,' LATTIC WITH ',I5,' INEQUIV. ATOMS/UC USING ', &
+       & A4,'. AUGMENTATION')") &
+       LATTIC,NAT,RelMode
+  WRITE(unit_out,"(/' LATTIC CONSTANTS:',3F12.7,' (in bohr)' &
+       & /' UNIT CELL ANGLES:',3F12.7,' (in degree)')") &
+       A,ALPHA,BETA,GAMMA
   CALL LATGEN(LATTIC,A,ALPHA,BETA,GAMMA,ORTHO,PRIM)
 
   NMT=0
@@ -206,7 +210,10 @@ subroutine main()
   atoms: DO JATOM=1,NAT
      INDEX1 = INDEX+1
      INDEX=INDEX+1
+
+1030 FORMAT(4X,I4,1X,3(3X,F10.7):/15X,I2)
      READ(unit_struct,1030) IATNR(INDEX),(POS(I,INDEX),I=1,3),MULT(JATOM)
+
      IATNR(INDEX) = ABS(IATNR(INDEX))
 
      DO MU=2,MULT(JATOM)
@@ -215,7 +222,7 @@ subroutine main()
         IATNR(INDEX) = ABS(IATNR(INDEX))
      end DO
 
-     READ(unit_struct,1040) ANAME,JRI(JATOM),RNOT(JATOM),RMT(JATOM), &
+     READ(unit_struct, '(A10,5X,I5,2(5X,F10.5),5X,F5.2)') ANAME,JRI(JATOM),RNOT(JATOM),RMT(JATOM), &
           ZNUC(JATOM)
      DX(JATOM) = LOG( RMT(JATOM)/RNOT(JATOM) ) / DBLE( JRI(JATOM)-1 )
      IF(JRI(JATOM).GT.NRAD) STOP 'NRAD too small'
@@ -225,7 +232,7 @@ subroutine main()
      end DO
 
      RMT(JATOM) = RM(JRI(JATOM),JATOM)
-     READ(unit_struct,1050) ((ROTLOC(I,J,INDEX1),I=1,3),J=1,3)
+     READ(unit_struct, '(20X,3F10.8)') ((ROTLOC(I,J,INDEX1),I=1,3),J=1,3)
 
      DO J=1,NMT
         IF(RMT(JATOM).EQ.RAD(J))THEN
@@ -242,22 +249,36 @@ subroutine main()
   NDAT = INDEX
   allocate ( AUG(NRAD,(LMAX7+1)*(LMAX7+1),NDat))
 
-  WRITE(unit_out,2030)
-  READ(unit_struct,1060) IORD
+  write(unit_out, &
+       "(/' SYMMETRY OPERATIONS'                                     &
+       & /' -------------------'                                     &
+       & /' y = {Q|t}(x) : y_i = Sum(j) Q_ij x_j + t_i',             &
+       & /' with y_i and x_j in conventional fractional coordinates' &
+       &//' symm    Q(:,1)  Q(:,2)  Q(:,3)    t(:)')")
+  READ(unit_struct, '(I4)') IORD
   IF(IORD.GT.NSYM) STOP 'NSYM too small'
 
   DO K=1,IORD
-     READ(unit_struct,1070) ((IMAT(J,I,K),J=1,3),TAU(I,K),I=1,3)
-     WRITE(unit_out,2040) K,((IMAT(J,I,K),J=1,3),TAU(I,K),I=1,3)
+     READ(unit_struct, '(3(3I2,F10.5/))') ((IMAT(J,I,K),J=1,3),TAU(I,K),I=1,3)
+     write(unit_out,"(I5,3I8,F13.5/2(5X,3I8,F13.5/))") &
+          K,((IMAT(J,I,K),J=1,3),TAU(I,K),I=1,3)
   end DO
 
-  WRITE(unit_out,2050)
+  write(unit_out, &
+       "( ' POSITIONS OF THE BASIS ATOMS'                &
+       & /' ----------------------------'                &
+       & /' x = Sum(j=1,3) f_i a_i  with  f_i in [0,1[', &
+       &  '  (in the conventional unit cell)'            &
+       &//' atom    f_1      f_2      f_3   ',           &
+       &  '        x [bohr]     y [bohr]     z [bohr]')")
+
   DO INDEX=1,NDAT
      DO J=1,3
         R(J) = POS(1,INDEX)*BR1(1,J) + POS(2,INDEX)*BR1(2,J) &
              + POS(3,INDEX)*BR1(3,J)
      end DO
-     WRITE(unit_out,2060) IATNR(INDEX),(POS(I,INDEX),I=1,3),(R(J),J=1,3)
+     write(unit_out,"(I5,1X,3F9.5,3X,3F13.7)") &
+          IATNR(INDEX),(POS(I,INDEX),I=1,3),(R(J),J=1,3)
   end DO
 
   IF(.NOT.PRIM) CALL trans(NDAT,POS,IORD,IMAT,TAU)
@@ -276,12 +297,20 @@ subroutine main()
      end DO
   end DO
   
-  WRITE(unit_out,2070)
+  write(unit_out, &
+       "(/' SYMMETRY ADAPTED LOCAL ROTATION MATRICES' &
+       & /' ----------------------------------------' &
+       & /' x'' = T^-1(x) : x''_i = Sum(j) x_j T_ji'  &
+       & ,'  with x_j and x''_i in Cartesian coord.'  &
+       &//' atom  symm.      T(:,1)      T(:,2)      T(:,3)')")
+
   DO INDEX=1,NDAT
-     WRITE(unit_out,2080) IATNR(INDEX),IOP(INDEX), &
+     write(unit_out,"(2(I5,1X),3F12.6,2(/12X,3F12.6)/)") &
+          IATNR(INDEX),IOP(INDEX), &
           ((ROTLOC(I,J,INDEX),I=1,3),J=1,3)
+
      IF(.NOT.ORTH(ROTLOC(1,1,INDEX)))THEN
-        WRITE(unit_out,2085)
+        WRITE(unit_out,"(/'CURRENT ROTATION MATRIX IS NOT ORTHOGONAL')")
         STOP 'MATRIX NOT ORTHOGONAL'
      ENDIF
   end DO
@@ -302,9 +331,16 @@ subroutine main()
 ! and {a_1,a_2,a_3} being the primitive lattice vectors 
 ! ---------------------------------------------------------------
   CALL SPCGEN(NAT,RMT,ATMS)
-  WRITE(unit_out,2090)
+  write(unit_out, &
+       "(/' PRIMITIVE CELLS SURROUNDING THE MUFFIN TIN SPHERES' &
+       & /' --------------------------------------------------' &
+       & /' cell = Sum(i=1,3) [-s_i,+s_i] a_i',                 &
+       &  '  with  a_i = primitive lattice vector'              &
+       &//' atom     RMT         s_1      s_2      s_3')")
+
   DO JATOM=1,NAT
-     WRITE(unit_out,2100) JATOM,RMT(JATOM),(ATMS(I,JATOM),I=1,3)
+     write(unit_out,"(I5,F10.5,3X,3F9.5)") &
+          JATOM,RMT(JATOM),(ATMS(I,JATOM),I=1,3)
   end DO
 !     << determine into which sphere each grid point r falls >>
 ! -------------------------------------------------------------------------
@@ -344,10 +380,17 @@ subroutine main()
   end DO
 
   IF(NPG.GT.0)THEN
-     WRITE(unit_out,2110) 0,NREG(0),NREG(0)/DBLE(NPG)
+     write(unit_out, &
+          "(/' GRID POINT DISTRIBUTION'               &
+          & /' -----------------------'               &
+          & /' region  atom  grid points  percentage' &
+          & /I7,3X,'int',I10,2P,F11.1,' %')")         &
+          0,NREG(0),NREG(0)/dble(NPG)
+
      DO INDEX=1,NDAT
-        WRITE(unit_out,2120) INDEX,IATNR(INDEX),NREG(INDEX), &
-             NREG(INDEX)/DBLE(NPG)
+        write(unit_out,"(I7,I5,I11,2P,F11.1,' %')") &
+             INDEX,IATNR(INDEX),NREG(INDEX), &
+             NREG(INDEX)/dble(NPG)
      end DO
   ENDIF
 
@@ -374,10 +417,20 @@ subroutine main()
   close(unit_vector)
 !
 !     << write wave function options to output >>
-  WRITE(unit_out,2130) WHPSI
-  IF(DEPHAS)WRITE(unit_out,2131)
-  write(unit_out,2135) SWITCH//'(PSI)',IUNIT
-  write(BUF(1:67),3000) SWITCH//'(PSI)',IUNIT,WHPSI
+  write(unit_out, &
+       "(/' WAVE FUNCTION OPTIONS'                            &
+       & /' ---------------------'                            &
+       & /' evaluation of the ',A5,' relativistic component', &
+       &  ' of the wave functions')")                         &
+       WHPSI
+
+  IF(DEPHAS) WRITE(unit_out,"( ' after dephasing of the wave function')")
+  write(unit_out,"( ' data provided    :  ',A,'  [in ',A3,' units]')") &
+       SWITCH//'(PSI)',IUNIT
+  write(BUF(1:67), &
+       "('k =..... , n =...... : ',A8,' [',A3,' units] ', &
+       & '-- ',A5,' rel. component')")                    &
+       SWITCH//'(PSI)',IUNIT,WHPSI
 
 !     << set up constants and prefactors >>
 ! -----------------------------------------
@@ -398,6 +451,11 @@ subroutine main()
      write(unit_out,2150) '((psi(ix,iy),ix=1,nx),iy=1,ny)'
   elseif(GridMode(1:2) == '3D') then
      write(unit_out,2150) '(((psi(ix,iy,iz),ix=1,nx),iy=1,ny),iz=1,nz)'
+
+2150 format(/' ==================' &
+          & /' WAVE FUNCTION DATA' &
+          & /' ==================' &
+          & /' order: ',A/)
   endif
 
 !     << read in k points >>
@@ -609,7 +667,9 @@ subroutine main()
         WRITE(unit_psink,'(A)') BUF(1:67)
 
 !         << echo wave functions to the output >>
-        WRITE(unit_out,2170)IEABS,E,KKKABS
+        write(unit_out, &
+             "( ' band',I4,' : E = ',F12.6,'  (k-point:',I4,')')") &
+             IEABS,E,KKKABS
 
         if(IE.lt.NE) goto 340
      end do kpoints
@@ -617,69 +677,10 @@ subroutine main()
 
   write(unit_psink, 3020)(abs(tot(IG))**2/kkk,IG=1,NPG)
   write(unit_psiarg,3020)(atan2(dimag(tot(IG)),real(tot(IG))),IG=1,NPG)
+3020 format(1P,10E16.8)
 
   RETURN
 
- 1000 FORMAT(A80)
- 1010 FORMAT(A4,23X,I3/13X,A4)
- 1020 FORMAT(6F10.5)
- 1030 FORMAT(4X,I4,1X,3(3X,F10.7):/15X,I2)
- 1040 FORMAT(A10,5X,I5,2(5X,F10.5),5X,F5.2)
- 1050 FORMAT(20X,3F10.8)
- 1060 FORMAT(I4)
- 1070 FORMAT(3(3I2,F10.5/))
- 1080 FORMAT(A3)
- 2000 FORMAT(/A/)
- 2010 FORMAT(1X,A4,' LATTIC WITH ',I5,' INEQUIV. ATOMS/UC USING ', &
-             A4,'. AUGMENTATION')
- 2020 FORMAT(/' LATTIC CONSTANTS:',3F12.7,' (in bohr)' &
-             /' UNIT CELL ANGLES:',3F12.7,' (in degree)')
- 2030 FORMAT(/' SYMMETRY OPERATIONS' &
-             /' -------------------' &
-             /' y = {Q|t}(x) : y_i = Sum(j) Q_ij x_j + t_i', &
-             /' with y_i and x_j in conventional fractional coordinates' &
-            //' symm    Q(:,1)  Q(:,2)  Q(:,3)    t(:)')
- 2040 FORMAT(I5,3I8,F13.5/2(5X,3I8,F13.5/))
- 2050 FORMAT( ' POSITIONS OF THE BASIS ATOMS' &
-             /' ----------------------------' &
-             /' x = Sum(j=1,3) f_i a_i  with  f_i in [0,1[', &
-              '  (in the conventional unit cell)' &
-            //' atom    f_1      f_2      f_3   ', &
-              '        x [bohr]     y [bohr]     z [bohr]')
- 2060 FORMAT(I5,1X,3F9.5,3X,3F13.7)
- 2070 FORMAT(/' SYMMETRY ADAPTED LOCAL ROTATION MATRICES' &
-             /' ----------------------------------------' &
-             /' x'' = T^-1(x) : x''_i = Sum(j) x_j T_ji' &
-             ,'  with x_j and x''_i in Cartesian coord.' &
-            //' atom  symm.      T(:,1)      T(:,2)      T(:,3)')
- 2080 FORMAT(2(I5,1X),3F12.6,2(/12X,3F12.6)/)
- 2085 FORMAT(/'CURRENT ROTATION MATRIX IS NOT ORTHOGONAL')
- 2090 FORMAT(/' PRIMITIVE CELLS SURROUNDING THE MUFFIN TIN SPHERES' &
-             /' --------------------------------------------------' &
-             /' cell = Sum(i=1,3) [-s_i,+s_i] a_i', &
-              '  with  a_i = primitive lattice vector' &
-            //' atom     RMT         s_1      s_2      s_3')
- 2100 FORMAT(I5,F10.5,3X,3F9.5)
- 2110 FORMAT(/' GRID POINT DISTRIBUTION' &
-             /' -----------------------' &
-             /' region  atom  grid points  percentage' &
-             /I7,3X,'int',I10,2P,F11.1,' %')
- 2120 FORMAT(I7,I5,I11,2P,F11.1,' %')
- 2130 FORMAT(/' WAVE FUNCTION OPTIONS' &
-             /' ---------------------' &
-             /' evaluation of the ',A5,' relativistic component', &
-              ' of the wave functions')
- 2131 FORMAT( ' after dephasing of the wave function')
- 2135 FORMAT( ' data provided    :  ',A,'  [in ',A3,' units]')
- 2140 FORMAT( ' selected ',A7,' :',I5)
- 2150 FORMAT(/' ==================' &
-             /' WAVE FUNCTION DATA' &
-             /' ==================' &
-             /' order: ',A/)
- 2170 FORMAT( ' band',I4,' : E = ',F12.6,'  (k-point:',I4,')')
- 3020 FORMAT(1P,10E16.8)
- 3000 FORMAT('k =..... , n =...... : ',A8,' [',A3,' units] ', &
-             '-- ',A5,' rel. component')
 
 contains
   subroutine wfopen(unit, file, iwf, iostat, status, form)
@@ -726,4 +727,4 @@ end subroutine main
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-22 19:47:31 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-22 20:08:33 assman@faepop36.tu-graz.ac.at>
