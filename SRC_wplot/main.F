@@ -31,7 +31,9 @@ subroutine main()
   character(10)    :: aname, bname
 
   LOGICAL    LARGE
-  COMPLEX(C16) ALMSUM
+  complex(C16) ALMSUM
+
+  type(chk_t)    :: chk
 
 #ifndef _COMPLEX_
   REAL(R8),     allocatable :: CF(:)
@@ -51,30 +53,18 @@ subroutine main()
   integer,allocatable ::  KX(:),KY(:),KZ(:)
   complex(c16), allocatable :: uu(:), rotmatrix(:,:)
   real(r8),allocatable :: tmprot(:)
-  LOGICAL :: REL,ORTHO,PRIM,ORTH, &
-       &     DEPHAS,rotate
+  LOGICAL :: REL,ORTHO,PRIM,ORTH, DEPHAS,rotate=.false.
 
   integer :: i, ie, ieabs, ierr, iG, ik, il, il1, imax, index, index1, irf
-  integer :: iseig, iloop
+  integer :: iskpt, iseig, iloop
   integer :: j, j2, j3, jatom, jneq, k, kkk, kkkabs, l, latom, lm, m, mu
-  integer :: nat, nb, ndat, ne, nemax, nemin, nmatk, nkp, nmat, nmt, npw
-  integer :: num_bands, NP(3), nskip
+  integer :: Nat, Nb, Ndat, NE, NEmax, NEmin, Nmatk, Nmat, Nmt, Npw
+  integer :: NP(3), Nskip
 
   real(R8) :: A(3), ROT0(3,3), R(3), FK(3), phsav, prefac
   real(R8) :: alpha, beta, gamma, arg, E, weight
 
-  !definition for umat read-in
-  character(len=33) :: header
-  character(len=20) :: chkpt1
-  complex(kind=DPk), allocatable :: u_matrix_opt(:,:,:), u_matrix(:,:,:), &
-       &                            m_matrix(:,:,:,:)
   complex(kind=DPk) :: local_contribution
-  integer num_exclude_bands,num_kpts,mp_grid(3),nntot,num_wann
-  integer, allocatable :: exclude_bands(:),kpt_latt(:,:),ndimwin(:)
-  logical :: have_disentangled
-  logical, allocatable :: lwindow(:,:)
-  real(kind=DPk) :: real_lattice(3,3), recip_lattice(3,3),omega_invariant
-  real(kind=DPk), allocatable :: wannier_centres(:,:),wannier_spreads(:)
 
 ! ############################
 ! # PART I : read input file #
@@ -130,7 +120,7 @@ subroutine main()
   LARGE = WHPSI .EQ. 'LARGE'
 
 !     << read in wave function selection (and file handling) >>
-  READ (unit_in,*) ISEIG
+  READ (unit_in,*) ISKPT,ISEIG
   read(unit_inwf,*)
   read(unit_inwf,*)nemin,nemax
   nb=nemax-nemin+1
@@ -147,53 +137,17 @@ subroutine main()
   write(unit_out,2140) 'Wannier function   ',iseig
 
 !!! Read chk file for num_wann, u_matrix, and friends
-  write(unit_out,*)"read-in chk file from Wannier90"
-  read(unit_chk) header    ! Date and time
-  write(*,*)header
-  read(unit_chk) num_bands ! Number of bands
-  if (num_bands.ne.nb) &
+  call chk_read(unit_chk, chk)
+
+  write(unit_out,'("Read Wannier90 ‘chk’ file ", A)') trim(chk%header)
+
+  if (chk%num_bands /= nb) &
        call croak("Error in read-in of chk file: &
        &inconsistency of number of Bloch bands")
 
-  read(unit_chk) num_exclude_bands ! Number of excluded bands
-  allocate(exclude_bands(num_exclude_bands))
-  read(unit_chk) (exclude_bands(i),i=1,num_exclude_bands)
-  read(unit_chk) ((real_lattice(i,j),i=1,3),j=1,3)
-  read(unit_chk) ((recip_lattice(i,j),i=1,3),j=1,3)
-  read(unit_chk) num_kpts
-  read(unit_chk) (mp_grid(i),i=1,3)
-  allocate(kpt_latt(3,num_kpts))
-  read(unit_chk) ((kpt_latt(i,nkp),i=1,3),nkp=1,num_kpts)
-  read(unit_chk) nntot   ! Number of nearest k-point neighbours
-  read(unit_chk) num_wann
-  read(unit_chk) chkpt1  ! Position of checkpoint
-  read(unit_chk) have_disentangled
-  if (have_disentangled) then
-     read(unit_chk) omega_invariant     ! Omega invariant
-     ! lwindow, ndimwin and U_matrix_opt 
-     allocate(lwindow(num_bands,num_kpts))
-     read(unit_chk) ((lwindow(i,nkp),i=1,num_bands),nkp=1,num_kpts)
-     allocate(ndimwin(num_kpts))
-     read(unit_chk) (ndimwin(nkp),nkp=1,num_kpts)
-     allocate(u_matrix_opt(num_bands,num_wann,num_kpts))
-     u_matrix_opt(:,:,:) = 0
-     read(unit_chk) (((u_matrix_opt(i,j,nkp),i=1,num_bands), &
-          j=1,num_wann),nkp=1,num_kpts)
-  endif
-  allocate(u_matrix(num_wann,num_wann,num_kpts))
-  u_matrix(:,:,:) = 0
-  read(unit_chk) (((u_matrix(i,j,k),i=1,num_wann),j=1,num_wann), &
-       k=1,num_kpts)
-  allocate(m_matrix(num_wann,num_wann,nntot,num_kpts))
-  read(unit_chk) ((((m_matrix(i,j,k,l),i=1,num_wann),j=1,num_wann), &
-       k=1,nntot),l=1,num_kpts)
-  allocate(wannier_centres(3,num_wann))
-  read(unit_chk) ((wannier_centres(i,j),i=1,3),j=1,num_wann)
-  allocate(wannier_spreads(num_wann))
-  read(unit_chk) (wannier_spreads(i),i=1,num_wann)
-  if (ISEIG.gt.num_wann) &
+  if (iseig > chk%num_wann) &
        call croak("Error in read-in of chk file: &
-       &number of Wannier functions is smaller than given index")
+          &number of Wannier functions is smaller than given index")
 
   close(unit_chk)
 
@@ -202,12 +156,12 @@ subroutine main()
      read(unit_in, "(A)") rotfilename
      write(*,*) "rotate with matrix from ", trim(rotfilename)
      open(unit_rot, file=trim(rotfilename), status='old')
-     allocate(rotmatrix(num_wann, num_wann), tmprot(num_wann*2))
+     allocate(rotmatrix(chk%num_wann, chk%num_wann), tmprot(chk%num_wann*2))
 
-     do j=1,num_wann
+     do j=1,chk%num_wann
         read(unit_rot,*) tmprot
 
-        do i=1,num_wann
+        do i=1,chk%num_wann
            rotmatrix(j,i) = cmplx(tmprot(2*i-1), tmprot(2*i), DPk)
         enddo
         write(*,"(100F13.5)") rotmatrix(j,:)
@@ -464,29 +418,29 @@ subroutine main()
 
         KKK = KKK + 1
 
-        do j=1,num_bands
+        do j=1, chk%num_bands
            local_contribution = dcmplx(0d0,0d0)
-           if (have_disentangled) then
-              do j2=1,num_wann
+           if (chk%have_disentangled) then
+              do j2=1, chk%num_wann
                  if (rotate) then
-                    do j3=1,num_wann
+                    do j3=1, chk%num_wann
                        local_contribution = local_contribution +&
                             rotmatrix(iseig,j3) * &
-                            u_matrix(j2,j3,kkk)*u_matrix_opt(j,j2,kkk)
+                            chk%u_matrix(j2,j3,kkk)*chk%u_matrix_opt(j,j2,kkk)
                     enddo
                  else
                     local_contribution = local_contribution + &
-                         u_matrix(j2,ISEIG,kkk)*u_matrix_opt(j,j2,kkk)
+                         chk%u_matrix(j2,ISEIG,kkk)*chk%u_matrix_opt(j,j2,kkk)
                  endif
               enddo
            else
               if (rotate) then
-                 do j2=1,num_wann
+                 do j2=1, chk%num_wann
                     local_contribution = local_contribution+ &
-                         rotmatrix(j2,iseig)*u_matrix(j,j2,kkk)
+                         rotmatrix(j2,iseig)*chk%u_matrix(j,j2,kkk)
                  enddo
               else
-                 local_contribution = u_matrix(j,ISEIG,kkk)
+                 local_contribution = chk%u_matrix(j,iseig,kkk)
               endif
            endif
            uu(j)=local_contribution
@@ -772,5 +726,4 @@ end subroutine main
 !! End:
 !!\---
 !!
-
-!! Time-stamp: <2015-12-22 19:28:12 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-22 19:47:31 assman@faepop36.tu-graz.ac.at>
