@@ -385,12 +385,12 @@ subroutine main()
           & /' -----------------------'               &
           & /' region  atom  grid points  percentage' &
           & /I7,3X,'int',I10,2P,F11.1,' %')")         &
-          0,NREG(0),NREG(0)/dble(NPG)
+          0,NREG(0),NREG(0)/real(NPG, DPk)
 
      DO INDEX=1,NDAT
         write(unit_out,"(I7,I5,I11,2P,F11.1,' %')") &
              INDEX,IATNR(INDEX),NREG(INDEX), &
-             NREG(INDEX)/dble(NPG)
+             NREG(INDEX)/real(NPG, DPk)
      end DO
   ENDIF
 
@@ -654,10 +654,10 @@ subroutine main()
            DO IG=1,NPG
               IF(ABS(PSI(IG)).GT.1D-18) &
                    PHSAV =  &
-                   PHSAV + DMOD(DATAN2(DIMAG(PSI(IG)),DBLE(PSI(IG)))+PI,PI)
+                   PHSAV + mod(atan2(aimag(psi(ig)), real(psi(ig)))+PI, PI)
            end DO
-           PHSAV = PHSAV/DBLE(NPG)
-           PHS   = DCMPLX(COS(PHSAV),-SIN(PHSAV))
+           PHSAV = PHSAV/real(NPG, DPk)
+           PHS   = cmplx(cos(PHSAV), -sin(PHSAV), DPk)
            DO IG=1,NPG
               PSI(IG) = PSI(IG)*PHS
            end DO
@@ -727,4 +727,4 @@ end subroutine main
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-22 20:16:28 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-22 20:25:32 assman@faepop36.tu-graz.ac.at>
