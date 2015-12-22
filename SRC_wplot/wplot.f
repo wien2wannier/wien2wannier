@@ -21,7 +21,8 @@
 PROGRAM WPLOT
   use const, only: BUFSZ
   use clio,  only: fetcharg, argstr
-  use param
+  use param, only: unit_def, unit_vector, unit_psink, unit_psiarg, unit_out,&
+       vecfn, psinkfn, psiargfn, outfn, idx_wann, iproc
   IMPLICIT none
 
   type(argstr)     :: defname
@@ -46,8 +47,6 @@ PROGRAM WPLOT
         psiargfn = fname
      case(unit_out)
         outfn    = fname
-     case(unit_tmp)
-        tmpfn    = fname
      case default
         open(iunit, FILE=fname, STATUS=status, FORM=form)
      end select
@@ -66,4 +65,4 @@ END PROGRAM WPLOT
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 20:50:35 elias>
+!! Time-stamp: <2015-12-22 15:59:07 assman@faepop36.tu-graz.ac.at>
