@@ -134,6 +134,7 @@ subroutine MAIN2()
   READ (unit_in,*) ISKPT,ISEIG
   ALLKPT = ISKPT.LE.0
   ALLEIG = ISEIG.LE.0
+  wan=.true.
   IF (WAN) THEN
      ALLKPT=.true.
      read(unit_inwf,*)
@@ -693,20 +694,6 @@ subroutine MAIN2()
 
 !         << echo wave functions to the output >>
         WRITE(unit_out,2170)IEABS,E,KKKABS
-        IF(GridMode(1:3) .EQ. 'ANY')THEN
-           WRITE(unit_out,'()')
-        ELSE
-!           << data stored in gnuplot order                 >>
-!           << POS = IZ + (IY-1)*NP(3) + (IX-1)*NP(3)*NP(2) >>
-           NPY = NP(3)
-           NPX = NP(3)*NP(2)
-           do IZ=0,NP(3)-1,NPO(3)
-              do IY=0,NP(2)-1,NPO(2)
-                 IG = 1 + IZ + IY*NPY
-              end DO
-              WRITE(unit_out,'()')
-           end DO
-        ENDIF
 
 315     IF(IE.LT.NE) GOTO 340
         IF(KFOUND.AND..NOT.PUTABC)WRITE(unit_tmp,'()')
@@ -860,4 +847,4 @@ END subroutine main2
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-22 09:45:28 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-22 14:20:56 assman@faepop36.tu-graz.ac.at>
