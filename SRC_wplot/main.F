@@ -26,13 +26,14 @@ subroutine main()
 
   character(BUFSZ) :: buf, rotfilename
   character( 3)    :: switch, iunit
-  character( 4)    :: lattic, GridMode, RelMode
+  character( 4)    :: GridMode
   character( 5)    :: whpsi
-  character(10)    :: aname, bname
+  character(10)    :: bname
 
   LOGICAL    LARGE
   complex(C16) ALMSUM
 
+  type(struct_t) :: stru
   type(chk_t)    :: chk
 
 #ifndef _COMPLEX_
@@ -53,16 +54,16 @@ subroutine main()
   integer,allocatable ::  KX(:),KY(:),KZ(:)
   complex(c16), allocatable :: uu(:), rotmatrix(:,:)
   real(r8),allocatable :: tmprot(:)
-  LOGICAL :: REL,ORTHO,PRIM,ORTH, DEPHAS,rotate=.false.
+  LOGICAL :: ORTHO,PRIM,ORTH, DEPHAS,rotate=.false.
 
   integer :: i, ie, ieabs, ierr, iG, ik, il, il1, imax, index, index1, irf
   integer :: iskpt, iseig, iloop
   integer :: j, j2, j3, jatom, jneq, k, kkk, kkkabs, l, latom, lm, m, mu
-  integer :: Nat, Nb, Ndat, NE, NEmax, NEmin, Nmatk, Nmat, Nmt, Npw
+  integer :: Nb, NE, NEmax, NEmin, Nmatk, Nmat, Nmt, Npw
   integer :: NP(3), Nskip
 
-  real(R8) :: A(3), ROT0(3,3), R(3), FK(3), phsav, prefac
-  real(R8) :: alpha, beta, gamma, arg, E, weight
+  real(R8) :: ROT0(3,3), R(3), FK(3), phsav, prefac
+  real(R8) :: arg, E, weight
 
   complex(kind=DPk) :: local_contribution
 
@@ -177,77 +178,66 @@ subroutine main()
 ! ###################################
 !
 !     << set up the lattice >>
-  READ(unit_struct, '(A)') buf
-  READ(unit_struct, '(A4,23X,I3/13X,A4)') LATTIC,NAT,RelMode
+  call struct_read(unit_struct, stru)
+  close(unit_struct)
 
-  allocate ( POS(3,NAT*48),ZNUC(NAT),RMT(NAT),MULT(NAT),IATNR(NAT*48))
-  allocate ( RM(NRAD,NAT),RNOT(NAT),DX(NAT),JRI(NAT) )
-  allocate ( ILO(0:LOMAX, NAT),LAPW(0:LMAX7,NAT) )
-  allocate ( ALO(0:LOMAX,NLOAT,NRF,NAT))
-  allocate ( P(0:LMAX7,NRF,NAT),DP(0:LMAX7,NRF,NAT))
-  allocate ( RRAD(NRAD,0:LMAX7,NRF,NAT))
-  allocate ( RAD(NAT),IRAD(NAT))
-  allocate ( ROTLOC(3,3,NAT*48),atms(3,NAT))
-  allocate ( IOP(NAT*48),nreg(0:NAT*48))
+  allocate ( POS(3,stru%Nneq*48),ZNUC(stru%Nneq),RMT(stru%Nneq),MULT(stru%Nneq),IATNR(stru%Nneq*48))
+  allocate ( RM(NRAD,stru%Nneq),RNOT(stru%Nneq),DX(stru%Nneq),JRI(stru%Nneq) )
+  allocate ( ILO(0:LOMAX, stru%Nneq),LAPW(0:LMAX7,stru%Nneq) )
+  allocate ( ALO(0:LOMAX,NLOAT,NRF,stru%Nneq))
+  allocate ( P(0:LMAX7,NRF,stru%Nneq),DP(0:LMAX7,NRF,stru%Nneq))
+  allocate ( RRAD(NRAD,0:LMAX7,NRF,stru%Nneq))
+  allocate ( RAD(stru%Nneq),IRAD(stru%Nneq))
+  allocate ( ROTLOC(3,3,stru%Nneq*48),atms(3,stru%Nneq))
+  allocate ( IOP(stru%Nneq*48),nreg(0:stru%Nneq*48))
 
-  REL = RelMode .EQ. 'RELA'
-  READ(unit_struct, '(6F10.5)') A,ALPHA,BETA,GAMMA
-  IF(ALPHA.EQ.0.0D0) ALPHA=90.0D0
-  IF(BETA .EQ.0.0D0) BETA =90.0D0
-  IF(GAMMA.EQ.0.0D0) GAMMA=90.0D0
-
-  WRITE(unit_out, '(/A/)') trim(buf)
-  WRITE(unit_out,"(1X,A4,' LATTIC WITH ',I5,' INEQUIV. ATOMS/UC USING ', &
+  write(unit_out, '(/A/)') trim(stru%title)
+  write(unit_out,"(1X,A4,' LATTIC WITH ',I5,' INEQUIV. ATOMS/UC USING ', &
        & A4,'. AUGMENTATION')") &
-       LATTIC,NAT,RelMode
-  WRITE(unit_out,"(/' LATTIC CONSTANTS:',3F12.7,' (in bohr)' &
+       stru%lattic, stru%Nneq, stru%mode
+  write(unit_out,"(/' LATTIC CONSTANTS:',3F12.7,' (in bohr)' &
        & /' UNIT CELL ANGLES:',3F12.7,' (in degree)')") &
-       A,ALPHA,BETA,GAMMA
-  CALL LATGEN(LATTIC,A,ALPHA,BETA,GAMMA,ORTHO,PRIM)
+       stru%a, stru%alpha(:)
 
-  NMT=0
-  INDEX=0
-  atoms: DO JATOM=1,NAT
-     INDEX1 = INDEX+1
-     INDEX=INDEX+1
+  CALL LATGEN(stru%lattic, stru%a, stru%alpha, ORTHO, PRIM)
 
-1030 FORMAT(4X,I4,1X,3(3X,F10.7):/15X,I2)
-     READ(unit_struct,1030) IATNR(INDEX),(POS(I,INDEX),I=1,3),MULT(JATOM)
+  pos  = stru%pos
+  znuc = stru%Z
+  rmt  = stru%rmt
+  mult = stru%mult
+  iatnr= stru%neq2at
+  jri  = stru%Npt
+  rnot = stru%r0
+  dx   = log(stru%rmt / stru%r0) / real(stru%npt-1, DPk)
 
-     IATNR(INDEX) = ABS(IATNR(INDEX))
+  ! FIXME: Nrad could be replaced by max(stru%npt)
+  if (any(stru%Npt > Nrad)) call croak('NRAD too small')
 
-     DO MU=2,MULT(JATOM)
-        INDEX=INDEX+1
-        READ(unit_struct,1030) IATNR(INDEX),(POS(I,INDEX),I=1,3)
-        IATNR(INDEX) = ABS(IATNR(INDEX))
-     end DO
+  NMT = 0
 
-     READ(unit_struct, '(A10,5X,I5,2(5X,F10.5),5X,F5.2)') ANAME,JRI(JATOM),RNOT(JATOM),RMT(JATOM), &
-          ZNUC(JATOM)
-     DX(JATOM) = LOG( RMT(JATOM)/RNOT(JATOM) ) / DBLE( JRI(JATOM)-1 )
-     IF(JRI(JATOM).GT.NRAD) call croak('NRAD too small')
+  atoms: do jatom=1,stru%Nneq
+     do i=1, stru%Npt(jatom)
+        RM(i, jatom) = stru%r0(jatom) * exp( real(i-1, DPk) * dx(jatom) )
+     end do
 
-     DO I=1,JRI(JATOM)
-        RM(I,JATOM) = RNOT(JATOM) * EXP( DBLE(I-1)*DX(JATOM) )
-     end DO
+     RMT(jatom) = RM(stru%Npt(JATOM), jatom)
 
-     RMT(JATOM) = RM(JRI(JATOM),JATOM)
-     READ(unit_struct, '(20X,3F10.8)') ((ROTLOC(I,J,INDEX1),I=1,3),J=1,3)
+     rotloc(:,:, stru%at2neq(jatom)%p(1)) = &
+          transpose(stru%locrot(:,:, jatom))
 
-     DO J=1,NMT
-        IF(RMT(JATOM).EQ.RAD(J))THEN
-           IRAD(JATOM) = J
+     do j=1,NMT
+        if(RMT(jatom) == rad(j))then
+           irad(jatom) = j
            cycle atoms
         ENDIF
      end DO
 
      NMT = NMT + 1
-     RAD(NMT) = RMT(JATOM)
-     IRAD(JATOM) = NMT
+     rad(NMT) = RMT(jatom)
+     irad(jatom) = NMT
   end DO atoms
 
-  NDAT = INDEX
-  allocate ( AUG(NRAD,(LMAX7+1)*(LMAX7+1),NDat))
+  allocate ( AUG(NRAD,(LMAX7+1)*(LMAX7+1), stru%nat))
 
   write(unit_out, &
        "(/' SYMMETRY OPERATIONS'                                     &
@@ -255,11 +245,13 @@ subroutine main()
        & /' y = {Q|t}(x) : y_i = Sum(j) Q_ij x_j + t_i',             &
        & /' with y_i and x_j in conventional fractional coordinates' &
        &//' symm    Q(:,1)  Q(:,2)  Q(:,3)    t(:)')")
-  READ(unit_struct, '(I4)') IORD
+
+  iord = size(stru%rsym, 3)
   IF(IORD.GT.NSYM) call croak('NSYM too small')
 
+  imat = stru%rsym
+  tau  = stru%rtrans
   DO K=1,IORD
-     READ(unit_struct, '(3(3I2,F10.5/))') ((IMAT(J,I,K),J=1,3),TAU(I,K),I=1,3)
      write(unit_out,"(I5,3I8,F13.5/2(5X,3I8,F13.5/))") &
           K,((IMAT(J,I,K),J=1,3),TAU(I,K),I=1,3)
   end DO
@@ -272,7 +264,7 @@ subroutine main()
        &//' atom    f_1      f_2      f_3   ',           &
        &  '        x [bohr]     y [bohr]     z [bohr]')")
 
-  DO INDEX=1,NDAT
+  DO INDEX=1,stru%nat
      DO J=1,3
         R(J) = POS(1,INDEX)*BR1(1,J) + POS(2,INDEX)*BR1(2,J) &
              + POS(3,INDEX)*BR1(3,J)
@@ -281,12 +273,12 @@ subroutine main()
           IATNR(INDEX),(POS(I,INDEX),I=1,3),(R(J),J=1,3)
   end DO
 
-  IF(.NOT.PRIM) CALL trans(NDAT,POS,IORD,IMAT,TAU)
-  CALL ROTDEF(NAT,MULT,POS,IOP)
+  IF(.NOT.PRIM) CALL trans(stru%nat,POS,IORD,IMAT,TAU)
+  CALL ROTDEF(stru%Nneq,MULT,POS,IOP)
 !
 !     << set up local rotations for all basis atoms (in Cartesian coord.) >>
   INDEX=0
-  DO JATOM=1,NAT
+  DO JATOM=1,stru%Nneq
      INDEX1 = INDEX+1
 !       << store ROTLOC(1.atom) before updating it >>
      ROT0(:,:) = ROTLOC(:,:, index1)
@@ -304,14 +296,14 @@ subroutine main()
        & ,'  with x_j and x''_i in Cartesian coord.'  &
        &//' atom  symm.      T(:,1)      T(:,2)      T(:,3)')")
 
-  DO INDEX=1,NDAT
+  DO INDEX=1,stru%nat
      write(unit_out,"(2(I5,1X),3F12.6,2(/12X,3F12.6)/)") &
           IATNR(INDEX),IOP(INDEX), &
           ((ROTLOC(I,J,INDEX),I=1,3),J=1,3)
 
-     IF(.NOT.ORTH(ROTLOC(1,1,INDEX)))THEN
+     IF(.NOT.ORTH(ROTLOC(:,:,INDEX)))THEN
         WRITE(unit_out,"(/'CURRENT ROTATION MATRIX IS NOT ORTHOGONAL')")
-        call croak('MATRIX NOT ORTHOGONAL')
+        call croak('Local rotation matrix not orthogonal')
      ENDIF
   end DO
 
@@ -330,7 +322,7 @@ subroutine main()
 ! SPC := Sum(i=1,3) [-s_i,+s_i] * a_i  with  s_i > 0
 ! and {a_1,a_2,a_3} being the primitive lattice vectors 
 ! ---------------------------------------------------------------
-  CALL SPCGEN(NAT,RMT,ATMS)
+  CALL SPCGEN(stru%Nneq,RMT,ATMS)
   write(unit_out, &
        "(/' PRIMITIVE CELLS SURROUNDING THE MUFFIN TIN SPHERES' &
        & /' --------------------------------------------------' &
@@ -338,7 +330,7 @@ subroutine main()
        &  '  with  a_i = primitive lattice vector'              &
        &//' atom     RMT         s_1      s_2      s_3')")
 
-  DO JATOM=1,NAT
+  DO JATOM=1, stru%Nneq
      write(unit_out,"(I5,F10.5,3X,3F9.5)") &
           JATOM,RMT(JATOM),(ATMS(I,JATOM),I=1,3)
   end DO
@@ -358,7 +350,7 @@ subroutine main()
   NREG(:) = 0
 
   DO IG=1,NPG
-     CALL FINDMT(RGRID(1,IG),ATMS,nat,NDAT,INDEX,ILAT(1,IG),IRI(IG),R)
+     CALL FINDMT(RGRID(1,IG),ATMS,stru%Nneq,stru%nat,INDEX,ILAT(1,IG),IRI(IG),R)
      IREG(IG) = INDEX
      NREG(INDEX)= NREG(INDEX) + 1
      IF(INDEX.GT.0)THEN
@@ -387,7 +379,7 @@ subroutine main()
           & /I7,3X,'int',I10,2P,F11.1,' %')")         &
           0,NREG(0),NREG(0)/real(NPG, DPk)
 
-     DO INDEX=1,NDAT
+     DO INDEX=1,stru%nat
         write(unit_out,"(I7,I5,I11,2P,F11.1,' %')") &
              INDEX,IATNR(INDEX),NREG(INDEX), &
              NREG(INDEX)/real(NPG, DPk)
@@ -395,7 +387,7 @@ subroutine main()
   ENDIF
 
 !     << finally transform POS into global Cartesian coord. >>
-  DO INDEX=1,NDAT
+  DO INDEX=1,stru%nat
      DO J=1,3
         R(J) = POS(1,INDEX)*BR2(1,J) + POS(2,INDEX)*BR2(2,J) &
              + POS(3,INDEX)*BR2(3,J)
@@ -413,7 +405,7 @@ subroutine main()
 !     << set up the augmentation functions  >>
 !     << for each group of equivalent atoms >>
   call paropen(unit_vector, vecfn, iproc, 1, FORM='unformatted')
-  CALL AUGGEN(REL,NAT,WHPSI)
+  CALL AUGGEN(stru%mode=='RELA',stru%Nneq,WHPSI)
   close(unit_vector)
 !
 !     << write wave function options to output >>
@@ -465,7 +457,7 @@ subroutine main()
   vecfiles: do iloop = 1, max(iproc,1)
      call paropen(unit_vector, vecfn, iproc, iloop, FORM='unformatted')
      ! read off two records from the fresh ‘vector’ file
-     do i=1,NAT
+     do i=1,stru%Nneq
         read(unit_vector)
         read(unit_vector)
      end do
@@ -587,7 +579,7 @@ subroutine main()
 ! ----------------------------------------------------------------------------
         IL1 = NPW
         LATOM  = 0
-        DO JATOM=1,NAT
+        DO JATOM=1,stru%Nneq
            IMAX = JRI(JATOM)
            DO JNEQ=1,MULT(JATOM)
               LATOM = LATOM + 1
@@ -727,4 +719,4 @@ end subroutine main
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-22 20:25:32 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-22 21:28:02 assman@faepop36.tu-graz.ac.at>

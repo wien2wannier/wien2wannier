@@ -1,19 +1,19 @@
 !!! wien2wannier/SRC_wplot/latgen.f
 
-SUBROUTINE LATGEN(LATTIC,A,ALP,BET,GAM,ORTHO,PRIM)
+subroutine LATGEN(LATTIC,A,ALP,ORTHO,PRIM)
   use const
   use latt
   use param, only: unit_out
 
   IMPLICIT     REAL(R8) (A-H,O-Z)
   CHARACTER(4) LATTIC
-  DIMENSION    A(3)
+  dimension    A(3), alp(3)
   LOGICAL      ORTHO, PRIM
 !
 ! << Input >>
 ! LATTIC      -- the type of the Bravais lattice
 ! A(1:3)      -- the lattice constants
-! ALP,BET,GAM -- the unit cell angles (in degree)
+! ALP         -- the unit cell angles (in degree)
 !
 ! << Output >>
 ! ORTHO       -- .TRUE. if the lattice is an orthogonal one
@@ -31,29 +31,29 @@ SUBROUTINE LATGEN(LATTIC,A,ALP,BET,GAM,ORTHO,PRIM)
 ! Caution: The lattice vectors setup here must precisely co-incide with 
 !          those used within LAPW2 !
 ! 
-      ALPHA = ALP * PI / 180
-      BETA  = BET * PI / 180
-      GAMMA = GAM * PI / 180
+      ALPHA = alp(1) * PI / 180
+      BETA  = alp(2) * PI / 180
+      GAMMA = alp(3) * PI / 180
 
       BR1=0; BR2=0
 
       IF(LATTIC(1:1).EQ.'P')THEN
 ! -------------------------------------------------------------------------
-!       << primitive lattice : P a b c alp bet gam >>
+!       << primitive lattice : P a b c alp(1) alp(2) alp(3) >>
 !
-!       a_1 = a * (sin(bet)*sin(phi),sin(bet)*cos(phi),cos(bet))
-!       a_2 = b * (        0        ,      sin(alp)   ,cos(alp))
+!       a_1 = a * (sin(alp(2))*sin(phi),sin(alp(2))*cos(phi),cos(alp(2)))
+!       a_2 = b * (        0        ,      sin(alp(1))   ,cos(alp(1)))
 !       a_3 = c * (        0        ,        0        ,  1     )
 !       with
-!       cos(phi) := ( cos(gam) - cos(alp)*cos(bet) ) / sin(alp)*sin(bet)
+!       cos(phi) := ( cos(alp(3)) - cos(alp)*cos(alp(2)) ) / sin(alp)*sin(alp(2))
 !
-!       VUC = a*b*c * sin(alp)*sin(bet)*sin(phi)
+!       VUC = a*b*c * sin(alp(1))*sin(alp(2))*sin(phi)
 !       
 !       triclinic, monoclinic, orthorhombic, tetragonal, cubic
 !
-!       b_1 = ( 1/sin(bet)*sin(phi)                    ,     0     ,0) / a
-!       b_2 = (-1/sin(alp)*tan(phi)                    , 1/sin(alp),0) / b
-!       b_3 = ( 1/tan(alp)*tan(phi)-1/tan(bet)*sin(phi),-1/tan(alp),1) / c
+!       b_1 = ( 1/sin(alp(2))*sin(phi)                    ,     0     ,0) / a
+!       b_2 = (-1/sin(alp(1))*tan(phi)                    , 1/sin(alp(1)),0) / b
+!       b_3 = ( 1/tan(alp(1))*tan(phi)-1/tan(alp(2))*sin(phi),-1/tan(alp(1)),1) / c
 ! -------------------------------------------------------------------------
         COSPHI=(COS(GAMMA)-COS(ALPHA)*COS(BETA))/SIN(ALPHA)/SIN(BETA)
         PHI=ACOS(COSPHI)
@@ -69,7 +69,7 @@ SUBROUTINE LATGEN(LATTIC,A,ALP,BET,GAM,ORTHO,PRIM)
 !       << further settings >>
         VUC   = SIN(ALPHA)*SIN(BETA)*SIN(PHI) * A(1)*A(2)*A(3)
         PRIM  = .TRUE.
-        ORTHO = ALP.EQ.90.0D0 .AND. BET.EQ.90.0D0 .AND. GAM.EQ.90.0D0
+        ORTHO = ALP(1).EQ.90.0D0 .AND. ALP(2).EQ.90.0D0 .AND. ALP(3).EQ.90.0D0
       ELSE IF(LATTIC(1:1).EQ.'H') THEN
 ! -------------------------------------------------------------------------
 !       << hexagonal lattice : H a * c * * * >>
@@ -195,25 +195,25 @@ SUBROUTINE LATGEN(LATTIC,A,ALP,BET,GAM,ORTHO,PRIM)
         VUC   = A(1)*A(2)*A(3) / 2.0D0
         PRIM  = .FALSE.
         ORTHO = .TRUE.
-      ELSE IF(LATTIC(1:3).EQ.'CXY' .AND. GAM.EQ.90.0D0) THEN
+      ELSE IF(LATTIC(1:3).EQ.'CXY' .AND. ALP(3).EQ.90.0D0) THEN
 ! -------------------------------------------------------------------------
-!       << base-centered (in the xy-plane) : CXY a b c alp bet 90 >>
+!       << base-centered (in the xy-plane) : CXY a b c alp(1) alp(2) 90 >>
 !
-!       Note: either alp or bet must be 90 degree
+!       Note: either alp(1) or alp(2) must be 90 degree
 !
-!       a_1 = (a*sin(bet)/2,-b*sin(alp)/2,a*cos(bet)/2-b*cos(alp)/2)
-!       a_2 = (a*sin(bet)/2, b*sin(alp)/2,a*cos(bet)/2+b*cos(alp)/2)
+!       a_1 = (a*sin(alp(2))/2,-b*sin(alp(1))/2,a*cos(alp(2))/2-b*cos(alp(1))/2)
+!       a_2 = (a*sin(alp(2))/2, b*sin(alp(1))/2,a*cos(alp(2))/2+b*cos(alp(1))/2)
 !       a_3 = (    0       ,    0       ,            c            )
 !
-!       VUC = a*b*c * sin(alp)*sin(bet)/2
+!       VUC = a*b*c * sin(alp(1))*sin(alp(2))/2
 !       
 !       monoclinic, orthorhombic
 !       
-!       b_1 = ( 1/(a*sin(bet)),-1/(b*sin(alp)), 0 )
-!       b_2 = ( 1/(a*sin(bet)), 1/(b*sin(alp)), 0 )
-!       b_3 = (-1/(c*tan(bet)),-1/(c*tan(alp)),1/c)
+!       b_1 = ( 1/(a*sin(alp(2))),-1/(b*sin(alp(1))), 0 )
+!       b_2 = ( 1/(a*sin(alp(2))), 1/(b*sin(alp(1))), 0 )
+!       b_3 = (-1/(c*tan(alp(2))),-1/(c*tan(alp(1))),1/c)
 ! -------------------------------------------------------------------------
-        IF(ALP.NE.90.0D0 .AND. BET.NE.90.0D0) STOP 'LATTIC NOT DEFINED'
+        IF(ALP(1).NE.90.0D0 .AND. ALP(2).NE.90.0D0) STOP 'LATTIC NOT DEFINED'
 !       << primitive unit cell >>
         BR2(1,1)= A(1)*0.5D0*SIN(BETA)
         BR2(1,2)=-A(2)*0.5D0*SIN(ALPHA)
@@ -233,26 +233,26 @@ SUBROUTINE LATGEN(LATTIC,A,ALP,BET,GAM,ORTHO,PRIM)
 !       << further settings >>
         VUC   = A(1)*A(2)*A(3) * SIN(ALPHA)*SIN(BETA)/2.0D0
         PRIM  = .FALSE.
-        ORTHO = ALP.EQ.90.0D0 .AND. BET.EQ.90.0D0
-      ELSE IF(LATTIC(1:3).EQ.'CYZ' .AND. ALP.EQ.90.0D0) THEN
+        ORTHO = ALP(1).EQ.90.0D0 .AND. ALP(2).EQ.90.0D0
+      ELSE IF(LATTIC(1:3).EQ.'CYZ' .AND. ALP(1).EQ.90.0D0) THEN
 ! -------------------------------------------------------------------------
-!       << base-centered (in the yz-plane) : CYZ a b c 90 bet gam >>
+!       << base-centered (in the yz-plane) : CYZ a b c 90 alp(2) alp(3) >>
 !
-!       Note: either bet or gam must be 90 degree
+!       Note: either alp(2) or alp(3) must be 90 degree
 !
-!       a_1 = (a*sin(bet)*sin(gam),a*sin(bet)*cos(gam),a*cos(bet))
+!       a_1 = (a*sin(alp(2))*sin(alp(3)),a*sin(alp(2))*cos(alp(3)),a*cos(alp(2)))
 !       a_2 = (        0        ,           b/2       ,  -c/2    )
 !       a_3 = (        0        ,           b/2       ,   c/2    )
 !
-!       VUC = a*b*c * sin(bet)*sin(gam)/2
+!       VUC = a*b*c * sin(alp(2))*sin(alp(3))/2
 !       
 !       monoclinic, orthorhombic
 !       
-!       b_1 = ( 1/(a*sin(bet)*sin(gam))               , 0 ,  0 )
-!       b_2 = (-1/(b*tan(gam))+1/(c*tan(bet)*sin(gam)),1/b,-1/c)
-!       b_3 = (-1/(b*tan(gam))-1/(c*tan(bet)*sin(gam)),1/b, 1/c)
+!       b_1 = ( 1/(a*sin(alp(2))*sin(alp(3)))               , 0 ,  0 )
+!       b_2 = (-1/(b*tan(alp(3)))+1/(c*tan(alp(2))*sin(alp(3))),1/b,-1/c)
+!       b_3 = (-1/(b*tan(alp(3)))-1/(c*tan(alp(2))*sin(alp(3))),1/b, 1/c)
 ! -------------------------------------------------------------------------
-        IF(BET.NE.90.0D0 .AND. GAM.NE.90.0D0) STOP 'LATTIC NOT DEFINED'
+        IF(ALP(2).NE.90.0D0 .AND. ALP(3).NE.90.0D0) STOP 'LATTIC NOT DEFINED'
 !       << primitive unit cell >>
         BR2(1,1)= A(1)*SIN(BETA)*SIN(GAMMA)
         BR2(1,2)= A(1)*SIN(BETA)*COS(GAMMA)
@@ -270,26 +270,26 @@ SUBROUTINE LATGEN(LATTIC,A,ALP,BET,GAM,ORTHO,PRIM)
 !       << further settings >>
         VUC   = A(1)*A(2)*A(3) * SIN(BETA)*SIN(GAMMA)/2.0D0
         PRIM  = .FALSE.
-        ORTHO = BET.EQ.90.0D0 .AND. GAM.EQ.90.0D0
-      ELSE IF(LATTIC(1:3).EQ.'CXZ' .AND. BET.EQ.90.0D0) THEN
+        ORTHO = ALP(2).EQ.90.0D0 .AND. ALP(3).EQ.90.0D0
+      ELSE IF(LATTIC(1:3).EQ.'CXZ' .AND. ALP(2).EQ.90.0D0) THEN
 ! -------------------------------------------------------------------------
-!       << base-centered (in the xz-plane) : CXZ a b c alp 90 gam >>
+!       << base-centered (in the xz-plane) : CXZ a b c alp(1) 90 alp(3) >>
 !
-!       Note: either alp or gam must be 90 degree
+!       Note: either alp(1) or alp(3) must be 90 degree
 !
-!       a_1 = (a*sin(gam)/2,a*cos(gam)/2,  -c/2    )
-!       a_2 = (    0       ,b*sin(alp)  ,b*cos(alp))
-!       a_3 = (a*sin(gam)/2,a*cos(gam)/2,   c/2    )
+!       a_1 = (a*sin(alp(3))/2,a*cos(alp(3))/2,  -c/2    )
+!       a_2 = (    0       ,b*sin(alp(1))  ,b*cos(alp(1)))
+!       a_3 = (a*sin(alp(3))/2,a*cos(alp(3))/2,   c/2    )
 !
-!       VUC = a*b*c * sin(alp)*sin(gam)/2
+!       VUC = a*b*c * sin(alp(1))*sin(alp(3))/2
 !       
 !       monoclinic, orthorhombic
 !
-!       b_1 = ( 1/(a*sin(gam))         , 1/(c*tan(alp)),-1/c)
-!       b_2 = (-1/(b*tan(gam)*sin(alp)), 1/(b*sin(alp)),  0 )
-!       b_3 = ( 1/(a*sin(gam))         ,-1/(c*tan(alp)), 1/c)
+!       b_1 = ( 1/(a*sin(alp(3)))         , 1/(c*tan(alp(1))),-1/c)
+!       b_2 = (-1/(b*tan(alp(3))*sin(alp(1))), 1/(b*sin(alp(1))),  0 )
+!       b_3 = ( 1/(a*sin(alp(3)))         ,-1/(c*tan(alp(1))), 1/c)
 ! -------------------------------------------------------------------------
-        IF(ALP.NE.90.0D0 .AND. GAM.NE.90.0D0) STOP 'LATTIC NOT DEFINED'
+        IF(ALP(1).NE.90.0D0 .AND. ALP(3).NE.90.0D0) STOP 'LATTIC NOT DEFINED'
 !       << primitive unit cell >>
         BR2(1,1)= A(1)*0.5D0*SIN(GAMMA)
         BR2(1,2)= A(1)*0.5D0*COS(GAMMA)
@@ -308,7 +308,7 @@ SUBROUTINE LATGEN(LATTIC,A,ALP,BET,GAM,ORTHO,PRIM)
 !       << further settings >>
         VUC   = A(1)*A(2)*A(3) * SIN(ALPHA)*SIN(GAMMA)/2.0D0
         PRIM  = .FALSE.
-        ORTHO = ALP.EQ.90.0D0 .AND. GAM.EQ.90.0D0
+        ORTHO = ALP(1).EQ.90.0D0 .AND. ALP(3).EQ.90.0D0
       ELSE
         STOP 'LATTIC NOT DEFINED'
       END IF
@@ -338,4 +338,4 @@ SUBROUTINE LATGEN(LATTIC,A,ALP,BET,GAM,ORTHO,PRIM)
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2015-12-22 20:56:13 assman@faepop36.tu-graz.ac.at>
