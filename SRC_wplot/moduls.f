@@ -42,10 +42,10 @@ module param
 !:17]
 !!!!!\=== END param.inc ===================================================
 
-  integer, parameter :: unit_in=5, unit_out=6, unit_grid=7, unit_struct=8
-  integer, parameter :: unit_vector=10, unit_vsp=18, unit_inwf=31, unit_chk=32
+  integer, parameter :: unit_in=5, unit_out=6, unit_struct=8, unit_vector=10
+  integer, parameter :: unit_grid=7, unit_vsp=18, unit_inwf=31, unit_chk=32
   integer, parameter :: unit_psink=21, unit_psiarg=22, unit_def=1
-  integer, parameter :: unit_rot=5894
+  integer, parameter :: unit_rot=33
 
 !!! The following is set by ‘wplot.f’ to be passed to ‘main.F’
   character(BUFSZ) :: vecfn, psinkfn, psiargfn, outfn
@@ -166,4 +166,4 @@ end module sym2
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-22 16:00:41 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-22 17:03:03 assman@faepop36.tu-graz.ac.at>
