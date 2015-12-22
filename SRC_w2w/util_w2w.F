@@ -1002,8 +1002,11 @@ module structmod
      logical           :: ortho        ! orthogonal axes?
      real(DPk)         :: vol          ! u.c. volume
      integer, allocatable, dimension(:,:,:) &
-                       :: rsym, ksym   ! symmetry operations from struct
-                                       ! (as ‘outputkgen’)
+          &            :: rsym, ksym   ! symmetry operations (3×3×N — can be
+                                       ! different!) as ‘outputkgen’
+     real(DPk), allocatable, dimension(:,:) &
+          &            :: rtrans       ! translational part of symmetries
+                                       ! (3×N)
 
      ! positions (3 × nat); local rotation matrices (3 × 3 × nneq)
      real(DPk),         allocatable :: pos(:,:), locrot(:,:,:)
@@ -1225,12 +1228,14 @@ contains
   contains
     subroutine read_rsym()
 !!! This is from SRC_kgen (main.f, addinv.f)
-      integer :: nsym, i, i1, i2
+      integer :: Nrsym, i, id
 
-      read(lun, '(I4)') nsym
-      allocate(stru%rsym(3,3,nsym))
-      do i=1,nsym
-         read(lun, '(3(3I2,/), I8)') ((stru%rsym(i1,i2,i), i1=1,3), i2=1,3)
+      read(lun, '(I4)') Nrsym
+      allocate(stru%rsym  (3,3,Nrsym), &
+           &   stru%rtrans(3,  Nrsym))
+      do i=1,Nrsym
+         read(lun, '(3(3I2,F11.8/), I8)') &
+              (stru%rsym(:,id,i), stru%rtrans(id, i), id=1,3)
       end do
     end subroutine read_rsym
 
@@ -1239,14 +1244,14 @@ contains
 
       real(DPk), dimension(3,3) :: a
       logical                   :: addinv
-      integer                   :: i, nrsym, nksym
+      integer                   :: i, Nrsym, Nksym
 
       addinv = .true.
-      nrsym  = size(stru%rsym, 3)
+      Nrsym  = size(stru%rsym, 3)
 !!! Redefine symmetry operations from struct with
 !!! unitary transformation  u(-1) * S * u
 
-      do i=1,nrsym
+      do i=1,Nrsym
          ! if inversion is already present, we do not need to add it
          ! later
          if (all(stru%rsym(:,:,i) == reshape( (/ -1, 0, 0,    &
@@ -1258,24 +1263,24 @@ contains
          end if
       end do
 
-      if (nrsym>24 .and. addinv) &
-           call croak('nsym > 24 without inversion')
+      if (Nrsym>24 .and. addinv) &
+           call croak('Nsym > 24 without inversion')
 
       if (addinv) then
          ! add inversion
          ! FIXME: check if we should actually do this (non-sp non-so)
-         nksym = 2*nrsym
+         Nksym = 2*Nrsym
       else
-         nksym =   nrsym
+         Nksym =   Nrsym
       end if
-      allocate(stru%ksym(3,3,nksym))
+      allocate(stru%ksym(3,3,Nksym))
 
-                  stru%ksym(:,:,       1:nrsym) =  stru%rsym(:,:, 1:nrsym)
-      if (addinv) stru%ksym(:,:, nrsym+1:nksym) = -stru%rsym(:,:, 1:nrsym)
+                  stru%ksym(:,:,       1:Nrsym) =  stru%rsym(:,:, 1:Nrsym)
+      if (addinv) stru%ksym(:,:, Nrsym+1:Nksym) = -stru%rsym(:,:, 1:Nrsym)
 
       if (stru%ortho .or. stru%lattic=='CXZ') then
          ! FIXME: why the check for CXZ??  sdefl.f has it …
-         do i=1,nksym
+         do i=1,Nksym
             a = matmul(matmul(stru%brlat, stru%ksym(:,:,i)), &
                  &     stru%gbas)/2/PI
             stru%ksym(:,:,i) = nint(a)
@@ -2048,4 +2053,4 @@ END MODULE wien2k
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-21 13:54:49 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-22 21:15:25 assman@faepop36.tu-graz.ac.at>
