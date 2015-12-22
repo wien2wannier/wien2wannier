@@ -142,27 +142,17 @@ $(C_EXEC): $(objs) $(c_objs) $(UTILOBJ) Makefile
 #
 #  Real and complex need to be kept separate!
 #
-$(O_DIR)/%.o: %.f Makefile $(O_DIR)
-	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(O_DIR)
-$(O_DIR)/%.o: %.F Makefile $(O_DIR)
+$(O_DIR)/%.o: %.f Makefile
+	@test -d $(O_DIR) || mkdir $(O_DIR)
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(O_DIR)
 
-$(R_DIR)/%.o: %.f Makefile $(R_DIR)
-	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(R_DIR)
-$(R_DIR)/%.o: %.F Makefile $(R_DIR)
+$(R_DIR)/%.o: %.F Makefile
+	@test -d $(R_DIR) || mkdir $(R_DIR)
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(R_DIR)
 
-$(C_DIR)/%.o: %.f Makefile $(C_DIR)
+$(C_DIR)/%.o: %.F Makefile
+	@test -d $(C_DIR) || mkdir $(C_DIR)
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(C_DIR) -D_COMPLEX_
-$(C_DIR)/%.o: %.F Makefile $(C_DIR)
-	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(C_DIR) -D_COMPLEX_
-
-#........................................................................
-#
-#  lib*/
-#
-$(O_DIR) $(R_DIR) $(C_DIR):
-	mkdir $@
 
 #........................................................................
 #
@@ -184,4 +174,4 @@ $(util_users): $(UTILOBJ)
 $(util_users): FFLAGS += -I$(UTILDIR)
 
 
-## Time-stamp: <2015-12-21 13:55:07 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2015-12-22 15:33:29 assman@faepop36.tu-graz.ac.at>
