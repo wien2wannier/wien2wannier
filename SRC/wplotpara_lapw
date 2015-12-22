@@ -17,17 +17,18 @@ if ($#argv < 1) then
   exit
 endif
 
-set updn cmplx
+set updn cmplx so
 
 while ($#argv)
   switch ($1)
   case -up:
-    set updn = up
-    set dnup = dn
+    set updn = -up
     shift; breaksw
   case -dn:
-    set updn = 'dn'
-    set dnup = 'up'
+    set updn = -dn
+    shift; breaksw
+  case -so:
+    set so   = so
     shift; breaksw
   case -c:
     set cmplx = c
@@ -43,9 +44,9 @@ set exe = $bin/wplot$cmplx
 
 set maxproc = `grep : .processes | grep  -v -e init: -e residue: | wc -l`
 
-$bin/vec2old -p -local -$updn
+if (! $?so) $bin/vec2old -p -local $updn
 $exe $def.def $wf $maxproc
 exit 0
 
 
-## Time-stamp: <2015-05-28 16:21:56 assman@faepop23.tu-graz.ac.at>
+## Time-stamp: <2015-12-21 17:20:09 assman@faepop36.tu-graz.ac.at>
