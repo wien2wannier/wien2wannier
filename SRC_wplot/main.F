@@ -116,7 +116,7 @@ subroutine main()
 
   IF(WHPSI.EQ.'     ')WHPSI='LARGE'
   IF(WHPSI.NE.'SMALL'.AND.WHPSI.NE.'LARGE') &
-       STOP 'ERROR: UNKNOWN REL. COMPONENT OPTION'
+       call croak('ERROR: UNKNOWN REL. COMPONENT OPTION')
   LARGE = WHPSI .EQ. 'LARGE'
 
 !     << read in wave function selection (and file handling) >>
@@ -225,7 +225,7 @@ subroutine main()
      READ(unit_struct, '(A10,5X,I5,2(5X,F10.5),5X,F5.2)') ANAME,JRI(JATOM),RNOT(JATOM),RMT(JATOM), &
           ZNUC(JATOM)
      DX(JATOM) = LOG( RMT(JATOM)/RNOT(JATOM) ) / DBLE( JRI(JATOM)-1 )
-     IF(JRI(JATOM).GT.NRAD) STOP 'NRAD too small'
+     IF(JRI(JATOM).GT.NRAD) call croak('NRAD too small')
 
      DO I=1,JRI(JATOM)
         RM(I,JATOM) = RNOT(JATOM) * EXP( DBLE(I-1)*DX(JATOM) )
@@ -256,7 +256,7 @@ subroutine main()
        & /' with y_i and x_j in conventional fractional coordinates' &
        &//' symm    Q(:,1)  Q(:,2)  Q(:,3)    t(:)')")
   READ(unit_struct, '(I4)') IORD
-  IF(IORD.GT.NSYM) STOP 'NSYM too small'
+  IF(IORD.GT.NSYM) call croak('NSYM too small')
 
   DO K=1,IORD
      READ(unit_struct, '(3(3I2,F10.5/))') ((IMAT(J,I,K),J=1,3),TAU(I,K),I=1,3)
@@ -311,7 +311,7 @@ subroutine main()
 
      IF(.NOT.ORTH(ROTLOC(1,1,INDEX)))THEN
         WRITE(unit_out,"(/'CURRENT ROTATION MATRIX IS NOT ORTHOGONAL')")
-        STOP 'MATRIX NOT ORTHOGONAL'
+        call croak('MATRIX NOT ORTHOGONAL')
      ENDIF
   end DO
 
@@ -727,4 +727,4 @@ end subroutine main
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-22 20:08:33 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-22 20:16:28 assman@faepop36.tu-graz.ac.at>
