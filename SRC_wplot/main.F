@@ -24,9 +24,9 @@ subroutine main()
 
   IMPLICIT none
 
-  character(BUFSZ) :: titel, rotfilename
+  character(BUFSZ) :: buf, rotfilename
   character( 3)    :: switch, iunit
-  character( 4)    :: lattic, GridMode, RelMode, handle
+  character( 4)    :: lattic, GridMode, RelMode
   character( 5)    :: whpsi
   character(10)    :: aname, bname
 
@@ -43,12 +43,6 @@ subroutine main()
 
   real(r8),allocatable :: BK(:,:)
 
-  character(*), parameter :: fmt_fancy = "(I5,F14.6,2X,1P,2E12.3)"
-  character(*), parameter :: fmt_short = "(' band', I7, ' :', &
-       & F14.6 : 1P, SP, ' , min/max =', E11.3, ' /',E11.3)"
-
-  character(128) :: fmt_out
-
   COMPLEX(C16),allocatable :: PSI(:),tot(:)
   COMPLEX(C16) ALM((LMAX7+1)*(LMAX7+1),NRF), Y((LMAX7+1)*(LMAX7+1))
   COMPLEX(C16) PHS
@@ -58,16 +52,16 @@ subroutine main()
   complex(c16), allocatable :: uu(:), rotmatrix(:,:)
   real(r8),allocatable :: tmprot(:)
   LOGICAL :: REL,ORTHO,PRIM,ORTH, &
-       &     ALLKPT,ALLEIG,KFOUND,DEPHAS,GETABC,PUTABC,WAN,rotate
+       &     DEPHAS,rotate
 
   integer :: i, ie, ieabs, ierr, iG, ik, il, il1, imax, index, index1, irf
-  integer :: iskpt, iseig, ix, iy, iz, iloop
+  integer :: iseig, iloop
   integer :: j, j2, j3, jatom, jneq, k, kkk, kkkabs, l, latom, lm, m, mu
   integer :: nat, nb, ndat, ne, nemax, nemin, nmatk, nkp, nmat, nmt, npw
-  integer :: npx, npy, num_bands, NP(3), NPO(0:3), nskip
+  integer :: num_bands, NP(3), nskip
 
-  real(R8) :: A(3), ROT0(3,3), R(3), FK(3), phsav, prefac, Edummy
-  real(R8) :: alpha, beta, gamma, arg, datmax, datmin, E, weight
+  real(R8) :: A(3), ROT0(3,3), R(3), FK(3), phsav, prefac
+  real(R8) :: alpha, beta, gamma, arg, E, weight
 
   !definition for umat read-in
   character(len=33) :: header
@@ -136,104 +130,87 @@ subroutine main()
   LARGE = WHPSI .EQ. 'LARGE'
 
 !     << read in wave function selection (and file handling) >>
-  READ (unit_in,*) ISKPT,ISEIG
-  ALLKPT = ISKPT.LE.0
-  ALLEIG = ISEIG.LE.0
-  wan=.true.
-  IF (WAN) THEN
-     ALLKPT=.true.
-     read(unit_inwf,*)
-     read(unit_inwf,*)nemin,nemax
-     nb=nemax-nemin+1
-     allocate(uu(nb))
-     if (idx_wann.gt.0) then
-        ISEIG = idx_wann
-     endif
-  ENDIF
+  READ (unit_in,*) ISEIG
+  read(unit_inwf,*)
+  read(unit_inwf,*)nemin,nemax
+  nb=nemax-nemin+1
+  allocate(uu(nb))
+  if (idx_wann.gt.0) then
+     iseig = idx_wann
+  endif
 
 !!! Now we know the WF index ISEIG and can open files accordingly
   call wfopen(unit_psink,  psinkfn,  iseig, STATUS='unknown')
   call wfopen(unit_psiarg, psiargfn, iseig, STATUS='unknown')
   call wfopen(unit_out,    outfn,    iseig, STATUS='unknown')
 
-  READ(unit_in,1100,IOSTAT=ierr)HANDLE
-  IF(ierr.NE.0)HANDLE='    '
-  rotate=HANDLE(1:3).eq.'ROT'
-  GETABC = HANDLE.EQ.'READ' .OR. HANDLE.EQ.'REPL'
-  PUTABC = HANDLE.EQ.'SAVE' .OR. HANDLE.EQ.'STOR'
-  IF(.NOT.ALLKPT)WRITE(unit_out,2140)'k-point',ISKPT
-  IF(.NOT.ALLEIG)WRITE(unit_out,2140)'Wannier function   ',ISEIG
-  IF(GETABC)WRITE(unit_out,2144)
-  IF(PUTABC)WRITE(unit_out,2145)
-  IF((GETABC.OR.PUTABC).AND.(ALLKPT.OR.ALLEIG)) &
-       STOP 'STORE/READ option only allowed for single state selection'
+  write(unit_out,2140) 'Wannier function   ',iseig
 
 !!! Read chk file for num_wann, u_matrix, and friends
-  wannier: if(WAN) then
-     write(unit_out,*)"read-in chk file from Wannier90"
-     read(unit_chk) header    ! Date and time
-     write(*,*)header
-     read(unit_chk) num_bands ! Number of bands
-     if (num_bands.ne.nb) &
-          call croak("Error in read-in of chk file: &
-          &inconsistency of number of Bloch bands")
+  write(unit_out,*)"read-in chk file from Wannier90"
+  read(unit_chk) header    ! Date and time
+  write(*,*)header
+  read(unit_chk) num_bands ! Number of bands
+  if (num_bands.ne.nb) &
+       call croak("Error in read-in of chk file: &
+       &inconsistency of number of Bloch bands")
 
-     read(unit_chk) num_exclude_bands ! Number of excluded bands
-     allocate(exclude_bands(num_exclude_bands))
-     read(unit_chk) (exclude_bands(i),i=1,num_exclude_bands)
-     read(unit_chk) ((real_lattice(i,j),i=1,3),j=1,3)
-     read(unit_chk) ((recip_lattice(i,j),i=1,3),j=1,3)
-     read(unit_chk) num_kpts
-     read(unit_chk) (mp_grid(i),i=1,3)
-     allocate(kpt_latt(3,num_kpts))
-     read(unit_chk) ((kpt_latt(i,nkp),i=1,3),nkp=1,num_kpts)
-     read(unit_chk) nntot   ! Number of nearest k-point neighbours
-     read(unit_chk) num_wann
-     read(unit_chk) chkpt1  ! Position of checkpoint
-     read(unit_chk) have_disentangled
-     if (have_disentangled) then
-        read(unit_chk) omega_invariant     ! Omega invariant
-        ! lwindow, ndimwin and U_matrix_opt 
-        allocate(lwindow(num_bands,num_kpts))
-        read(unit_chk) ((lwindow(i,nkp),i=1,num_bands),nkp=1,num_kpts)
-        allocate(ndimwin(num_kpts))
-        read(unit_chk) (ndimwin(nkp),nkp=1,num_kpts)
-        allocate(u_matrix_opt(num_bands,num_wann,num_kpts))
-        u_matrix_opt(:,:,:) = 0
-        read(unit_chk) (((u_matrix_opt(i,j,nkp),i=1,num_bands), &
-             j=1,num_wann),nkp=1,num_kpts)
-     endif
-     allocate(u_matrix(num_wann,num_wann,num_kpts))
-     u_matrix(:,:,:) = 0
-     read(unit_chk) (((u_matrix(i,j,k),i=1,num_wann),j=1,num_wann), &
-          k=1,num_kpts)
-     allocate(m_matrix(num_wann,num_wann,nntot,num_kpts))
-     read(unit_chk) ((((m_matrix(i,j,k,l),i=1,num_wann),j=1,num_wann), &
-          k=1,nntot),l=1,num_kpts)
-     allocate(wannier_centres(3,num_wann))
-     read(unit_chk) ((wannier_centres(i,j),i=1,3),j=1,num_wann)
-     allocate(wannier_spreads(num_wann))
-     read(unit_chk) (wannier_spreads(i),i=1,num_wann)
-     if (ISEIG.gt.num_wann) &
-          call croak("Error in read-in of chk file: &
-          &number of Wannier functions is smaller than given index")
-  endif wannier
+  read(unit_chk) num_exclude_bands ! Number of excluded bands
+  allocate(exclude_bands(num_exclude_bands))
+  read(unit_chk) (exclude_bands(i),i=1,num_exclude_bands)
+  read(unit_chk) ((real_lattice(i,j),i=1,3),j=1,3)
+  read(unit_chk) ((recip_lattice(i,j),i=1,3),j=1,3)
+  read(unit_chk) num_kpts
+  read(unit_chk) (mp_grid(i),i=1,3)
+  allocate(kpt_latt(3,num_kpts))
+  read(unit_chk) ((kpt_latt(i,nkp),i=1,3),nkp=1,num_kpts)
+  read(unit_chk) nntot   ! Number of nearest k-point neighbours
+  read(unit_chk) num_wann
+  read(unit_chk) chkpt1  ! Position of checkpoint
+  read(unit_chk) have_disentangled
+  if (have_disentangled) then
+     read(unit_chk) omega_invariant     ! Omega invariant
+     ! lwindow, ndimwin and U_matrix_opt 
+     allocate(lwindow(num_bands,num_kpts))
+     read(unit_chk) ((lwindow(i,nkp),i=1,num_bands),nkp=1,num_kpts)
+     allocate(ndimwin(num_kpts))
+     read(unit_chk) (ndimwin(nkp),nkp=1,num_kpts)
+     allocate(u_matrix_opt(num_bands,num_wann,num_kpts))
+     u_matrix_opt(:,:,:) = 0
+     read(unit_chk) (((u_matrix_opt(i,j,nkp),i=1,num_bands), &
+          j=1,num_wann),nkp=1,num_kpts)
+  endif
+  allocate(u_matrix(num_wann,num_wann,num_kpts))
+  u_matrix(:,:,:) = 0
+  read(unit_chk) (((u_matrix(i,j,k),i=1,num_wann),j=1,num_wann), &
+       k=1,num_kpts)
+  allocate(m_matrix(num_wann,num_wann,nntot,num_kpts))
+  read(unit_chk) ((((m_matrix(i,j,k,l),i=1,num_wann),j=1,num_wann), &
+       k=1,nntot),l=1,num_kpts)
+  allocate(wannier_centres(3,num_wann))
+  read(unit_chk) ((wannier_centres(i,j),i=1,3),j=1,num_wann)
+  allocate(wannier_spreads(num_wann))
+  read(unit_chk) (wannier_spreads(i),i=1,num_wann)
+  if (ISEIG.gt.num_wann) &
+       call croak("Error in read-in of chk file: &
+       &number of Wannier functions is smaller than given index")
 
   close(unit_chk)
 
+!!! Apply WF rotation
   if (rotate) then
-     read(unit_in, "(A)")rotfilename
-     write(*,*)"rotate with matrix from ",trim(rotfilename)
-     open(unit=unit_rot,file=trim(rotfilename),status='old')
-     allocate(rotmatrix(num_wann,num_wann),tmprot(num_wann*2))
+     read(unit_in, "(A)") rotfilename
+     write(*,*) "rotate with matrix from ", trim(rotfilename)
+     open(unit_rot, file=trim(rotfilename), status='old')
+     allocate(rotmatrix(num_wann, num_wann), tmprot(num_wann*2))
 
      do j=1,num_wann
-        read(unit_rot,*)tmprot
+        read(unit_rot,*) tmprot
 
         do i=1,num_wann
            rotmatrix(j,i) = cmplx(tmprot(2*i-1), tmprot(2*i), DPk)
         enddo
-        write(*,"(100F13.5)")rotmatrix(j,:)
+        write(*,"(100F13.5)") rotmatrix(j,:)
      enddo
      close(unit_rot)
   endif
@@ -246,7 +223,7 @@ subroutine main()
 ! ###################################
 !
 !     << set up the lattice >>
-  READ(unit_struct,1000) TITEL
+  READ(unit_struct,1000) buf
   READ(unit_struct,1010) LATTIC,NAT,RelMode
 
   allocate ( POS(3,NAT*48),ZNUC(NAT),RMT(NAT),MULT(NAT),IATNR(NAT*48))
@@ -265,7 +242,7 @@ subroutine main()
   IF(BETA .EQ.0.0D0) BETA =90.0D0
   IF(GAMMA.EQ.0.0D0) GAMMA=90.0D0
 
-  WRITE(unit_out,2000) trim(TITEL)
+  WRITE(unit_out,2000) trim(buf)
   WRITE(unit_out,2010) LATTIC,NAT,RelMode
   WRITE(unit_out,2020) A,ALPHA,BETA,GAMMA
   CALL LATGEN(LATTIC,A,ALPHA,BETA,GAMMA,ORTHO,PRIM)
@@ -446,7 +423,7 @@ subroutine main()
   WRITE(unit_out,2130) WHPSI
   IF(DEPHAS)WRITE(unit_out,2131)
   write(unit_out,2135) SWITCH//'(PSI)',IUNIT
-  write(TITEL(1:67),3000) SWITCH//'(PSI)',IUNIT,WHPSI
+  write(BUF(1:67),3000) SWITCH//'(PSI)',IUNIT,WHPSI
 
 !     << set up constants and prefactors >>
 ! -----------------------------------------
@@ -461,15 +438,13 @@ subroutine main()
 !     ---------
 !     MAIN LOOP
 !     ---------
-  IF(.NOT.PUTABC)THEN
-     if(GridMode(1:3) == 'ANY') then
-        write(unit_out,2150)'according to the grid point input file'
-     elseif(GridMode(1:2) == '2D') then
-        write(unit_out,2150) '((psi(ix,iy),ix=1,nx),iy=1,ny)'
-     elseif(GridMode(1:2) == '3D') then
-        write(unit_out,2150) '(((psi(ix,iy,iz),ix=1,nx),iy=1,ny),iz=1,nz)'
-     endif
-  ENDIF
+  if(GridMode(1:3) == 'ANY') then
+     write(unit_out,2150)'according to the grid point input file'
+  elseif(GridMode(1:2) == '2D') then
+     write(unit_out,2150) '((psi(ix,iy),ix=1,nx),iy=1,ny)'
+  elseif(GridMode(1:2) == '3D') then
+     write(unit_out,2150) '(((psi(ix,iy,iz),ix=1,nx),iy=1,ny),iz=1,nz)'
+  endif
 
 !     << read in k points >>
   KKK = 0
@@ -479,8 +454,8 @@ subroutine main()
      call paropen(unit_vector, vecfn, iproc, iloop, FORM='unformatted')
      ! read off two records from the fresh ‘vector’ file
      do i=1,NAT
-        read(unit_vector) Edummy
-        read(unit_vector) Edummy
+        read(unit_vector)
+        read(unit_vector)
      end do
      kpoints: do
         READ(unit_vector, IOSTAT=IERR)&
@@ -489,35 +464,33 @@ subroutine main()
 
         KKK = KKK + 1
 
-        if(WAN) then
-           do j=1,num_bands
-              local_contribution = dcmplx(0d0,0d0)
-              if (have_disentangled) then
-                 do j2=1,num_wann
-                    if (rotate) then
-                       do j3=1,num_wann
-                          local_contribution = local_contribution +&
-                               rotmatrix(iseig,j3) * &
-                               u_matrix(j2,j3,kkk)*u_matrix_opt(j,j2,kkk)
-                       enddo
-                    else
-                       local_contribution = local_contribution + &
-                            u_matrix(j2,ISEIG,kkk)*u_matrix_opt(j,j2,kkk)
-                    endif
-                 enddo
-              else
+        do j=1,num_bands
+           local_contribution = dcmplx(0d0,0d0)
+           if (have_disentangled) then
+              do j2=1,num_wann
                  if (rotate) then
-                    do j2=1,num_wann
-                       local_contribution = local_contribution+ &
-                            rotmatrix(j2,iseig)*u_matrix(j,j2,kkk)
+                    do j3=1,num_wann
+                       local_contribution = local_contribution +&
+                            rotmatrix(iseig,j3) * &
+                            u_matrix(j2,j3,kkk)*u_matrix_opt(j,j2,kkk)
                     enddo
                  else
-                    local_contribution = u_matrix(j,ISEIG,kkk)
+                    local_contribution = local_contribution + &
+                         u_matrix(j2,ISEIG,kkk)*u_matrix_opt(j,j2,kkk)
                  endif
+              enddo
+           else
+              if (rotate) then
+                 do j2=1,num_wann
+                    local_contribution = local_contribution+ &
+                         rotmatrix(j2,iseig)*u_matrix(j,j2,kkk)
+                 enddo
+              else
+                 local_contribution = u_matrix(j,ISEIG,kkk)
               endif
-              uu(j)=local_contribution
-           enddo
-        endif
+           endif
+           uu(j)=local_contribution
+        enddo
         
         IF(IERR.GT.0) KKKABS = KKK
         NPW = NMATK - NLO
@@ -540,16 +513,10 @@ subroutine main()
         !       << read in PW and local orbital wave vectors K >>
         READ(unit_vector) (KX(IK),KY(IK),KZ(IK),IK=1,NMATK)
         !
-        KFOUND = ALLKPT .OR. KKKABS.EQ.ISKPT 
-        IF(.NOT.KFOUND) GOTO 340
-        IF(.NOT.PUTABC)THEN
-           WRITE(unit_out,2160)KKKABS,BNAME,(FK(I),I=1,3)
-           IF(ALLEIG)THEN
-              fmt_out = fmt_short
-           ELSE
-              fmt_out = fmt_fancy
-           ENDIF
-        ENDIF
+        write(unit_out, "(' k-point',I4,' : ',A10,&
+             &' = (',F8.4,',',F8.4,',',F8.4,')'/' ',55('-'))")&
+             KKKABS,BNAME,(FK(I),I=1,3)
+
 
         !       << transform K+k into global Cartesian coordinates >>
         DO IK=1,NMATK
@@ -573,7 +540,7 @@ subroutine main()
 ! FJ (l,:,Rmt) :      j_l(|K+k|*r) at r = Rmt_a for all PW's K+k
 ! DFJ(l,:,Rmt) : d/dr j_l(|K+k|*r) at r = Rmt_a for all PW's K+k
 ! -----------------------------------------------------------------
-        IF(.NOT.GETABC) CALL BESSEL(NPW,NMATK,BK,NMT,RAD,LMAX7,FJ,DFJ)
+        call BESSEL(NPW,NMATK,BK,NMT,RAD,LMAX7,FJ,DFJ)
 !
 !       << read in individual eigen states >>
        
@@ -581,7 +548,7 @@ subroutine main()
         DO I=1,NE
 340        READ(unit_vector,IOSTAT=IERR) IE,E,IEABS
            READ(unit_vector) (CF(IK),IK=1,NMATK)
-           IF (WAN.and.ie.ge.nemin.and.ie.le.nemax) THEN
+           IF (ie>=nemin .and. ie<=nemax) THEN
               do ik=1,nmatk
                  COEF(ik)=COEF(ik)+uu(ie-nemin+1)*cf(ik)
               enddo
@@ -643,7 +610,6 @@ subroutine main()
            end DO
         end DO
 
-        IF(PUTABC) GOTO 315
 !
 !         << now evaluate the wave function on the grid >>
         DO IG=1,NPG
@@ -665,12 +631,10 @@ subroutine main()
 !          write(93,*)IG,IREG(IG),PSI(IG)
         end DO
 
-        IF (WAN) THEN
-           DO IG=1,NPG
-              tot(ig)=tot(ig)+psi(ig)
-           ENDDO
-           cycle kpoints
-        ENDIF
+        DO IG=1,NPG
+           tot(ig)=tot(ig)+psi(ig)
+        ENDDO
+        cycle kpoints
 
 !         << correct for averaged phase factor >>
         IF(DEPHAS)THEN
@@ -687,20 +651,18 @@ subroutine main()
            end DO
         ENDIF
 
-        WRITE(TITEL(1:20),3010) KKKABS,IEABS
-        WRITE(unit_psink,'(A)') TITEL(1:67)
+        WRITE(BUF(1:20),"('k =',I5,' , n =',I6)") KKKABS,IEABS
+        WRITE(unit_psink,'(A)') BUF(1:67)
 
 !         << echo wave functions to the output >>
         WRITE(unit_out,2170)IEABS,E,KKKABS
 
-315     IF(IE.LT.NE) GOTO 340
+        if(IE.lt.NE) goto 340
      end do kpoints
   end do vecfiles
 
-  IF (WAN) THEN
-     write(unit_psink, 3020)(abs(tot(IG))**2/kkk,IG=1,NPG)
-     write(unit_psiarg,3020)(atan2(dimag(tot(IG)),real(tot(IG))),IG=1,NPG)
-  ENDIF
+  write(unit_psink, 3020)(abs(tot(IG))**2/kkk,IG=1,NPG)
+  write(unit_psiarg,3020)(atan2(dimag(tot(IG)),real(tot(IG))),IG=1,NPG)
 
   RETURN
 
@@ -713,8 +675,6 @@ subroutine main()
  1060 FORMAT(I4)
  1070 FORMAT(3(3I2,F10.5/))
  1080 FORMAT(A3)
- 1100 FORMAT(A4)
-!
  2000 FORMAT(/A/)
  2010 FORMAT(1X,A4,' LATTIC WITH ',I5,' INEQUIV. ATOMS/UC USING ', &
              A4,'. AUGMENTATION')
@@ -758,31 +718,14 @@ subroutine main()
  2131 FORMAT( ' after dephasing of the wave function')
  2135 FORMAT( ' data provided    :  ',A,'  [in ',A3,' units]')
  2140 FORMAT( ' selected ',A7,' :',I5)
- 2144 FORMAT(/' evaluation based on previously stored', &
-              ' augmentation coefficients')
- 2145 FORMAT(/' augmentation coefficients stored for later re-use'/ &
-             /' >>> no wave function data produced! <<<')
  2150 FORMAT(/' ==================' &
              /' WAVE FUNCTION DATA' &
              /' ==================' &
              /' order: ',A/)
- 2160 FORMAT( ' k-point',I4,' : ',A10,' = (',F8.4,',',F8.4,',',F8.4,')' &
-             /' ',55('-'))
  2170 FORMAT( ' band',I4,' : E = ',F12.6,'  (k-point:',I4,')')
- 2180 FORMAT(1P,A1,6E13.5:/(1X,6E13.5))
- 2185 FORMAT(1P,A1,2(' (',E13.5,',',E13.5,')':):/ &
-            (   1X,2(' (',E13.5,',',E13.5,')':)))
-!
- 2190 FORMAT( ' WAVE FUNCTION INFO' &
-             /' ------------------')
- 2200 FORMAT( ' k-point',I4,' : ',A10,' = (',F8.4,',',F8.4,',',F8.4,')')
- 2210 FORMAT( ' band        energy':'     ',A3,'(data)   ',A3,'(data)')
-!
  3020 FORMAT(1P,10E16.8)
- 3025 FORMAT(1P,2E16.8,3X,2E16.8)
  3000 FORMAT('k =..... , n =...... : ',A8,' [',A3,' units] ', &
              '-- ',A5,' rel. component')
- 3010 FORMAT('k =',I5,' , n =',I6)
 
 contains
   subroutine wfopen(unit, file, iwf, iostat, status, form)
@@ -829,4 +772,4 @@ end subroutine main
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-22 18:24:31 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-22 19:24:07 assman@faepop36.tu-graz.ac.at>
