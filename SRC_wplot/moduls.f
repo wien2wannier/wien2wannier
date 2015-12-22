@@ -45,26 +45,29 @@ module param
   integer, parameter :: unit_in=5, unit_out=6, unit_grid=7, unit_struct=8
   integer, parameter :: unit_vector=10, unit_vsp=18, unit_inwf=31, unit_chk=32
   integer, parameter :: unit_psink=21, unit_psiarg=22, unit_def=1
-  integer, parameter :: unit_tmp=90, unit_rot=5894
+  integer, parameter :: unit_rot=5894
 
 !!! The following is set by ‘wplot.f’ to be passed to ‘main.F’
-  character(BUFSZ) :: vecfn, psinkfn, psiargfn, outfn, tmpfn
+  character(BUFSZ) :: vecfn, psinkfn, psiargfn, outfn
   integer          :: idx_wann=0, iproc=0
 end module param
 
 module struct
   use const, only: R8
+  implicit none
   real(R8), allocatable :: POS(:,:),ZNUC(:),RMT(:)
   integer,allocatable :: MULT(:),IATNR(:)
 end module struct
 
 module radgrd 
   use const, only: R8
+  implicit none
   real(R8),allocatable :: RM(:,:),RNOT(:),DX(:)
   integer,allocatable :: JRI(:)
 end module radgrd
 
 module lolog 
+  implicit none
   integer  NLO
   logical,allocatable :: LAPW(:,:)
   integer, allocatable :: ILO(:,:)
@@ -72,32 +75,38 @@ end module lolog
 
 module loabc
   use const, only: R8
+  implicit none
   real(R8),allocatable :: ALO(:,:,:,:)  
 end module loabc
 
 module atspdt
   use const, only: R8
+  implicit none
   real(R8),allocatable :: P(:,:,:),DP(:,:,:) 
 end module atspdt
 
 module radfu
   use const, only: R8
+  implicit none
   real(R8),allocatable ::  RRAD(:,:,:,:)
 end module radfu
 
 module bessfu
   use const, only: R8
+  implicit none
   real(R8),allocatable ::  FJ(:,:,:),DFJ(:,:,:),RAD(:)
   integer, allocatable :: IRAD(:)
 end module bessfu
 
 module work
   use const, only: C16
+  implicit none
   complex(C16),allocatable :: aug(:,:,:)
 end module work
 
 module grid
   use const, only: R8
+  implicit none
   real(R8),allocatable :: rgrid(:,:)
   integer,allocatable :: ireg(:),ilat(:,:),iri(:)
   integer npg
@@ -105,6 +114,8 @@ end module grid
 
 MODULE ams
   use const, only: R8
+  implicit none
+
   REAL(R8)   :: atom_mass(103)
 
 CONTAINS
@@ -141,7 +152,7 @@ module sym2
 
   implicit none
 
-  private :: R8, NSYM
+  private :: NSYM
   public
 
   real(R8) :: TAU(3,NSYM)
@@ -155,4 +166,4 @@ end module sym2
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2015-12-22 16:00:41 assman@faepop36.tu-graz.ac.at>
