@@ -1,21 +1,26 @@
 !!! wien2wannier/SRC_wplot/main.F
 
-subroutine MAIN2()
-  use struct
-  use radgrd
-  use latt
-  use sym2
-  use lolog
-  use loabc
-  use atspdt
-  use radfu
-  use bessfu
-  use work
-  use grid
-  use const, only: DPk, R8, C16, BUFSZ, error_unit, PI
-  use util,  only: paropen, uppercase
-  use clio,  only: croak
-  use param
+subroutine main()
+  use struct,    only: pos, Znuc, RMT, mult, iatnr
+  use radgrd,    only: rm, rnot, dx, jri
+  use latt,      only: Vuc, br1, br2, br3, br4
+  use sym2,      only: tau, imat, iord
+  use lolog,     only: lapw, ilo, Nlo
+  use loabc,     only: Alo
+  use atspdt,    only: p, dp
+  use radfu,     only: rrad
+  use bessfu,    only: fj, dfj, rad, irad
+  use work,      only: aug
+  use grid,      only: rgrid, ireg, ilat, iri, npg
+  use const,     only: DPk, R8, C16, BUFSZ, PI
+  use util,      only: paropen, uppercase
+  use clio,      only: croak
+  use Wannier90, only: chk_t, chk_read
+  use structmod, only: struct_t, struct_read
+  use param,     only: Nrad, Nsym, NRF, NLOAt, LOmax, Lmax7, idx_wann,      &
+       unit_in, unit_out, unit_struct, unit_vector, unit_chk, unit_rot,     &
+       unit_inwf, unit_psink, unit_psiarg, outfn, vecfn, psinkfn, psiargfn, &
+       iproc
 
   IMPLICIT none
 
@@ -150,7 +155,6 @@ subroutine MAIN2()
   call wfopen(unit_psink,  psinkfn,  iseig, STATUS='unknown')
   call wfopen(unit_psiarg, psiargfn, iseig, STATUS='unknown')
   call wfopen(unit_out,    outfn,    iseig, STATUS='unknown')
-  call wfopen(unit_tmp,    tmpfn,    iseig, STATUS='unknown')
 
   READ(unit_in,1100,IOSTAT=ierr)HANDLE
   IF(ierr.NE.0)HANDLE='    '
@@ -170,11 +174,10 @@ subroutine MAIN2()
      read(unit_chk) header    ! Date and time
      write(*,*)header
      read(unit_chk) num_bands ! Number of bands
-     if (num_bands.ne.nb) then
-        write(error_unit, *) "Error in read-in of chk file: &
-             &inconsistency of number of Bloch bands"
-        call exit(1)
-     endif
+     if (num_bands.ne.nb) &
+          call croak("Error in read-in of chk file: &
+          &inconsistency of number of Bloch bands")
+
      read(unit_chk) num_exclude_bands ! Number of excluded bands
      allocate(exclude_bands(num_exclude_bands))
      read(unit_chk) (exclude_bands(i),i=1,num_exclude_bands)
@@ -211,11 +214,9 @@ subroutine MAIN2()
      read(unit_chk) ((wannier_centres(i,j),i=1,3),j=1,num_wann)
      allocate(wannier_spreads(num_wann))
      read(unit_chk) (wannier_spreads(i),i=1,num_wann)
-     if (ISEIG.gt.num_wann) then
-        write(error_unit,*) "Error in read-in of chk file: &
-             &number of Wannier functions is smaller than given index"
-        call exit(1)
-     endif
+     if (ISEIG.gt.num_wann) &
+          call croak("Error in read-in of chk file: &
+          &number of Wannier functions is smaller than given index")
   endif wannier
 
   close(unit_chk)
@@ -468,7 +469,6 @@ subroutine MAIN2()
      elseif(GridMode(1:2) == '3D') then
         write(unit_out,2150) '(((psi(ix,iy,iz),ix=1,nx),iy=1,ny),iz=1,nz)'
      endif
-     WRITE(unit_tmp,2190)
   ENDIF
 
 !     << read in k points >>
@@ -544,9 +544,7 @@ subroutine MAIN2()
         IF(.NOT.KFOUND) GOTO 340
         IF(.NOT.PUTABC)THEN
            WRITE(unit_out,2160)KKKABS,BNAME,(FK(I),I=1,3)
-           WRITE(unit_tmp,2200)KKKABS,BNAME,(FK(I),I=1,3)
            IF(ALLEIG)THEN
-              write(unit_tmp,2210)
               fmt_out = fmt_short
            ELSE
               fmt_out = fmt_fancy
@@ -696,7 +694,6 @@ subroutine MAIN2()
         WRITE(unit_out,2170)IEABS,E,KKKABS
 
 315     IF(IE.LT.NE) GOTO 340
-        IF(KFOUND.AND..NOT.PUTABC)WRITE(unit_tmp,'()')
      end do kpoints
   end do vecfiles
 
@@ -705,21 +702,6 @@ subroutine MAIN2()
      write(unit_psiarg,3020)(atan2(dimag(tot(IG)),real(tot(IG))),IG=1,NPG)
   ENDIF
 
-  REWIND(unit_tmp)
-570 READ(unit_tmp,'(A)',END=580)TITEL(1:64)
-  DO I=64,1,-1
-     IF(TITEL(I:I).NE.' ')THEN
-        WRITE(unit_out,'(A)')TITEL(1:I)
-        GOTO 570
-     ENDIF
-  end DO
-  WRITE(unit_out,'()')
-  GOTO 570
-580 CLOSE(unit_tmp,STATUS='DELETE')
-  IF(PUTABC)THEN
-     REWIND unit_psink
-     ENDFILE unit_psink
-  ENDIF
   RETURN
 
  1000 FORMAT(A80)
@@ -838,7 +820,7 @@ contains
        open(unit, FILE=tmpnam, STATUS=s, FORM=f)
     end if
   end subroutine wfopen
-END subroutine main2
+end subroutine main
 
 
 !!/---
@@ -847,4 +829,4 @@ END subroutine main2
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-22 14:20:56 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-22 18:24:31 assman@faepop36.tu-graz.ac.at>
