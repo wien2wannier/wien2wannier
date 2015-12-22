@@ -18,7 +18,7 @@
 !! 32 chk	  'old'		'unformatted'
 !!\---
 
-PROGRAM WPLOT
+program wplot
   use const, only: BUFSZ
   use clio,  only: fetcharg, argstr
   use param, only: unit_def, unit_vector, unit_psink, unit_psiarg, unit_out,&
@@ -55,8 +55,8 @@ PROGRAM WPLOT
 8001 close(unit_def)
 
   !     << start wave function evaluation >>
-  CALL MAIN2(iproc)
-END PROGRAM WPLOT
+  call main(iproc)
+end program wplot
 
 
 !!/---
@@ -65,4 +65,4 @@ END PROGRAM WPLOT
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-22 15:59:07 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-22 18:13:31 assman@faepop36.tu-graz.ac.at>
