@@ -143,20 +143,21 @@ $(C_EXEC): $(objs) $(c_objs) Makefile
 #
 #  Real and complex need to be kept separate!
 #
-$(O_DIR)/%.o: %.F Makefile $(O_DIR)
+$(O_DIR)/%.o: %.[fF] Makefile
 	@test -d $(O_DIR) || mkdir $(O_DIR)
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(O_DIR)
 
-$(R_DIR)/%.o: %.F Makefile $(R_DIR)
+$(O_DIR)/%.o: %.c Makefile
+	@test -d $(O_DIR) || mkdir $(O_DIR)
+	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
+
+$(R_DIR)/%.o: %.[fF] Makefile
 	@test -d $(R_DIR) || mkdir $(R_DIR)
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(R_DIR)
 
-$(C_DIR)/%.o: %.F Makefile $(C_DIR)
+$(C_DIR)/%.o: %.[fF] Makefile
 	@test -d $(C_DIR) || mkdir $(C_DIR)
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(C_DIR) -D_COMPLEX_
-
-$(O_DIR)/%.o: %.c Makefile $(O_DIR)
-	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
 
 #........................................................................
 #
@@ -174,4 +175,4 @@ $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
 	$(foreach o, $(util_users), $d/$o)): $(O_DIR)/util_w2w.o
 
 
-## Time-stamp: <2015-12-22 16:03:04 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2015-12-23 11:50:29 assman@faepop36.tu-graz.ac.at>
