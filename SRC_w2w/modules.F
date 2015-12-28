@@ -32,7 +32,7 @@ MODULE param
   ! for x-dos set lxdos to 3
   parameter (lxdos= 3)
   parameter (nloat= 3)
-  parameter (nrf=3)
+  parameter (nrf=4)
   PARAMETER (CLIGHT=137.0359895D0)
 END MODULE param
 
@@ -272,4 +272,4 @@ end module lolog
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-28 15:15:50 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-28 16:23:38 assman@faepop36.tu-graz.ac.at>
