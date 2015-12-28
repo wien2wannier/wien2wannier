@@ -83,7 +83,7 @@ MODULE struct
     IMPLICIT NONE
 
     INTEGER                :: ios,inum,isplit,iatnr
-    REAL(R8)                 :: test,ninety
+    REAL(R8)               :: test,ninety
     INTEGER                :: index,i,j,j1,j2,m,jatom
 
     test=1.D-5
@@ -104,7 +104,8 @@ MODULE struct
     INDEX=0
     DO jatom=1,NAT
      INDEX=INDEX+1
-     READ(unit_struct,1030,iostat=ios)iatnr,(pos(j,index),j=1,3),mult(jatom),isplit
+     read(unit_struct,1030,iostat=ios) &
+          iatnr, (pos(j,index),j=1,3), mult(jatom), isplit
      IF(ios /= 0) THEN
       WRITE(unit_out,*) iatnr,(pos(j,index),j=1,3),mult(jatom)
       WRITE(unit_out,*) 'ERROR IN STRUCT FILE READ'
@@ -226,12 +227,12 @@ END MODULE amn_mmn
 MODULE pairs
   INTEGER,ALLOCATABLE       :: KP(:),KPB(:),BQX(:),BQY(:),BQZ(:),BQX1(:),BQY1(:),BQZ1(:)
 
-   CONTAINS
-    SUBROUTINE  init_pairs(npair)
-     INTEGER  :: npair
-     ALLOCATE(kp(npair),kpb(npair),bqx(npair),bqy(npair),bqz(npair),bqx1(npair),bqy1(npair),bqz1(npair))
-    END SUBROUTINE init_pairs
- END MODULE pairs
+CONTAINS
+  SUBROUTINE  init_pairs(npair)
+    INTEGER  :: npair
+    ALLOCATE(kp(npair),kpb(npair),bqx(npair),bqy(npair),bqz(npair),bqx1(npair),bqy1(npair),bqz1(npair))
+  END SUBROUTINE init_pairs
+END MODULE pairs
 
 
 MODULE ams
@@ -239,23 +240,31 @@ MODULE ams
 
   REAL(R8)          :: atom_mass(103)
 
- CONTAINS
+CONTAINS
   SUBROUTINE init_ams
-  REAL(R8)          :: atom_mass(103)
-     DATA atom_mass /1.,4.,6.9,9.,10.8,12.,14.,16.,19.,20.2, &
-          23.,24.3,27.,28.1,31.,32.,35.4,40.,39.1,40.,45., &
-          47.9,50.9,52.,54.9,55.8,58.9,58.7,63.5,65.4,69.7, &
-          72.6,74.9,79.,79.9,83.8,85.5,87.6,88.9,91.2,92.9, &
-          95.9,98.,101.1,102.9,106.4,107.9,112.4,114.8, &
-          118.7,121.8,127.6,126.9,131.3,132.9,137.3,138.9,140.1, &
-          140.9,144.2,145.,150.4,152.,157.3,158.9,162.5, &
-          164.9,167.3,168.9,173.,175.,178.5,180.9,183.8,186.2, &
-          190.2,192.2,195.1,197.,200.6,204.4,207.2,209.,209., &
-          210.,222.,223.,226.,227.,232.,231.,238.,237.,244.,243., &
-          247.,247.,251.,252.,257.,258.,259.,262./
-   END SUBROUTINE init_ams
- END MODULE ams
+    REAL(R8)          :: atom_mass(103)
+    DATA atom_mass /1.,4.,6.9,9.,10.8,12.,14.,16.,19.,20.2, &
+         23.,24.3,27.,28.1,31.,32.,35.4,40.,39.1,40.,45., &
+         47.9,50.9,52.,54.9,55.8,58.9,58.7,63.5,65.4,69.7, &
+         72.6,74.9,79.,79.9,83.8,85.5,87.6,88.9,91.2,92.9, &
+         95.9,98.,101.1,102.9,106.4,107.9,112.4,114.8, &
+         118.7,121.8,127.6,126.9,131.3,132.9,137.3,138.9,140.1, &
+         140.9,144.2,145.,150.4,152.,157.3,158.9,162.5, &
+         164.9,167.3,168.9,173.,175.,178.5,180.9,183.8,186.2, &
+         190.2,192.2,195.1,197.,200.6,204.4,207.2,209.,209., &
+         210.,222.,223.,226.,227.,232.,231.,238.,237.,244.,243., &
+         247.,247.,251.,252.,257.,258.,259.,262./
+  END SUBROUTINE init_ams
+END MODULE ams
 
+module lolog
+  use param, only: lmax2, lomax
+
+  implicit none
+
+  integer :: nlo, nlov, nlon, n_rad(0:lmax2), ilo(0:lomax)
+  logical :: loor(0:lomax), lapw(0:lmax2)
+end module lolog
 
 !!/---
 !! Local Variables:
@@ -263,4 +272,4 @@ MODULE ams
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-07-14 13:15:29 assman@faepop23.tu-graz.ac.at>
+!! Time-stamp: <2015-12-28 15:15:50 assman@faepop36.tu-graz.ac.at>

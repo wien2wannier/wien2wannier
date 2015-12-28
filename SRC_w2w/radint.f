@@ -4,12 +4,11 @@
       USE param
       USE struct
       USE bessel
+      use lolog, only: nlo,nlov,nlon,loor,ilo,lapw,n_rad
       IMPLICIT REAL(R8) (A-H,O-Z)
       INTEGER L_index,R_index
       COMMON /RADFU/   RF1(NRAD,0:LMAX2,nrf),RF2(NRAD,0:LMAX2,nrf)
       COMMON /GENER/  BR1(3,3)
-      logical loor(0:lomax),lapw(0:lmax2)
-      common /lolog/   nlo,nlov,nlon,loor,ilo(0:lomax),lapw,n_rad(0:lmax2)
       DIMENSION  A(nrad),B(nrad),X(nrad),Y(nrad)
 
 
@@ -54,4 +53,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-06-30 22:16:06 assman@faepop23.tu-graz.ac.at>
+!! Time-stamp: <2015-12-28 15:14:09 assman@faepop36.tu-graz.ac.at>

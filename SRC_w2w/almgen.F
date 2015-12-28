@@ -4,7 +4,8 @@
      USE param
      USE struct
      USE xa3
-     USE xa
+     use xa
+     use lolog, only: nlo,nlov,nlon,loor,ilo,lapw,n_rad
      IMPLICIT REAL(R8) (A-H,O-Z)
 
      real(r8)     h_al(iblock),h_bl(iblock)
@@ -17,12 +18,9 @@
      complex(c16) ALMt((LMAX2+1)*(LMAX2+1),NB,NRF,MULT(JATOM))
      complex(c16) ALM(NB,NRF,(LMAX2+1)*(LMAX2+1),MULT(JATOM))
 
-     LOGICAL loor,lapw
-
      COMMON /GENER/   BR1(3,3),BR2(3,3)
      COMMON /ATSPDT/  P(0:LMAX2,nrf),DP(0:LMAX2,nrf)
      COMMON /loabc/   alo(0:lomax,nloat,nrf)
-     COMMON /lolog/   nlo,nlov,nlon,loor(0:lomax),ilo(0:lomax),lapw(0:lmax2),n_rad(0:lmax2)
 
      TWOPI=2.D0*PI
      FAC=4.0D0*PI*RMT(JATOM)**2/SQRT(VOL)
@@ -163,4 +161,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-06-29 16:15:35 assman@faepop23.tu-graz.ac.at>
+!! Time-stamp: <2015-12-28 15:20:52 assman@faepop36.tu-graz.ac.at>

@@ -3,22 +3,22 @@
 SUBROUTINE ATPAR (JATOM,LATOM,itape,jtape)
   USE param
   USE struct
+  use lolog, only: nlo,nlov,nlon,loor,ilo,lapw,n_rad
 
   use const, only: R8
 
   IMPLICIT REAL(R8) (A-H,O-Z)
   real(r8)           :: VR(NRAD)
-  LOGICAL          loor(0:lomax),lapw(0:lmax2),rlo(1:nloat, 0:lomax)
+  LOGICAL            :: rlo(1:nloat, 0:lomax)
   DIMENSION     emist(0:lomax,nloat),E(0:LMAX2),elo(0:LOMAX,nloat), &
-       pei(0:lmax2),ilo(0:lomax),n_rad(0:lmax2) 
+       pei(0:lmax2) 
 
   COMMON /UHELP/   A(NRAD),B(NRAD),AE(NRAD),BE(NRAD)
   COMMON /ATSPDT/  P(0:LMAX2,nrf),DP(0:LMAX2,nrf)
   COMMON /RADFU/   RF1(NRAD,0:LMAX2,nrf),RF2(NRAD,0:LMAX2,nrf)
   COMMON /RINTEG/  RI_MAT(0:lmax2,nrf,nrf)
   common /loabc/   alo(0:lomax,2,nloat,nrf)
-  common /lolog/   nlo,nlov,nlon,loor,ilo,lapw,n_rad  
-  !---------------------------------------------------------------------  
+
 2022 FORMAT(3X,4E19.12) 
 
   dummy=latom                   ! silence unused variable warning
@@ -237,4 +237,4 @@ END SUBROUTINE ATPAR
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-06-29 15:57:06 assman@faepop23.tu-graz.ac.at>
+!! Time-stamp: <2015-12-28 15:16:27 assman@faepop36.tu-graz.ac.at>
