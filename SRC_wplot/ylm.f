@@ -6,10 +6,13 @@ SUBROUTINE YLM(V,LMAX,Y)
 ! version of ylm.f which was found to be numerically unstable for 
 ! arguments close to but not on the z-axis (P. Balah, priv. comm.)
 ! -----------------------------------------------------------------
-  use const
-  INTEGER            LMAX
-  DOUBLE PRECISION   V(3)
-  COMPLEX(C16)       Y(*)
+  use param, only: DPk, PI
+
+  implicit none
+
+  integer,      intent(in)  :: LMAX
+  real(DPk),    intent(in)  :: V(3)
+  complex(DPk), intent(out) :: Y(*)
 !
 !     ..................................................................
 ! 1.     PROGRAM UNIT 'YLM'
@@ -159,13 +162,13 @@ SUBROUTINE YLM(V,LMAX,Y)
 !        INSTITUT FUER TECHNISCHE ELEKTROCHEMIE            --  TU VIENNA
 !     ..................................................................
 
-  INTEGER            I2L, I4L2, INDEX, INDEX2, L, M, MSIGN
-  DOUBLE PRECISION   A, B, C, AB, ABC, ABMAX, ABCMAX
-  DOUBLE PRECISION   D4LL1C, D2L13
-  DOUBLE PRECISION   COSTH, SINTH, COSPH, SINPH
-  DOUBLE PRECISION   TEMP1, TEMP2, TEMP3
-  DOUBLE PRECISION   YLLR, YLL1R, YL1L1R, YLMR
-  DOUBLE PRECISION   YLLI, YLL1I, YL1L1I, YLMI
+  integer   :: I2L, I4L2, INDEX, INDEX2, L, M, MSIGN
+  real(DPk) :: A, B, C, AB, ABC, ABMAX, ABCMAX
+  real(DPk) :: D4LL1C, D2L13
+  real(DPk) :: COSTH, SINTH, COSPH, SINPH
+  real(DPk) :: TEMP1, TEMP2, TEMP3
+  real(DPk) :: YLLR, YLL1R, YL1L1R, YLMR
+  real(DPk) :: YLLI, YLL1I, YL1L1I, YLMI
 
 !        Y(0,0)
 !
@@ -279,4 +282,4 @@ END SUBROUTINE YLM
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2015-12-29 18:41:22 assman@faepop36.tu-graz.ac.at>
