@@ -1,11 +1,10 @@
 !!! wien2wannier/SRC_wplot/moduls.f
 
 module param
-  use const, only: BUFSZ
+  use const, only: BUFSZ, DPk, R8, C16, PI
 
   implicit none
 
-  private :: BUFSZ
   public
 
 !!!/=== The following is from the old ‘param.inc_{r,c}’ ===================
@@ -13,14 +12,7 @@ module param
 !
 !     Constant parameter definition
 !
-  INTEGER   NRAD, NSYM, NRF, NLOAT
-  INTEGER   LOMAX, LMAX7
-  PARAMETER          (NRAD=    981)
-  PARAMETER          (NSYM=     48)
-  PARAMETER          (LMAX7=     8)
-  PARAMETER          (LOMAX=     3)
-  PARAMETER          (NRF = 4)
-  PARAMETER          (NLOAT =3)
+  integer, parameter :: Nrad=981, Nsym=48, lmax7=8, LOmax=3, NRF=4, NLOat=3
 
 !:17[
 !     There are a couple of optional features in how to set-up the wave
@@ -34,13 +26,12 @@ module param
 !     of these alternative choices. For more details see the "trick 17"
 !     sections C:17[ ... C:17] in the code (Uwe Birkenheuer)
 !      
-  LOGICAL         KCONJG,USEROT,ADDLOC,MVATOM
-  PARAMETER       (KCONJG=.TRUE.)
-  PARAMETER       (USEROT=.TRUE.)
-  PARAMETER       (ADDLOC=.TRUE.)
-  PARAMETER       (MVATOM=.TRUE.)
+  logical, parameter :: &
+       kconjg=.true., UseRot=.true., AddLoc=.true., mvatom=.true.
 !:17]
 !!!!!\=== END param.inc ===================================================
+
+  real(DPk), parameter :: clight=137.0359991_DPk
 
   integer, parameter :: unit_in=5, unit_out=6, unit_struct=8, unit_vector=10
   integer, parameter :: unit_grid=7, unit_vsp=18, unit_inwf=31, unit_chk=32
@@ -52,102 +43,113 @@ module param
   integer          :: idx_wann=0, iproc=0
 end module param
 
-module struct
-  use const, only: R8
-  implicit none
-  real(R8), allocatable :: POS(:,:),ZNUC(:),RMT(:)
-  integer,allocatable :: MULT(:),IATNR(:)
-end module struct
+module ams
+  use const, only: DPk
 
-module radgrd 
-  use const, only: R8
-  implicit none
-  real(R8),allocatable :: RM(:,:),RNOT(:),DX(:)
-  integer,allocatable :: JRI(:)
-end module radgrd
+  ! FIXME: get more precise atomic mass data
+  real(DPk), parameter :: atom_mass(103) = (/ &
+       &    1.0,   4.0,   6.9,   9.0,  10.8,  12.0,  14.0,  16.0,  19.0, &
+       &   20.2,  23.0,  24.3,  27.0,  28.1,  31.0,  32.0,  35.4,  40.0, &
+       &   39.1,  40.0,  45.0,  47.9,  50.9,  52.0,  54.9,  55.8,  58.9, &
+       &   58.7,  63.5,  65.4,  69.7,  72.6,  74.9,  79.0,  79.9,  83.8, &
+       &   85.5,  87.6,  88.9,  91.2,  92.9,  95.9,  98.0, 101.1, 102.9, &
+       &  106.4, 107.9, 112.4, 114.8, 118.7, 121.8, 127.6, 126.9, 131.3, &
+       &  132.9, 137.3, 138.9, 140.1, 140.9, 144.2, 145.0, 150.4, 152.0, &
+       &  157.3, 158.9, 162.5, 164.9, 167.3, 168.9, 173.0, 175.0, 178.5, &
+       &  180.9, 183.8, 186.2, 190.2, 192.2, 195.1, 197.0, 200.6, 204.4, &
+       &  207.2, 209.0, 209.0, 210.0, 222.0, 223.0, 226.0, 227.0, 232.0, &
+       &  231.0, 238.0, 237.0, 244.0, 243.0, 247.0, 247.0, 251.0, 252.0, &
+       &  257.0, 258.0, 259.0, 262.0                                     &
+       /)
+end module ams
 
-module lolog 
-  implicit none
-  integer  NLO
-  logical,allocatable :: LAPW(:,:)
-  integer, allocatable :: ILO(:,:)
-end module lolog
 
-module loabc
-  use const, only: R8
-  implicit none
-  real(R8),allocatable :: ALO(:,:,:,:)  
-end module loabc
-
+!!! “Minimodules” (converted COMMON blocks &c.)
 module atspdt
-  use const, only: R8
+  use const, only: DPk
   implicit none
-  real(R8),allocatable :: P(:,:,:),DP(:,:,:) 
+
+  real(DPk),allocatable :: P(:,:,:),DP(:,:,:) 
 end module atspdt
 
-module radfu
-  use const, only: R8
-  implicit none
-  real(R8),allocatable ::  RRAD(:,:,:,:)
-end module radfu
-
 module bessfu
-  use const, only: R8
+  use const, only: DPk
   implicit none
-  real(R8),allocatable ::  FJ(:,:,:),DFJ(:,:,:),RAD(:)
-  integer, allocatable :: IRAD(:)
+
+  real(DPk),allocatable ::  FJ(:,:,:),DFJ(:,:,:),RAD(:)
+  integer,  allocatable :: IRAD(:)
 end module bessfu
 
-module work
-  use const, only: C16
-  implicit none
-  complex(C16),allocatable :: aug(:,:,:)
-end module work
-
 module grid
-  use const, only: R8
+  use const, only: DPk
   implicit none
-  real(R8),allocatable :: rgrid(:,:)
-  integer,allocatable :: ireg(:),ilat(:,:),iri(:)
+  real(DPk),allocatable :: rgrid(:,:)
+  integer,  allocatable :: ireg(:),ilat(:,:),iri(:)
   integer npg
 end module grid
 
-MODULE ams
-  use const, only: R8
-  implicit none
-
-  REAL(R8)   :: atom_mass(103)
-
-CONTAINS
-  SUBROUTINE init_ams
-    REAL(R8) :: atom_mass(103)
-    DATA atom_mass /1.,4.,6.9,9.,10.8,12.,14.,16.,19.,20.2, &
-         23.,24.3,27.,28.1,31.,32.,35.4,40.,39.1,40.,45., &
-         47.9,50.9,52.,54.9,55.8,58.9,58.7,63.5,65.4,69.7, &
-         72.6,74.9,79.,79.9,83.8,85.5,87.6,88.9,91.2,92.9, &
-         95.9,98.,101.1,102.9,106.4,107.9,112.4,114.8, & 
-         118.7,121.8,127.6,126.9,131.3,132.9,137.3,138.9,140.1, &
-         140.9,144.2,145.,150.4,152.,157.3,158.9,162.5, &
-         164.9,167.3,168.9,173.,175.,178.5,180.9,183.8,186.2, &
-         190.2,192.2,195.1,197.,200.6,204.4,207.2,209.,209., &
-         210.,222.,223.,226.,227.,232.,231.,238.,237.,244.,243., &
-         247.,247.,251.,252.,257.,258.,259.,262./
-  END SUBROUTINE init_ams
-END MODULE ams
-
 module latt
-  use const, only: R8
+  use const, only: DPk
 
   implicit none
 
-  private R8
+  private DPk
   public
 
-  real(R8) :: VUC, BR1(3,3), BR2(3,3), BR3(3,3), BR4(3,3)
+! BR1(i,:) -- the real space lattice vectors a_i of the conventional u.c.
+! BR2(i,:) -- the real space lattice vectors a_i of the primitive unit cell
+! BR3(i,:) -- the reciprocal lattice vectors b_i of the conventional u.c
+! BR4(i,:) -- the reciprocal lattice vectors b_i of the primitive unit cell
+  
+
+  real(DPk) :: BR1(3,3), BR2(3,3), BR3(3,3), BR4(3,3)
 end module latt
 
+module loabc
+  use const, only: DPk
+  implicit none
+
+  real(DPk),allocatable :: ALO(:,:,:,:)  
+end module loabc
+
+module lolog 
+  implicit none
+
+  integer :: NLO
+  logical, allocatable :: LAPW(:,:)
+  integer, allocatable :: ILO(:,:)
+end module lolog
+
+module ps1
+  use const, only: DPK
+  implicit none
+
+  real(DPk) :: dep(5),deq(5),dd,dvc,dsal,dk,dm1
+end module ps1
+
+module radfu
+  use const, only: DPk
+  implicit none
+
+  real(DPk),allocatable ::  RRAD(:,:,:,:)
+end module radfu
+
+module radgrd 
+  use const, only: DPk
+  implicit none
+
+  real(DPk),allocatable :: RM(:,:), DX(:)
+end module radgrd
+
+module struct
+  use const, only: DPk
+  implicit none
+
+  real(DPk), allocatable :: POS(:,:), RMT(:)
+end module struct
+
 module sym2
-  use const, only: R8
+  use const, only: DPk
   use param, only: NSYM
 
   implicit none
@@ -155,10 +157,24 @@ module sym2
   private :: NSYM
   public
 
-  real(R8) :: TAU(3,NSYM)
-  integer  :: IMAT(3,3,NSYM), IORD
+  real(DPk) :: TAU (3,NSYM)
+  integer   :: IMAT(3,3,NSYM), IORD
 end module sym2
 
+module work
+  use const, only: DPK
+  implicit none
+
+  complex(DPK), allocatable :: aug(:,:,:)
+end module work
+
+module work1
+  use const, only: DPK
+  use param, only: Nrad
+  implicit none
+
+  real(DPk) :: A(Nrad), B(Nrad)
+end module work1
 
 !!/---
 !! Local Variables:
@@ -166,4 +182,4 @@ end module sym2
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-22 17:03:03 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-29 17:52:53 assman@faepop36.tu-graz.ac.at>
