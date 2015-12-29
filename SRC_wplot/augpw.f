@@ -71,7 +71,7 @@
         IF(.NOT.KCONJG)THEN
 !         << WIEN95 convention : (*) =   >>
           DO 35 LM=1,(LMAX7+1)*(LMAX7+1)
-            Y(LM) = DCONJG(Y(LM))
+            Y(LM) = conjg(Y(LM))
    35     CONTINUE
         ENDIF
 !:17]
@@ -79,7 +79,7 @@
 !       << c_K/sqrt(V) * exp(i(K+k)R_a) >>
         ARG = BK(1,IPW)*POS(1,LATOM) + BK(2,IPW)*POS(2,LATOM) &
             + BK(3,IPW)*POS(3,LATOM)
-        PHS = COEF(IPW) * DCMPLX(COS(ARG),SIN(ARG))
+        PHS = COEF(IPW) * cmplx(cos(arg), sin(arg), DPk)
 !
 !       << A_l,a and B_l,a (without Rmt^2 factor) >>
 ! -----------------------------------------------------------------
@@ -102,7 +102,7 @@
           endif
           DO 50 M=-L,L
             LM = LM + 1
-            PHSLM = PHS * DCONJG( Y(LM) )
+            PHSLM = PHS * conjg( Y(LM) )
             ALM(LM,1) = ALM(LM,1) + PHSLM * AL
             ALM(LM,2) = ALM(LM,2) + PHSLM * BL
    50     CONTINUE
@@ -118,4 +118,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 19:10:52 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-29 19:57:06 assman@faepop36.tu-graz.ac.at>

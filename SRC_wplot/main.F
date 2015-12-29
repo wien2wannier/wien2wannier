@@ -475,7 +475,7 @@ subroutine main()
         KKK = KKK + 1
 
         do j=1, chk%num_bands
-           local_contribution = dcmplx(0d0,0d0)
+           local_contribution = 0
            if (chk%have_disentangled) then
               do j2=1, chk%num_wann
                  if (rotate) then
@@ -637,7 +637,7 @@ subroutine main()
 !             << load calc. Bloch factor e^ikR >>
               ARG = FK(1)*ILAT(1,IG) + FK(2)*ILAT(2,IG)  &
                    + FK(3)*ILAT(3,IG)
-              PHS = DCMPLX(COS(ARG),SIN(ARG))
+              PHS = cmplx(cos(arg), sin(arg), DPk)
               call WAVSPH(Rgrid(1,ig), PHS, ireg(ig), iri(ig), Psi(ig), Y, &
                    stru%neq2at)
            ENDIF
@@ -677,7 +677,7 @@ subroutine main()
   end do vecfiles
 
   write(unit_psink, 3020)(abs(tot(IG))**2/kkk,IG=1,NPG)
-  write(unit_psiarg,3020)(atan2(dimag(tot(IG)),real(tot(IG))),IG=1,NPG)
+  write(unit_psiarg,3020)(atan2(aimag(tot(IG)), real(tot(IG))),IG=1,NPG)
 3020 format(1P,10E16.8)
 
   RETURN
@@ -728,4 +728,4 @@ end subroutine main
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 19:31:23 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-29 19:57:42 assman@faepop36.tu-graz.ac.at>

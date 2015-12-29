@@ -35,11 +35,11 @@
                   CALL YLM(RK,LOMAX,Y)
                   ARG=BK(1,IL)*POS(1,LATOM)+BK(2,IL)*POS(2,LATOM) &
                   + BK(3,IL)*POS(3,LATOM)
-                  PHS=COEF(IL)*DCMPLX(COS(ARG),SIN(ARG))
+                  PHS=COEF(IL) * cmplx(cos(arg), sin(arg), DPk)
                   LM = L*L
                   DO M=-L,L
                      LM = LM + 1
-                     PHSSUM(M) = PHSSUM(M) + PHS * DCONJG( Y(LM) )
+                     PHSSUM(M) = PHSSUM(M) + PHS * conjg( Y(LM) )
                   ENDDO
                ENDDO
  30         CONTINUE
@@ -62,4 +62,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 18:35:48 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-29 19:56:44 assman@faepop36.tu-graz.ac.at>

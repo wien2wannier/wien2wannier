@@ -78,13 +78,6 @@ SUBROUTINE YLM(V,LMAX,Y)
 !        INPUT/OUTPUT (READ/WRITE)
 !           none
 !
-!        MACHINENDEPENDENT PROGRAMPARTS
-!           Type COMPLEX*16 is used which does not conform to the
-!           FORTRAN 77 standard.
-!           Also the non-standard type conversion function DCMPLX()
-!           is used which combines two double precision values into
-!           one double complex value.
-!
 ! 4.     REMARKS
 !           none
 !
@@ -174,7 +167,7 @@ SUBROUTINE YLM(V,LMAX,Y)
 !
   YLLR = 1.0D+0/SQRT(4.0D+0*PI)
   YLLI = 0.0D+0
-  Y(1) = DCMPLX(YLLR,YLLI)
+  Y(1) = cmplx(YLLR, YLLI, DPk)
 
 !        continue only if spherical harmonics for (L .GT. 0) are desired
 !
@@ -210,13 +203,13 @@ SUBROUTINE YLM(V,LMAX,Y)
 
 !        Y(1,0)
 !
-  Y(3) = DCMPLX(SQRT(3.0D+0)*YLLR*COSTH,0.0D+0)
+  Y(3) = cmplx(sqrt(3.0_DPk)*YLLR*COSTH, 0, DPk)
 
 !        Y(1,1) ( = -DCONJG(Y(1,-1)))
 !
   TEMP1 = -SQRT(1.5D+0)*YLLR*SINTH
-  Y(4) = DCMPLX(TEMP1*COSPH,TEMP1*SINPH)
-  Y(2) = -DCONJG(Y(4))
+  Y(4) = cmplx(temp1*cosph, temp1*sinph, DPk)
+  Y(2) = -conjg(Y(4))
 
   DO L = 2, LMAX
      INDEX  = L*L+1
@@ -225,42 +218,42 @@ SUBROUTINE YLM(V,LMAX,Y)
 
 !        YLL = Y(L,L) = f(Y(L-1,L-1)) ... Formula 1
 !
-     YL1L1R = DBLE(Y(INDEX-1))
-     YL1L1I = DIMAG(Y(INDEX-1))
-     TEMP1 = -SQRT(DBLE(2*L+1)/DBLE(2*L))*SINTH
+     YL1L1R = real(Y(INDEX-1))
+     YL1L1I = aimag(Y(INDEX-1))
+     TEMP1 = -sqrt(real(2*L+1, DPk)/2/L) * SINTH
      YLLR = TEMP1*(COSPH*YL1L1R - SINPH*YL1L1I)
      YLLI = TEMP1*(COSPH*YL1L1I + SINPH*YL1L1R)
-     Y(INDEX2) = DCMPLX(YLLR,YLLI)
-     Y(INDEX)  = MSIGN*DCONJG(Y(INDEX2))
+     Y(INDEX2) = cmplx(YLLR, YLLI, DPk)
+     Y(INDEX)  = MSIGN * conjg(Y(index2))
      INDEX2 = INDEX2 - 1
      INDEX  = INDEX  + 1
 
 !        YLL1 = Y(L,L-1) = f(Y(L-1,L-1)) ... Formula 2
 !               (the coefficient for Y(L-2,L-1) in Formula 2 is zero)
 !
-     TEMP2 = SQRT(DBLE(2*L+1))*COSTH
+     TEMP2 = sqrt(real(2*L+1, DPk))*COSTH
      YLL1R = TEMP2*YL1L1R
      YLL1I = TEMP2*YL1L1I
-     Y(INDEX2) = DCMPLX(YLL1R,YLL1I)
-     Y(INDEX)  = -MSIGN*DCONJG(Y(INDEX2))
+     Y(INDEX2) = cmplx(YLL1R, YLL1I, DPk)
+     Y(INDEX)  = -MSIGN * conjg(Y(INDEX2))
      INDEX2 = INDEX2 - 1
      INDEX  = INDEX  + 1
 
      I4L2 = INDEX2 - 4*L + 2
      I2L  = INDEX2 - 2*L
-     D4LL1C = COSTH*SQRT(DBLE(4*L*L-1))
-     D2L13  = -SQRT(DBLE(2*L+1)/DBLE(2*L-3))
+     D4LL1C = COSTH*sqrt(real(4*L*L-1, DPk))
+     D2L13  = -sqrt(real(2*L+1, DPk)/(2*L-3))
 
      DO M = L - 2, 0, -1
 !        YLM = Y(L,M) = f(Y(L-2,M),Y(L-1,M)) ... Formula 2
 !
-        TEMP1 = 1.0D+0/SQRT(DBLE((L+M)*(L-M)))
+        TEMP1 = 1.0D+0/sqrt(real((L+M)*(L-M), DPk))
         TEMP2 = D4LL1C*TEMP1
-        TEMP3 = D2L13*SQRT(DBLE((L+M-1)*(L-M-1)))*TEMP1
-        YLMR = TEMP2*DBLE(Y(I2L))  + TEMP3*DBLE(Y(I4L2))
-        YLMI = TEMP2*DIMAG(Y(I2L)) + TEMP3*DIMAG(Y(I4L2))
-        Y(INDEX2) = DCMPLX(YLMR,YLMI)
-        Y(INDEX)  = MSIGN*DCONJG(Y(INDEX2))
+        TEMP3 = D2L13*sqrt(real((L+M-1)*(L-M-1), DPk))*TEMP1
+        YLMR = TEMP2*real(Y(I2L))  + TEMP3*real(Y(I4L2))
+        YLMI = TEMP2*aimag(Y(I2L)) + TEMP3*aimag(Y(I4L2))
+        Y(INDEX2) = cmplx(YLMR, YLMI, DPk)
+        Y(INDEX)  = MSIGN*conjg(Y(INDEX2))
 
         MSIGN  = -MSIGN
         INDEX2 = INDEX2 - 1
@@ -282,4 +275,4 @@ END SUBROUTINE YLM
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 18:41:22 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-29 20:03:26 assman@faepop36.tu-graz.ac.at>

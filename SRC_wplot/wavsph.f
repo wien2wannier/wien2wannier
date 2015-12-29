@@ -50,7 +50,7 @@
       IF(.NOT.KCONJG)THEN
 !       << WIEN95 convention : (*) =   >>
         DO 5 LM=1,(LMAX7+1)*(LMAX7+1)
-          Y(LM) = DCONJG(Y(LM))
+          Y(LM) = conjg(Y(LM))
    5    CONTINUE
       ENDIF
 !:17]
@@ -87,4 +87,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 18:38:50 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-29 20:03:13 assman@faepop36.tu-graz.ac.at>

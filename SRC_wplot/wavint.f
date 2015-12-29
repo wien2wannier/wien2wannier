@@ -31,7 +31,7 @@ SUBROUTINE WAVINT(R,NPW,PSI,bk,coef,nmat)
   PSI = 0
   DO IPW=1,NPW
      ARG = R(1)*BK(1,IPW) + R(2)*BK(2,IPW) + R(3)*BK(3,IPW)
-     PSI = PSI + COEF(IPW) * DCMPLX(COS(ARG),SIN(ARG))   !changed by P.wissgott
+     PSI = PSI + COEF(IPW) * cmplx(cos(arg), sin(arg), DPk)
   END DO
 END SUBROUTINE WAVINT
 
@@ -42,4 +42,4 @@ END SUBROUTINE WAVINT
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 18:21:41 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-29 19:58:33 assman@faepop36.tu-graz.ac.at>

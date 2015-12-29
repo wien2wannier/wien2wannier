@@ -40,7 +40,7 @@ SUBROUTINE OUTWIN(REL,V,RI,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
   real(DPk), intent(out) :: val, slo
   integer,   intent(out) :: nodes
 
-  real(DPk) :: AA, B1, B2, C, D(2,3), Dsqrt, det, DF1, DF2, DF3
+  real(DPk) :: AA, B1, B2, C, D(2,3), det, DF1, DF2, DF3
   real(DPk) :: DG1, DG2, DG3, DRDI, FLLP1, E, F0, G0, H83, phi
   real(DPk) :: R, R1, R2, R3, R83SQ, S, SF, U, X, Y, ZZ
   integer   :: k, iiij
@@ -71,7 +71,7 @@ SUBROUTINE OUTWIN(REL,V,RI,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
      F0 = FL/C
   ELSE
      AA = ZZ/C
-     S = DSQRT(FLLP1 + 1 - AA*AA)
+     S = sqrt(FLLP1 + 1 - AA*AA)
      SF = S
      F0 = G0*(S - 1)/AA
   ENDIF
@@ -129,4 +129,4 @@ END SUBROUTINE OUTWIN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 18:21:27 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-29 20:03:07 assman@faepop36.tu-graz.ac.at>
