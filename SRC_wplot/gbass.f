@@ -1,11 +1,16 @@
 !!! wien2wannier/SRC_wplot/gbass.f
 
 SUBROUTINE GBASS(RBAS,GBAS,TWOPI)
-  use const
-  IMPLICIT  REAL(R8) (A-H,O-Z)
-  DIMENSION RBAS(3,3), GBAS(3,3)
-  LOGICAL   TWOPI
-  !
+  use param, only: DPk, PI
+
+  implicit none
+
+  real(DPk), dimension(3,3) :: RBAS, GBAS
+  logical                   :: TWOPI
+
+  intent(in)  :: Rbas, twoPI
+  intent(out) :: Gbas
+
   ! << Input >>
   ! RBAS(i,:) -- the real space lattice vectros a_i
   ! TWOPI     -- normalization of the reciprocal lattice vectors:
@@ -14,7 +19,10 @@ SUBROUTINE GBASS(RBAS,GBAS,TWOPI)
   !
   ! << Output >>
   ! GBAS(j,:) -- the corresponding reciprocal lattice vectors b_j
-  !
+
+  real(DPk) :: Vuc, fac
+  integer   :: i
+
   !     << b_1 = a_2 x a_3 >>
   GBAS(1,1) = RBAS(2,2)*RBAS(3,3) - RBAS(2,3)*RBAS(3,2)
   GBAS(1,2) = RBAS(2,3)*RBAS(3,1) - RBAS(2,1)*RBAS(3,3)
@@ -29,7 +37,7 @@ SUBROUTINE GBASS(RBAS,GBAS,TWOPI)
   GBAS(3,3) = RBAS(1,1)*RBAS(2,2) - RBAS(1,2)*RBAS(2,1)
   !
   !     << normalization : VUC = < a_1 | a_2 x a_3 > = < a_1 | b_1 > >>
-  VUC=0.0D0
+  VUC=0
   DO I=1,3
      VUC = VUC + RBAS(1,I)*GBAS(1,I)
   END DO
@@ -51,4 +59,4 @@ END SUBROUTINE GBASS
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2015-12-28 13:53:14 assman@faepop36.tu-graz.ac.at>
