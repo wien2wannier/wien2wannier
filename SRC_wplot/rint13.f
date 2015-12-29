@@ -1,8 +1,21 @@
 !!! wien2wannier/SRC_wplot/rint13.f
 
-      SUBROUTINE RINT13(REL,A,B,X,Y,S,JATOM)
-      use radgrd                     
-      use param
+      subroutine RINT13(rel, A, B, X, Y, S, jatom, stru)
+      use radgrd,    only: dx
+      use param,     only: DPk, Nrad, clight
+      use structmod, only: struct_t
+
+      implicit none
+
+      logical,        intent(in)  :: rel
+      real(DPk),      intent(in)  :: A(Nrad), B(Nrad), X(Nrad), Y(Nrad)
+      real(DPk),      intent(out) :: S
+      integer,        intent(in)  :: jatom
+      type(struct_t), intent(in)  :: stru
+
+      real(DPk) :: cin, d, R, R1, Z2, Z4, P1, P2
+      integer   :: j, j1
+
 !     last changes: 01.11.00 ub (updating comments)
 !
 !     PERFORM RADIAL INTEGRALS
@@ -21,43 +34,33 @@
 ! Y(:)   r * vs(r) on the radial mesh
 ! JATOM  the current type of atom
 !
-! from COMMON /RADGRD/
-! RNOT(JATOM)  first radial mesh point
+! from RADGRD
 ! DX  (JATOM)  logaritmic increment of the radial mesh
-! JRI (JATOM)  number of radial mesh points
 !
 ! Output:
 ! S    the value of the radial integral
 !----------------------------------------------------------------------------
-!
-      IMPLICIT REAL(R8) (A-H,O-Z)
-!
-      LOGICAL REL
-      DIMENSION A(NRAD),B(NRAD),X(NRAD),Y(NRAD)
-!
-!      COMMON /RADGRD/ RM(NRAD,NATO),RNOT(NATO),DX(NATO),JRI(NATO)
-!
-      CIN=1.331258D-5
-      IF(.NOT.REL) CIN=1E-22
+
+      CIN = 1/clight**2
+      IF(.NOT.REL) CIN=4E-22    ! legacy value
 !     CONVERT FROM RYDBERG TO HARTREE UNITS
-      CIN=CIN*4
 !
       D=EXP(DX(JATOM))
-      J=3-MOD(JRI(JATOM),2)
+      J=3-MOD(STRU%NPT(JATOM),2)
       J1=J-1
-      R=RNOT(JATOM)*(D**(J-1))
+      R=STRU%R0(JATOM)*(D**(J-1))
       R1=R/D
       Z4=0
       Z2=0
    10 Z4=Z4+R*(A(J)*X(J)+CIN*B(J)*Y(J))
       R=R*D
       J=J+1
-      IF(J.GE.JRI(JATOM)) GOTO 20
+      IF(J.GE.STRU%NPT(JATOM)) GOTO 20
       Z2=Z2+R*(A(J)*X(J)+CIN*B(J)*Y(J))
       R=R*D
       J=J+1
       GOTO 10
-   20 P1=RNOT(JATOM)*(A(1)*X(1)+CIN*B(1)*Y(1))
+   20 P1=STRU%R0(JATOM)*(A(1)*X(1)+CIN*B(1)*Y(1))
       P2=R1*(A(J1)*X(J1)+CIN*B(J1)*Y(J1))
       S=2*Z2+4*Z4+R*(A(J)*X(J)+CIN*B(J)*Y(J))+P2
       S=(DX(JATOM)*S+P1)/3.0D0
@@ -72,4 +75,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2015-12-29 19:46:44 assman@faepop36.tu-graz.ac.at>
