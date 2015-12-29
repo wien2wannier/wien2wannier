@@ -1,10 +1,18 @@
 !!! wien2wannier/SRC_wplot/trans.f
 
-SUBROUTINE TRANS(NPOS,POS,NSYM,IMAT,TAU)
-  use const
-  use latt
-  IMPLICIT REAL(R8) (A-H,O-Z)
-  DIMENSION POS(3,NPOS),IMAT(3,3,NSYM),TAU(3,NSYM)
+subroutine trans(Npos)
+  use param,  only: DPk
+  use latt,   only: br1, br2, br3, br4
+  use param,  only: Nsym
+  use sym2,   only: tau, imat
+  use struct, only: pos
+
+  implicit none
+
+  integer, intent(in) :: Npos
+
+  real(DPk) :: F(3), S(3,3), T(3,3), Q(3,3)
+  integer   :: i, k, n
 !
 ! transforms real space vectors x and symmetry operations {Q|t}
 ! from conventional into primitive fractional coordinates
@@ -37,8 +45,6 @@ SUBROUTINE TRANS(NPOS,POS,NSYM,IMAT,TAU)
 ! Q_kk' = Sum(ii') T(k,i) Q_ii' S(i',k')  and  t_k = Sum(i) T(k,i) t_i
 ! --------------------------------------------------------------------
 !
-
-  DIMENSION T(3,3),S(3,3),F(3),Q(3,3)
 
 !     << set up the transformation matrices >>
   DO K=1,3
@@ -89,4 +95,4 @@ END SUBROUTINE TRANS
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2015-12-23 15:48:01 assman@faepop36.tu-graz.ac.at>
