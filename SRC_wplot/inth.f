@@ -6,18 +6,26 @@
 ! DP ET DE LA PETITE COMPOSANTE DQ AU POINT DR,DV ETANT LE POTENTIEL EN 
 ! CE POINT                                                              
 ! **********************************************************************
-      use const
-      IMPLICIT REAL(R8) (A-H,O-Z)
-!     IMPLICIT REAL (D)                                                 
-      COMMON/PS1/DEP(5),DEQ(5),DB,DVC,DSAL,DK,DM                        
-      save  /PS1/
-!                                                                       
+      use param
+      use ps1, only: dep, deq, db=>dd, dvc, dsal, dk, dm=>dm1
+
+      implicit none
+
+      real(DPk), intent(out) :: dp, dq
+      real(DPk), intent(in)  :: dv, dr
+
 ! DEP,DEQ DERIVEES DE DP ET DQ   DB=ENERGIE/DVC    DVC VITESSE DE LA    
 ! LUMIERE EN U.A.   DSAL=2.*DVC   DK NOMBRE QUANTIQUE KAPPA             
 ! DM=PAS EXPONENTIEL/720.                                               
 ! DKOEF1=405./502., DKOEF2=27./502.                                     
 ! ********************************************************************* 
-      DATA DKOEF1/.9462151394422310D0/,DKOEF2/.5378486055776890D-1/     
+
+      ! dkoef1 is inferred from old numerical literal
+      real(DPk), parameter :: dkoef1 = 475 / 502._DPk
+      real(DPk), parameter :: dkoef2 =  27 / 502._DPk
+
+      real(DPk) :: DPR, DQR, dsum
+      integer   :: i
 
       DPR=DP+DM*((251.*DEP(1)+2616.*DEP(3)+1901.*DEP(5))-(1274.*DEP(2)+2774.*DEP(4)))                                                     
       DQR=DQ+DM*((251.*DEQ(1)+2616.*DEQ(3)+1901.*DEQ(5))-(1274.*DEQ(2)+2774.*DEQ(4)))                                                     
@@ -48,4 +56,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2015-12-29 16:19:36 assman@faepop36.tu-graz.ac.at>
