@@ -1,9 +1,9 @@
 !!! wien2wannier/SRC_wplot/main.F
 
 subroutine main()
-  use struct,    only: pos, Znuc, RMT, mult, iatnr
-  use radgrd,    only: rm, rnot, dx, jri
-  use latt,      only: Vuc, br1, br2, br3, br4
+  use struct,    only: pos, RMT
+  use radgrd,    only: rm, dx
+  use latt,      only: br1, br2, br3, br4
   use sym2,      only: tau, imat, iord
   use lolog,     only: lapw, ilo, Nlo
   use loabc,     only: Alo
@@ -12,7 +12,7 @@ subroutine main()
   use bessfu,    only: fj, dfj, rad, irad
   use work,      only: aug
   use grid,      only: rgrid, ireg, ilat, iri, npg
-  use const,     only: DPk, R8, C16, BUFSZ, PI
+  use const,     only: DPk, BUFSZ, PI
   use util,      only: paropen, uppercase
   use clio,      only: croak
   use Wannier90, only: chk_t, chk_read
@@ -22,7 +22,15 @@ subroutine main()
        unit_inwf, unit_psink, unit_psiarg, outfn, vecfn, psinkfn, psiargfn, &
        iproc
 
-  IMPLICIT none
+  implicit none
+
+  interface
+     logical function orth(A)
+       use const, only: DPk
+
+       real(DPk), intent(in) :: A(3,3)
+     end function orth
+  end interface
 
   character(BUFSZ) :: buf, rotfilename
   character( 3)    :: switch, iunit
@@ -30,31 +38,31 @@ subroutine main()
   character( 5)    :: whpsi
   character(10)    :: bname
 
-  LOGICAL    LARGE
-  complex(C16) ALMSUM
+  logical      :: LARGE
+  complex(DPk) :: ALMSUM
 
   type(struct_t) :: stru
   type(chk_t)    :: chk
 
 #ifndef _COMPLEX_
-  REAL(R8),     allocatable :: CF(:)
+  REAL(DPk),    allocatable :: CF(:)
 #else
-  COMPLEX(C16), allocatable :: CF(:)
+  COMPLEX(DPk), allocatable :: CF(:)
 #endif
 
-  COMPLEX(C16), allocatable ::  COEF(:) !changed by pwissgott
+  COMPLEX(DPk), allocatable ::  COEF(:) !changed by pwissgott
 
-  real(r8),allocatable :: BK(:,:)
+  real(DPk),allocatable :: BK(:,:)
 
-  COMPLEX(C16),allocatable :: PSI(:),tot(:)
-  COMPLEX(C16) ALM((LMAX7+1)*(LMAX7+1),NRF), Y((LMAX7+1)*(LMAX7+1))
-  COMPLEX(C16) PHS
-  real(r8),allocatable ::  ROTLOC(:,:,:),atms(:,:)
+  COMPLEX(DPk),allocatable :: PSI(:),tot(:)
+  COMPLEX(DPk) ALM((LMAX7+1)*(LMAX7+1),NRF), Y((LMAX7+1)*(LMAX7+1))
+  COMPLEX(DPk) PHS
+  real(DPk),allocatable ::  ROTLOC(:,:,:),atms(:,:)
   integer,allocatable :: IOP(:),nreg(:)
   integer,allocatable ::  KX(:),KY(:),KZ(:)
-  complex(c16), allocatable :: uu(:), rotmatrix(:,:)
-  real(r8),allocatable :: tmprot(:)
-  LOGICAL :: ORTHO,PRIM,ORTH, DEPHAS,rotate=.false.
+  complex(DPk), allocatable :: uu(:), rotmatrix(:,:)
+  real(DPk),allocatable :: tmprot(:)
+  LOGICAL :: DEPHAS, rotate=.false.
 
   integer :: i, ie, ieabs, ierr, iG, ik, il, il1, imax, index, index1, irf
   integer :: iskpt, iseig, iloop
@@ -62,10 +70,10 @@ subroutine main()
   integer :: Nb, NE, NEmax, NEmin, Nmatk, Nmat, Nmt, Npw
   integer :: NP(3), Nskip
 
-  real(R8) :: ROT0(3,3), R(3), FK(3), phsav, prefac
-  real(R8) :: arg, E, weight
+  real(DPK) :: ROT0(3,3), R(3), FK(3), phsav, prefac
+  real(DPK) :: arg, E, weight
 
-  complex(kind=DPk) :: local_contribution
+  complex(DPk) :: local_contribution
 
 ! ############################
 ! # PART I : read input file #
@@ -181,15 +189,14 @@ subroutine main()
   call struct_read(unit_struct, stru)
   close(unit_struct)
 
-  allocate ( POS(3,stru%Nneq*48),ZNUC(stru%Nneq),RMT(stru%Nneq),MULT(stru%Nneq),IATNR(stru%Nneq*48))
-  allocate ( RM(NRAD,stru%Nneq),RNOT(stru%Nneq),DX(stru%Nneq),JRI(stru%Nneq) )
-  allocate ( ILO(0:LOMAX, stru%Nneq),LAPW(0:LMAX7,stru%Nneq) )
-  allocate ( ALO(0:LOMAX,NLOAT,NRF,stru%Nneq))
-  allocate ( P(0:LMAX7,NRF,stru%Nneq),DP(0:LMAX7,NRF,stru%Nneq))
-  allocate ( RRAD(NRAD,0:LMAX7,NRF,stru%Nneq))
-  allocate ( RAD(stru%Nneq),IRAD(stru%Nneq))
-  allocate ( ROTLOC(3,3,stru%Nneq*48),atms(3,stru%Nneq))
-  allocate ( IOP(stru%Nneq*48),nreg(0:stru%Nneq*48))
+  allocate ( POS(3,stru%Nneq*48),             RMT(stru%Nneq), DX(stru%Nneq))
+  allocate ( ILO(0:LOMAX, stru%Nneq),         LAPW(0:LMAX7,stru%Nneq)      )
+  allocate ( ALO(0:LOMAX,NLOAT,NRF,stru%Nneq),RM(NRAD,stru%Nneq)           )
+  allocate ( P(0:LMAX7,NRF,stru%Nneq),        DP(0:LMAX7,NRF,stru%Nneq)    )
+  allocate ( RRAD(NRAD,0:LMAX7,NRF,stru%Nneq)                              )
+  allocate ( RAD(stru%Nneq),                  IRAD(stru%Nneq)              )
+  allocate ( ROTLOC(3,3,stru%Nneq*48),        atms(3,stru%Nneq)            )
+  allocate ( IOP(stru%Nneq*48),               nreg(0:stru%Nneq*48)         )
 
   write(unit_out, '(/A/)') trim(stru%title)
   write(unit_out,"(1X,A4,' LATTIC WITH ',I5,' INEQUIV. ATOMS/UC USING ', &
@@ -199,15 +206,9 @@ subroutine main()
        & /' UNIT CELL ANGLES:',3F12.7,' (in degree)')") &
        stru%a, stru%alpha(:)
 
-  CALL LATGEN(stru%lattic, stru%a, stru%alpha, ORTHO, PRIM)
+  call latgen(stru)
 
-  pos  = stru%pos
-  znuc = stru%Z
   rmt  = stru%rmt
-  mult = stru%mult
-  iatnr= stru%neq2at
-  jri  = stru%Npt
-  rnot = stru%r0
   dx   = log(stru%rmt / stru%r0) / real(stru%npt-1, DPk)
 
   ! FIXME: Nrad could be replaced by max(stru%npt)
@@ -264,17 +265,20 @@ subroutine main()
        &//' atom    f_1      f_2      f_3   ',           &
        &  '        x [bohr]     y [bohr]     z [bohr]')")
 
-  DO INDEX=1,stru%nat
-     DO J=1,3
-        R(J) = POS(1,INDEX)*BR1(1,J) + POS(2,INDEX)*BR1(2,J) &
-             + POS(3,INDEX)*BR1(3,J)
-     end DO
+  do INDEX=1,stru%nat
+     do J=1,3
+        R(J) = stru%pos(1,index)*BR1(1,J) + stru%pos(2,index)*BR1(2,J) &
+             + stru%pos(3,index)*BR1(3,J)
+     end do
      write(unit_out,"(I5,1X,3F9.5,3X,3F13.7)") &
-          IATNR(INDEX),(POS(I,INDEX),I=1,3),(R(J),J=1,3)
-  end DO
+          STRU%NEQ2AT(INDEX),(stru%pos(I,INDEX),I=1,3),(R(J),J=1,3)
+  end do
 
-  IF(.NOT.PRIM) CALL trans(stru%nat,POS,IORD,IMAT,TAU)
-  CALL ROTDEF(stru%Nneq,MULT,POS,IOP)
+  ! trans() updates POS
+  if (.not. stru%prim) call trans(stru%Nat)
+
+  ! rotdef() updates POS, sets IOP
+  call rotdef(stru, IOP)
 !
 !     << set up local rotations for all basis atoms (in Cartesian coord.) >>
   INDEX=0
@@ -283,7 +287,7 @@ subroutine main()
 !       << store ROTLOC(1.atom) before updating it >>
      ROT0(:,:) = ROTLOC(:,:, index1)
 
-     DO MU=1,MULT(JATOM)
+     DO MU=1,STRU%MULT(JATOM)
         INDEX = INDEX+1
         CALL LOCDEF(ROT0,IMAT(1,1,IOP(INDEX)),ROTLOC(1,1,INDEX))
      end DO
@@ -298,7 +302,7 @@ subroutine main()
 
   DO INDEX=1,stru%nat
      write(unit_out,"(2(I5,1X),3F12.6,2(/12X,3F12.6)/)") &
-          IATNR(INDEX),IOP(INDEX), &
+          STRU%NEQ2AT(INDEX),IOP(INDEX), &
           ((ROTLOC(I,J,INDEX),I=1,3),J=1,3)
 
      IF(.NOT.ORTH(ROTLOC(:,:,INDEX)))THEN
@@ -350,7 +354,7 @@ subroutine main()
   NREG(:) = 0
 
   DO IG=1,NPG
-     CALL FINDMT(RGRID(1,IG),ATMS,stru%Nneq,stru%nat,INDEX,ILAT(1,IG),IRI(IG),R)
+     call findmt(RGRID(1,IG), atms, stru, index, iLat(1,ig), iri(ig), R)
      IREG(IG) = INDEX
      NREG(INDEX)= NREG(INDEX) + 1
      IF(INDEX.GT.0)THEN
@@ -381,7 +385,7 @@ subroutine main()
 
      DO INDEX=1,stru%nat
         write(unit_out,"(I7,I5,I11,2P,F11.1,' %')") &
-             INDEX,IATNR(INDEX),NREG(INDEX), &
+             INDEX,STRU%NEQ2AT(INDEX),NREG(INDEX), &
              NREG(INDEX)/real(NPG, DPk)
      end DO
   ENDIF
@@ -405,7 +409,7 @@ subroutine main()
 !     << set up the augmentation functions  >>
 !     << for each group of equivalent atoms >>
   call paropen(unit_vector, vecfn, iproc, 1, FORM='unformatted')
-  CALL AUGGEN(stru%mode=='RELA',stru%Nneq,WHPSI)
+  call auggen(stru%mode=='RELA', stru, whpsi)
   close(unit_vector)
 !
 !     << write wave function options to output >>
@@ -428,7 +432,7 @@ subroutine main()
 ! -----------------------------------------
 !     prefactor = 1/sqrt( vol(UC) )
 ! -----------------------------------------
-  PREFAC = PREFAC / SQRT(VUC)
+  PREFAC = PREFAC / SQRT(STRU%VOL)
 !
 !     << scale reciprocal basis vectors with 2pi >>
   BR3 = 2*PI*BR3
@@ -462,9 +466,11 @@ subroutine main()
         read(unit_vector)
      end do
      kpoints: do
-        READ(unit_vector, IOSTAT=IERR)&
+        ! FIXME: every one of these reads fails with “input statement
+        ! requires too much data
+        read(unit_vector, IOSTAT=ierr) &
              (FK(I),I=1,3),BNAME,NMATK,NE,WEIGHT,KKKABS
-        IF(IERR.LT.0) exit kpoints
+        if (ierr<0) exit kpoints
 
         KKK = KKK + 1
 
@@ -528,7 +534,7 @@ subroutine main()
         end DO
 
         !       << transform k into primitive fractional coordinates >>
-        IF(.NOT.PRIM)THEN
+        if(.not. stru%prim)then
            DO J=1,3
               R(J) = BR3(1,J)*FK(1) + BR3(2,J)*FK(2) + BR3(3,J)*FK(3)
            end DO
@@ -580,14 +586,16 @@ subroutine main()
         IL1 = NPW
         LATOM  = 0
         DO JATOM=1,stru%Nneq
-           IMAX = JRI(JATOM)
-           DO JNEQ=1,MULT(JATOM)
+           IMAX = STRU%NPT(JATOM)
+           DO JNEQ=1,STRU%MULT(JATOM)
               LATOM = LATOM + 1
-              CALL AUGPW(LATOM,NPW,ALM,ROTLOC,Y,bk,coef,nmatk)
+              call augpw(latom, Npw, Alm, rotloc, Y, bk, coef, Nmatk, &
+                   stru%neq2at)
 
               IL=IL1
-              CALL AUGLO(LATOM,IL,ALM,ROTLOC,Y,bk,coef,nmatk)
-              IF (JNEQ.EQ.MULT(JATOM)) IL1=IL
+              call auglo(latom, il, Alm, rotloc, Y, bk, coef, nmatk, &
+                   stru)
+              IF (JNEQ.EQ.STRU%MULT(JATOM)) IL1=IL
                           
 !             << add 4pi*i^l Rmt^2 factor to ALM, BLM and CLM and >>
 !             << set up the eigen state's augmentation functions  >>
@@ -602,7 +610,7 @@ subroutine main()
                  DO M=-L,L
                     LM=LM+1
                     DO I=1,IMAX
-                       ALMSUM=(0.d0,0.d0)
+                       ALMSUM=0
                        DO irf=1,nrf
                           ALMSUM=ALMSUM+ALM(LM,irf)*RRAD(I,L,irf,JATOM)
                        ENDDO
@@ -619,18 +627,19 @@ subroutine main()
         DO IG=1,NPG
            IF(IREG(IG).EQ.0)THEN
 !             << grid point in interstitial >>
-              IF(LARGE)THEN
-                 CALL WAVINT(RGRID(1,IG),NPW,PSI(IG),bk,coef,nmatk)
-              ELSE
+              if(LARGE)then
+                 call WAVINT(RGRID(1,IG),NPW,PSI(IG),bk,coef,nmatk)
+              else
                  PSI(IG)=(0.0D0,0.0D0)
-              ENDIF
+              endif
            ELSE
 !             << grid point in atomic sphere at R(ILAT) + R_a(IREG) >>
 !             << load calc. Bloch factor e^ikR >>
               ARG = FK(1)*ILAT(1,IG) + FK(2)*ILAT(2,IG)  &
                    + FK(3)*ILAT(3,IG)
               PHS = DCMPLX(COS(ARG),SIN(ARG))
-              CALL WAVSPH(RGRID(1,IG),PHS,IREG(IG),IRI(IG),PSI(IG),Y)
+              call WAVSPH(Rgrid(1,ig), PHS, ireg(ig), iri(ig), Psi(ig), Y, &
+                   stru%neq2at)
            ENDIF
 !          write(93,*)IG,IREG(IG),PSI(IG)
         end DO
@@ -719,4 +728,4 @@ end subroutine main
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-22 21:28:02 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-29 19:31:23 assman@faepop36.tu-graz.ac.at>
