@@ -7,19 +7,16 @@
 !rschmid
 
       subroutine dergl(g_l,der1,rnot,dx,mesh)
-      use const, only: R8
-      use param, only: NRAD
-      implicit real(r8) (a-h,o-z)
+      use param, only: Nrad, DPk
 
-      real(r8) r(nrad)
-      real(r8) f_l(nrad),g_l(nrad)
-      real(r8) dx,rnot
-      integer mesh
-!     real(r8) dfldi(mesh),der1(nrad)
-      real(r8) dfldi(nrad),der1(nrad)
+      implicit none
 
-      integer j,i
-      real(r8) rad
+      real(DPk), intent(in)  :: g_l(nrad), rnot, dx
+      real(DPk), intent(out) :: der1(Nrad)
+      integer,   intent(in)  :: mesh
+
+      integer   :: j,i
+      real(DPk) :: r(Nrad), rad, dfldi(Nrad), f_l(Nrad)
 
       do i=1,mesh
          r(i) = rnot*exp(dx*(i-1))
@@ -106,4 +103,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2015-12-29 19:04:59 assman@faepop36.tu-graz.ac.at>
