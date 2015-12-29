@@ -19,7 +19,7 @@ SUBROUTINE OUTWIN(REL,V,RI,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
 !    SLO       descent d/dr u_l(r) at MT sphere r = Rmt
 !    Nodes     number of nodes
 !
-!  COMMON /WORK/
+!  MODULE WORK
 !    A(:)   r * u _l(r)     at mesh points
 !    B(:)   r * us_l(r) * c at mesh points (2nd rel. component)
 !
@@ -28,41 +28,52 @@ SUBROUTINE OUTWIN(REL,V,RI,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
 !  Rydberg units
 !
 ! ----------------------------------------------------------------
-  use const
 
-  use param
+  use param, only: DPk, Nrad, clight
+  use work1, only: A, B
   
-  IMPLICIT REAL(R8) (A-H,O-Z)
+  implicit none
 
-  LOGICAL       REL
-  DIMENSION     V(NRAD),RI(NRAD),D(2,3)
-  COMMON /WORK1/ A(NRAD),B(NRAD)
+  logical,   intent(in)  :: rel
+  real(DPk), intent(in)  :: V(NRAD), RI(NRAD), DH, EH, FL, Z
+  integer,   intent(in)  :: JRI
+  real(DPk), intent(out) :: val, slo
+  integer,   intent(out) :: nodes
+
+  real(DPk) :: AA, B1, B2, C, D(2,3), Dsqrt, det, DF1, DF2, DF3
+  real(DPk) :: DG1, DG2, DG3, DRDI, FLLP1, E, F0, G0, H83, phi
+  real(DPk) :: R, R1, R2, R3, R83SQ, S, SF, U, X, Y, ZZ
+  integer   :: k, iiij
 
 ! Hartree in Ryd
-  E=EH*2.d0
+  E = 2*EH
 
   Nodes = 0
   ZZ = Z + Z
-  C = 274.074D0
-  if(.not.rel) C=1.D+10
 
-  FLLP1 = FL*(FL + 1.d0)
-  R83SQ = 64.D0/9.D0
-  R1 = 1.D0/9.D0
-  R2 = -5.D0*R1
-  R3 = 19.D0*R1
-  H83 = 8.D0/3.D0
+  if (rel) then
+     C = 2*clight
+  else
+     C=1e10_DPk
+  end if
 
-  G0 = 1.d0
-  IF (Z .LT. 0.9D0) THEN
-     S = FL+1.d0
+  FLLP1 = FL*(FL + 1)
+  R83SQ = 64 / 9._DPk
+  R1    =  1 / 9._DPk
+  R2    = -5 * R1
+  R3    = 19 * R1
+  H83   =  8 / 3._DPk
+
+  G0 = 1
+  IF (Z .LT. 0.9_DPk) THEN
+     S = FL+1
      SF = FL
      F0 = FL/C
   ELSE
      AA = ZZ/C
-     S = DSQRT(FLLP1 + 1.D0 - AA*AA)
+     S = DSQRT(FLLP1 + 1 - AA*AA)
      SF = S
-     F0 = G0*(S - 1.D0)/AA
+     F0 = G0*(S - 1)/AA
   ENDIF
   DO K = 1,3
      R = RI(K)
@@ -103,7 +114,7 @@ SUBROUTINE OUTWIN(REL,V,RI,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
   END DO
 
   DO iiij=1,JRI
-     B(iiij)=B(iiij)*c/2.d0
+     B(iiij)=B(iiij)*c/2
   END DO
 
   VAL = A(JRI)/RI(JRI)
@@ -118,4 +129,4 @@ END SUBROUTINE OUTWIN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2015-12-29 18:21:27 assman@faepop36.tu-graz.ac.at>
