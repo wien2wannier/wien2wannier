@@ -1,12 +1,22 @@
 !!! wien2wannier/SRC_wplot/findmt.f
 
-      SUBROUTINE FINDMT(P,ATMS,nato,NAT,IAT,ILAT,IR,R)
-      use struct
-      use radgrd
-      use param
-      use latt
-      IMPLICIT REAL(R8) (A-H,O-Z)
-      DIMENSION P(3),ATMS(3,NATO),ILAT(3),R(3)
+subroutine FINDMT(P, atms, stru, iAt, iLat, iR, R)
+      use struct,    only: RMT, POS
+      use radgrd,    only: dx
+      use param,     only: DPk
+      use latt,      only: br2
+      use structmod, only: struct_t
+      
+      implicit none
+
+      type(struct_t), intent(in)  :: stru
+      real(DPk),      intent(in)  :: P(3), atms(3, stru%Nneq)
+      integer,        intent(out) :: iAt, iLat(3), iR
+      real(DPk),      intent(out) :: R(3)
+
+      integer   :: i, j, jatom, jx, jy, jz, ilow, iup
+      real(DPk) :: RR, R2, RMT2, T
+
 !
 ! checks whether a given real space point r falls into a muffin tin
 ! sphere around R + R_a with a running over all atoms in the unit cell
@@ -36,8 +46,8 @@
 
       DIMENSION T(3),ILOW(3),IUP(3)
 !
-      DO 10 IAT=1,NAT
-        JATOM = IATNR(IAT)
+      DO 10 IAT=1,STRU%NAT
+        JATOM = stru%neq2at(iat)
         RMT2 = RMT(JATOM)*RMT(JATOM)
 !
 !       << setup search area for atomic sphere at R0+R >>
@@ -71,8 +81,8 @@
                 ILAT(1) = JX
                 ILAT(2) = JY
                 ILAT(3) = JZ
-                IR = MIN(1+INT(LOG(MAX(RR/RNOT(JATOM),1.0D0))/DX(JATOM)) &
-                        ,JRI(JATOM))
+                IR = MIN(1+INT(LOG(MAX(RR/stru%r0(JATOM),1.0D0))/DX(JATOM)) &
+                        ,stru%Npt(JATOM))
                 RETURN
               ENDIF
    50       CONTINUE
@@ -95,4 +105,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2015-12-23 16:44:09 assman@faepop36.tu-graz.ac.at>
