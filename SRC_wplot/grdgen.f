@@ -3,10 +3,8 @@
 !!!    Generates / reads real-space grid for ‘wplot’.
 
 SUBROUTINE GRDGEN(MODE,NP)
-
-  use const, only: BUFSZ
-  use grid,  only: R8, NPG, Rgrid, ireg, ilat, IRI
-  use param, only: unit_in, unit_out, unit_grid, unit_psink
+  use grid,  only: NPG, Rgrid, ireg, ilat, IRI
+  use param, only: BUFSZ, DPk, unit_in, unit_out, unit_grid, unit_psink
   use latt,  only: BR1, BR4
   use clio,  only: croak
   use util,  only: string
@@ -65,8 +63,8 @@ SUBROUTINE GRDGEN(MODE,NP)
   character(4),intent(out) :: mode
   integer,     intent(out) :: NP(3)
 
-  real(R8) :: O(3), F(3,3), X(3,0:3), RAX(3), PHI(1:2,2:3), Rij, cosphi
-  integer  :: Ngdim, ig, i, j, idv, k, Ndim, ix, iy, iz
+  real(DPk) :: O(3), F(3,3), X(3,0:3), RAX(3), PHI(1:2,2:3), Rij, cosphi
+  integer   :: Ngdim, ig, i, j, idv, k, Ndim, ix, iy, iz
 
   character, parameter :: axis(3) = (/ 'x', 'y', 'z' /)
 
@@ -292,4 +290,4 @@ end SUBROUTINE GRDGEN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-08-13 16:15:10 elias@hupuntu>
+!! Time-stamp: <2015-12-23 15:40:11 assman@faepop36.tu-graz.ac.at>
