@@ -1,15 +1,21 @@
 !!! wien2wannier/SRC_wplot/wavsph.f
 
-      SUBROUTINE WAVSPH(R,BFAC,IAT,IR,PSI,Y)
-      use struct
-      use radgrd                     
-      use work                     
-      use param
+      subroutine WAVSPH(R, Bfac, iAt, iR, Psi, Y, iatnr)
+      use radgrd, only: RM
+      use work,   only: aug
+      use param,  only: DPk, kconjg, Lmax7
 
-      IMPLICIT REAL(R8) (A-H,O-Z)
-      DIMENSION  R(3)
-      COMPLEX(C16) BFAC,PSI
-!
+      implicit none
+
+      real(DPk),    intent(in)  :: R(3)
+      complex(DPk), intent(in)  :: BFAC
+      integer,      intent(in)  :: iAt, iR, iatnr(*)
+      complex(DPk), intent(out) :: Psi, Y((LMAX7+1)*(LMAX7+1))
+
+      complex(DPk) :: PHS, PHSLM
+      integer      :: lm, jatom
+      real(DPk)    :: RR, R1, R2, W1, W2
+
 ! evaluation of the wave function in the a muffin tin sphere around R+R_a
 !
 ! psi(r) = e^ikR Sum(lm) w_lm,a(|r-R-R_a|) Y*(*)_lm(T_a^-1(r-R-R_a))
@@ -25,11 +31,11 @@
 ! IAT  -- the atom a within the unit cell
 ! IR   -- the radial interval [r_i,r_i+1] the value |r-R-R_a| falls in
 !
-! COMMON /WORK  /
+! MODULE WORK
 ! AUG(:,lm,a) -- the augmentation functions w_lm,a(r) on the radial mesh
 !
-! COMMON /STRUCT/  structural information
-! COMMON /RADGRD/  radial grid information
+! MODULE STRUCT  structural information
+! MODULE RADGRD  radial grid information
 !
 ! Output:
 ! PSI  -- the wave function psi(r)
@@ -37,9 +43,7 @@
 ! Working arrays:
 ! Y    -- to hold Y_lm(...)
 ! -----------------------------------------------------------------------
-!
-      COMPLEX(C16) PHS,PHSLM,Y((LMAX7+1)*(LMAX7+1))
-!
+
 !     << Y*(*)_lm(T_a^-1(r-R-R_a)) for all lm >>
       CALL YLM(R,LMAX7,Y)
 !:17[
@@ -61,14 +65,15 @@
       R2 = RM(IR+1,JATOM)
       W1 = (R2-RR)/(R2-R1)
       W2 = (RR-R1)/(R2-R1)
-!
+
 !     << Sum(lm) ... >>
-      PHS = (0.0D0,0.0D0)
-      DO 10 LM=1,(LMAX7+1)*(LMAX7+1)
+      PHS = 0
+      do 10 LM=1,(LMAX7+1)*(LMAX7+1)
         PHSLM = W1*AUG(IR,LM,IAT) + W2*AUG(IR+1,LM,IAT)
         PHS = PHS + PHSLM * Y(LM)
-   10 CONTINUE
-!
+10    continue
+
+
 !     << psi(r) >>
       PSI = BFAC * PHS
 !
@@ -82,4 +87,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2015-12-29 18:38:50 assman@faepop36.tu-graz.ac.at>
