@@ -1,8 +1,6 @@
 !!! wien2wannier/SRC_wplot/diracout.f
 
-      subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk, &
-                          val,slo,nodes,z)
-
+subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
 !rschmid
 !         Integration of Dirac equation.
 ! 
@@ -25,31 +23,32 @@
 !rschmid
 !
 ! ----------------------------------------------------------------
-      USE ams
-      use param
-      implicit real(r8) (a-h,o-z)
-      logical rel
+  use ams,   only: atom_mass
+  use ps1,   only: dep, deq, db=>dd, dvc, dsal, dk, dm=>dm1
+  use param, only: DPk, Nrad, unit_out, clight
+
+  implicit none
+
+  logical :: rel
+
+  real(DPk) :: v(Nrad), rnot, dstep, eh, val, slo, z
+  integer   :: nmax, nqk, nodes
+
+  intent(in)  :: rel, v, rnot, dstep, nmax, eh, nqk, z
+  intent(out) :: val, slo, nodes
+
 !rschmid
 !     V     =   potential*r
-!rschmid
-      DIMENSION V(NRAD)
-
-!rschmid
 !      DR   =    radial mesh
-!rschmid
-      dimension dr(NRAD)
-
-!rschmid
 !     dp    =  large component of the solution of the dirac equation
 !     dq    =  small component of the solution 
 !rschmid
-      real(r8)     dp(nrad),dq(nrad)
-      DIMENSION  AP(NRAD),BP(NRAD),AE(NRAD),BE(NRAD)
-      COMMON  /uhelp/     dp,dq,AP,BP,AE,BE
-      SAVE    /uhelp/
+  real(DPk), dimension(Nrad) :: dr, dp, dq, dv
 
-      real(r8)     dv(nrad)
-!
+  save :: dp, dq
+
+  real(DPk), parameter :: DKOEF = 1/720._DPk
+
 ! DEP,DEQ DERIVEES DE DP ET DQ   DB=ENERGIE/DVC    DVC VITESSE DE LA
 ! LUMIERE EN U.A.   DSAL=2.*DVC   DK NOMBRE QUANTIQUE KAPPA
 ! DM=PAS EXPONENTIEL/720., DKOEF=1./720.
@@ -59,10 +58,8 @@
 !  with dm in inouh
 !rschmid
 
-      COMMON /PS1/ DEP(5),DEQ(5),DB,DVC,DSAL,DK,DM
-      save   /ps1/
-
-      DATA DKOEF/.1388888888888888D-2/
+  integer   :: i, nuc
+  real(DPk) :: rnuc, d1, test, dval, dfl, dq1
 
 !rschmid
 !   Set up radial mesh.
@@ -74,8 +71,9 @@
       if (rel) then
          dvc = clight
       else 
-         dvc = 1.d+10
+         dvc = 1.e10_DPk
       endif
+
       dsal = 2.d0*dvc
       db = eh/dvc
       dk = nqk
@@ -89,7 +87,7 @@
 !rschmid
 
 !jk   finite size of the nucleus
-      rnuc=2.2677D-05*(atom_mass(int(z))**(1/3.))
+      rnuc=2.2677e-05_DPk * (atom_mass(int(z))**(1/3.))
       write(unit_out,*)'amass, r0:',atom_mass(int(z)),rnuc
       do 10 i=1,nmax
        d1=rnot*exp(DSTEP*(i-1.d0))
@@ -112,7 +110,7 @@
 !rschmid
       test =1.e-8
     
-      CALL INOUH (dp,dq,dr,dq1,dfl,dv(1),Z,TEST,nuc,NSTOP)
+      CALL INOUH (dp,dq,dr,dq1,dfl,dv(1),Z,TEST,nuc)
 
 !rschmid
 !  Set up boundary conditions using a small r expansion.
@@ -164,4 +162,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2015-12-29 19:15:18 assman@faepop36.tu-graz.ac.at>
