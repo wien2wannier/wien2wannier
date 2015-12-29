@@ -5,19 +5,17 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
   USE struct 
   USE xa
   USE xa3
-  !  USE bessel
   USE amn_mmn
   USE pairs
+  use lolog, only: nlo,nlov,nlon,loor,ilo,lapw,n_rad
   IMPLICIT REAL(R8) (A-H,O-Z)
   COMPLEX(C16)       YL((LMAX2+1)*(LMAX2+1))        ! list of spherical harmics
   COMPLEX(C16)       projection(NB,NPROJ,NUM_KPTS)
   COMPLEX(C16)       PHSHEL,CFAC,IMAG,CZERO
   COMMON /GENER/   BR1(3,3),BR2(3,3)              ! transformation between u.c. and cartesian coordinates
   COMMON /ATSPDT/  P(0:LMAX2,nrf),DP(0:LMAX2,nrf) ! radial function and its slope at RMT
-  logical          loor(0:lomax),lapw(0:lmax2)    ! local orbitals options
   COMMON /RADFU/   RF1(NRAD,0:LMAX2,nrf),RF2(NRAD,0:LMAX2,nrf)  ! radial functions large and small component
   common /loabc/   alo(0:lomax,nloat,nrf)         ! use for local orbitals
-  common /lolog/   nlo,nlov,nlon,loor,ilo(0:lomax),lapw  
 
   !...............................
   real(r8)     h_al(iblock),h_bl(iblock)
@@ -266,4 +264,4 @@ END SUBROUTINE l2AMN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2015-12-28 15:13:05 assman@faepop36.tu-graz.ac.at>

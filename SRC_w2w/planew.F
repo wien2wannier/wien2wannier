@@ -7,8 +7,8 @@
   USE xa3
   USE amn_mmn
   USE pairs
+  use lolog, only: nlo,nlov,nlon,loor,ilo,lapw,n_rad
       IMPLICIT REAL(R8) (A-H,O-Z)
-      logical          loor(0:lomax),lapw(0:lomax)
       logical, allocatable, dimension(:,:) :: a_null,a_null_fin
       INTEGER          pair_index
       COMPLEX(C16)       SUM(NB),SUMA(NB,NB),FF
@@ -18,7 +18,6 @@
       COMPLEX(C16), allocatable, dimension(:,:) :: B_
  
       COMMON /GENER/  BR1(3,3),BR2(3,3)                                 
-      common /lolog/  nlo,nlov,nlon,loor,ilo(0:lomax),lapw  
 
       !allocate memory to arrays
       allocate(FAC(-(2*maxx+1):(2*maxx+1),-(2*maxy+1):(2*maxy+1),-(2*maxz+1):(2*maxz+1)) )
@@ -192,4 +191,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-06-30 21:37:47 assman@faepop23.tu-graz.ac.at>
+!! Time-stamp: <2015-12-28 15:13:58 assman@faepop36.tu-graz.ac.at>

@@ -8,6 +8,7 @@ SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
   USE bessel
   USE amn_mmn
   USE pairs
+  use lolog, only: nlo,nlov,nlon,loor,ilo,lapw,n_rad
   IMPLICIT REAL(R8) (A-H,O-Z)
   INTEGER          pair_index, r_index
   REAL(R8)           KX1,KY1,KZ1                       ! k-points in u.c. coordinates k and k+b
@@ -15,10 +16,8 @@ SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
   COMPLEX(C16)       PHSHEL,tmp,tmp1
   COMMON /GENER/   BR1(3,3),BR2(3,3)              ! transformation between u.c. and cartesian coordinates
   COMMON /ATSPDT/  P(0:LMAX2,nrf),DP(0:LMAX2,nrf) ! radial function and its slope at RMT
-  logical          loor(0:lomax),lapw(0:lmax2)    ! local orbitals options
   COMMON /RADFU/   RF1(NRAD,0:LMAX2,nrf),RF2(NRAD,0:LMAX2,nrf)  ! radial functions large and small component
   common /loabc/   alo(0:lomax,nloat,nrf)         ! use for local orbitals
-  common /lolog/   nlo,nlov,nlon,loor,ilo(0:lomax),lapw,n_rad(0:lmax2)  
 
   !...............................
   complex(C16), allocatable :: alm(:,:,:,:),blm(:,:,:,:)
@@ -209,4 +208,4 @@ END SUBROUTINE l2MMN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-06-30 22:39:45 assman@faepop23.tu-graz.ac.at>
+!! Time-stamp: <2015-12-28 15:13:21 assman@faepop36.tu-graz.ac.at>

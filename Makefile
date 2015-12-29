@@ -4,7 +4,7 @@
 ###
 ### Copyright 2013-2015 Elias Assmann
 
-git-describe := $(lastword '$version: v1.0.0-9-g0930602$')
+git-describe := $(lastword '$version: v1.0.0-28-g78bd696$')
 
 VERSION := $(git-describe)
 
@@ -40,40 +40,7 @@ distclean:
 
 Morig := $(addsuffix /Makefile.orig,SRC_w2w SRC_wplot SRC_trig)
 
-dist: dir     = wien2wannier-$(VERSION)
-dist: scripts = $(notdir $(wildcard SRC/*))
-dist: distclean doc/wien2wannier_userguide.pdf
-	mkdir $(dir); \
-	cd $(dir); \
-	ln -s -t . ../SRC* ../doc/ ../COPYING \
-           ../README ../NEWS ../Makefile; \
-	ln -s ../make.sys make.sys.example; \
-	cp ../WIEN-VERSION .
-
-	tar --exclude-vcs -chzf $(dir).tar.gz $(dir)
-	rm -rf $(dir) $(Morig)
-
-old-dist: dir     = wien2wannier-$(VERSION)
-old-dist: scripts = $(notdir $(wildcard SRC/*))
-old-dist: distclean doc/wien2wannier_userguide.pdf $(Morig)
-	mkdir $(dir); \
-	cd $(dir); \
-	ln -s -t . ../SRC* ../doc ../COPYING \
-	   ../README ../INSTALL ../NEWS ../Makefile \
-	   ../compile_wien2wannier.sh; \
-	ln -s ../make.sys make.sys.example; \
-	ln -s -t . SRC/*; \
-	cp ../WIEN-VERSION .; \
-	tar --exclude-vcs -chf wien2wannier.tar SRC* $(scripts); \
-	# for f in $(scripts); do ln -s $$f `echo $$f | sed s/_lapw//`; done; \
-	# ln -s w2wpara w2wcpara; ln -s wplotpara wplotcpara; \
-	# tar -rf wien2wannier.tar $(scripts:_lapw=) w2wcpara wplotcpara; \
-	# rm -f SRC* $(scripts) $(scripts:_lapw=) w2wcpara wplotcpara
-
-	# tar --exclude-vcs -chzf $(dir).tar.gz $(dir)
-	# rm -rf $(dir) $(Morig)
-
-## Make a .tar for extracting directly in Wien2k root folder and
+## Make a tarball for extracting directly in Wien2k root folder and
 ## bundle with INSTALL, compile_wien2wannier.sh
 ##
 ## This should perhaps strip the time-stamps.
@@ -98,4 +65,4 @@ wien-dist: distclean doc/wien2wannier_userguide.pdf $(Morig)
 	rm -rf $(dir) $(Morig)
 
 
-## Time-stamp: <2015-12-21 15:12:35 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2015-12-29 14:10:09 assman@faepop36.tu-graz.ac.at>

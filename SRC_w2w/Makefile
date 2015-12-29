@@ -116,8 +116,9 @@ RC_OBJS = $(filter-out $(R_OBJS), $(mod_users))
 #  Dependency information for object files
 #
 mod_users = abc.o almgen.o atpar.o diracout.o dergl.o gaunt1.o		\
-	    gaunt2.o main.o latgen.o l2mmn.o outwin.o rint13.o		\
-	    inouh.o planew.o read_vec.o radint.o rout.o rotdef.o
+	    gaunt2.o main.o latgen.o l2amn.o l2mmn.o outwin.o		\
+	    rint13.o inouh.o planew.o read_vec.o radint.o rout.o	\
+	    rotdef.o
 
 util_users = abc.o atpar.o dergl.o dvbes1.o harmon.o inouh.o inth.o	\
 	     inverss.o latgen.o main.o modules.o outwin.o ph.o		\
@@ -175,4 +176,4 @@ $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
 	$(foreach o, $(util_users), $d/$o)): $(O_DIR)/util_w2w.o
 
 
-## Time-stamp: <2015-12-23 11:50:29 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2015-12-29 14:08:40 assman@faepop36.tu-graz.ac.at>

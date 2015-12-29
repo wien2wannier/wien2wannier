@@ -32,7 +32,7 @@ MODULE param
   ! for x-dos set lxdos to 3
   parameter (lxdos= 3)
   parameter (nloat= 3)
-  parameter (nrf=3)
+  parameter (nrf=4)
   PARAMETER (CLIGHT=137.0359895D0)
 END MODULE param
 
@@ -257,10 +257,20 @@ CONTAINS
   END SUBROUTINE init_ams
 END MODULE ams
 
+module lolog
+  use param, only: lmax2, lomax
+
+  implicit none
+
+  integer :: nlo, nlov, nlon, n_rad(0:lmax2), ilo(0:lomax)
+  logical :: loor(0:lomax), lapw(0:lmax2)
+end module lolog
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 14:07:06 assman@faepop36.tu-graz.ac.at>
+
+!! Time-stamp: <2015-12-29 14:09:22 assman@faepop36.tu-graz.ac.at>

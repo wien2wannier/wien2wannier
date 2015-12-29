@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_w2w/diracout.f
 
-      subroutine diracout(rel,v,rnot,dstep,nmax,eh,nql,nqk, &
+      subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk, &
                           val,slo,nodes,z)
 
 !rschmid
@@ -14,7 +14,6 @@
 !    dstep  log. step
 !    nmax    number of radial meshpoints
 !    eh     energy in hartree
-!    nql    angular momentum 
 !    nqk    relativistic quantum number kappa 
 !    z      charge of nucleus
 !
@@ -64,8 +63,6 @@
       save   /ps1/
 
       DATA DKOEF/.1388888888888888D-2/
-
-      dummy = nql               ! silence warning
 
 !rschmid
 !   Set up radial mesh.
@@ -167,4 +164,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2015-12-28 16:11:50 assman@faepop36.tu-graz.ac.at>

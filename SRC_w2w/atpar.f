@@ -3,22 +3,22 @@
 SUBROUTINE ATPAR (JATOM,LATOM,itape,jtape)
   USE param
   USE struct
+  use lolog, only: nlo,nlov,nlon,loor,ilo,lapw,n_rad
 
   use const, only: R8
 
   IMPLICIT REAL(R8) (A-H,O-Z)
   real(r8)           :: VR(NRAD)
-  LOGICAL          loor(0:lomax),lapw(0:lmax2),rlo(1:nloat, 0:lomax)
+  LOGICAL            :: rlo(1:nloat, 0:lomax)
   DIMENSION     emist(0:lomax,nloat),E(0:LMAX2),elo(0:LOMAX,nloat), &
-       pei(0:lmax2),ilo(0:lomax),n_rad(0:lmax2) 
+       pei(0:lmax2) 
 
   COMMON /UHELP/   A(NRAD),B(NRAD),AE(NRAD),BE(NRAD)
   COMMON /ATSPDT/  P(0:LMAX2,nrf),DP(0:LMAX2,nrf)
   COMMON /RADFU/   RF1(NRAD,0:LMAX2,nrf),RF2(NRAD,0:LMAX2,nrf)
   COMMON /RINTEG/  RI_MAT(0:lmax2,nrf,nrf)
   common /loabc/   alo(0:lomax,2,nloat,nrf)
-  common /lolog/   nlo,nlov,nlon,loor,ilo,lapw,n_rad  
-  !---------------------------------------------------------------------  
+
 2022 FORMAT(3X,4E19.12) 
 
   dummy=latom                   ! silence unused variable warning
@@ -95,7 +95,6 @@ SUBROUTINE ATPAR (JATOM,LATOM,itape,jtape)
   WRITE(unit_out,5) E
   WRITE(unit_out,14)
 
-  !                                                                       
   lloop: DO l=0,LMAX2                                                  
      DELE=2.0D-3                                                       
      DELEI=0.25D0/DELE                                                 
@@ -103,10 +102,10 @@ SUBROUTINE ATPAR (JATOM,LATOM,itape,jtape)
      EI=E(l)/2.0d0        
      !     CALCULATE ENERGY-DERIVATIVE BY FINITE DIFFERENCE                  
      !     DELE IS THE UPWARD AND DOWNWARD ENERGY SHIFT IN HARTREES          
-     !                                                                       
+
      E1=EI-DELE  
      CALL OUTWIN(REL,VR,R0(JATOM),DX(JATOM),JRJ(JATOM),E1,            &
-          FL,UVB,DUVB,NODEL,ZZ)                                                
+          FL,UVB,DUVB,NODEL,ZZ(jatom))                                                
      CALL RINT13(A,B,A,B,OVLP,JATOM)                               
      TRX=1.0D0/SQRT(OVLP)                                              
      IMAX=JRJ(JATOM)                                                   
@@ -118,7 +117,7 @@ SUBROUTINE ATPAR (JATOM,LATOM,itape,jtape)
      DUVB=TRX*DUVB                                                     
      E1=EI+DELE                                                        
      CALL OUTWIN(REL,VR,R0(JATOM),DX(JATOM),JRJ(JATOM),E1,            &
-          FL,UVE,DUVE,NODE,ZZ)                                                 
+          FL,UVE,DUVE,NODE,ZZ(jatom))                                                 
      CALL RINT13(A,B,A,B,OVLP,JATOM)                               
      TRX=1.0d0/SQRT(OVLP)                                                
      UVE=DELEI*(TRX*UVE-UVB)                                           
@@ -132,7 +131,7 @@ SUBROUTINE ATPAR (JATOM,LATOM,itape,jtape)
      !     CALCULATE FUNCTION AT EI                                          
      !                                                                       
      CALL OUTWIN(REL,VR(1),R0(JATOM),DX(JATOM),JRJ(JATOM),EI,         &
-          FL,UV,DUV,NODES,ZZ)                                                  
+          FL,UV,DUV,NODES,ZZ(jatom))                                                  
      CALL RINT13(A,B,A,B,OVLP,JATOM)                               
      TRX=1.0d0/SQRT(OVLP)                                                
      P(l,1)=TRX*UV                                                       
@@ -182,7 +181,7 @@ SUBROUTINE ATPAR (JATOM,LATOM,itape,jtape)
               ei=elo(l,nloat)/2.d0
               kappa=l
               CALL diracout(rel,vr(1),r0(jatom),dx(jatom),jrj(jatom),    &
-                   ei,fl,kappa,uv,duv,nodes,zz)
+                   ei,kappa,uv,duv,nodes,zz(jatom))
               CALL dergl(a,b,r0(jatom),dx(jatom),jrj(jatom))
               DO m = 1, jrj(jatom)
                  r_m = r0(jatom)*exp(dx(jatom)*(m-1))
@@ -192,7 +191,7 @@ SUBROUTINE ATPAR (JATOM,LATOM,itape,jtape)
               ENDDO
            ELSE
               CALL outwin(rel,vr(1),r0(jatom),dx(jatom),jrj(jatom),   &
-                   ei,fl,uv,duv,nodes,zz)
+                   ei,fl,uv,duv,nodes,zz(jatom))
            ENDIF
 
            CALL RINT13(A,B,A,B,OVLP,JATOM)
@@ -237,4 +236,4 @@ END SUBROUTINE ATPAR
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-06-29 15:57:06 assman@faepop23.tu-graz.ac.at>
+!! Time-stamp: <2015-12-28 16:16:54 assman@faepop36.tu-graz.ac.at>

@@ -1,5 +1,5 @@
-                          Wien2Wannier News
-                          *****************
+                       Wien2Wannier 1.0.1 News
+                       ***********************
 
 Version 1.0 represents a major overhaul of the user interface.  The
 goal was to integrate it better into Wien2k and make it conform more
@@ -45,13 +45,7 @@ Other changes and new features include:
 
  * wien2wannier may now be used under the GNU GPL (see file `COPYING')
 
-One part of the package has been removed: `woptic', for the
-calculation of the optical conductivity.  If you want to use this
-program, please download wien2wannier 0.97 from
-<http://www.ifp.tuwien.ac.at/forschung/arbeitsgruppen/cms/software-download/wien2wannier/>.
-`woptic' will be released as a package of its own once outstanding
-issues have been resolved.
-
+================
 
 Changes in 1.0.1 (update to Wien2k_14.2) include:
 
@@ -80,6 +74,8 @@ Changes in 1.0.1 (update to Wien2k_14.2) include:
   conjugation
 
 * fixed a bug in w2w resulting in segmentation faults for some cases
+
+* fixed `w2w' to work with `-p -so'
 
 
 Many thanks to Marc Höppner, Hong Jiang, Gernot Kraberger, Oleg Rubel,
@@ -250,5 +246,5 @@ new:       id=-(BQZ(pair_index)*m2y+BQY(pair_index))*m2x-BQX(pair_index)-1
 ## comment-start: "#"
 ## End:
 ##
-## Time-stamp: <2015-07-14 13:18:38 assman@faepop23.tu-graz.ac.at>
+## Time-stamp: <2015-12-21 16:47:39 assman@faepop36.tu-graz.ac.at>
 ##\---
