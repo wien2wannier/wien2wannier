@@ -7,7 +7,7 @@
       use lolog,  only: lapw
       use param,  only: DPk, kconjg, Lmax7, Nrf
 
-      implicit none ! real(R8) (A-H,O-Z)
+      implicit none
 
       integer,      intent(in)  :: Latom, Npw, Nmat, iatnr(*)
       real(DPk),    intent(in)  :: rotloc(3,3,*), BK(3,Nmat)
@@ -118,4 +118,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 18:38:22 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-29 19:10:52 assman@faepop36.tu-graz.ac.at>
