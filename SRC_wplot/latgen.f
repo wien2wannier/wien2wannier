@@ -1,26 +1,20 @@
 !!! wien2wannier/SRC_wplot/latgen.f
 
-subroutine LATGEN(LATTIC,A,ALP,ORTHO,PRIM)
-  use const
-  use latt
-  use param, only: unit_out
+subroutine LATGEN(stru)
+  use const,     only: DPk, PI, SQ3
+  use latt,      only: br1, br2, br3, br4
+  use param,     only: unit_out
+  use structmod, only: struct_t
+  use clio,      only: croak
 
-  IMPLICIT     REAL(R8) (A-H,O-Z)
-  CHARACTER(4) LATTIC
-  dimension    A(3), alp(3)
-  LOGICAL      ORTHO, PRIM
-!
-! << Input >>
-! LATTIC      -- the type of the Bravais lattice
-! A(1:3)      -- the lattice constants
-! ALP         -- the unit cell angles (in degree)
-!
-! << Output >>
-! ORTHO       -- .TRUE. if the lattice is an orthogonal one
-! PRIM        -- .TRUE. if the lattice is a primitive one
-!
+  implicit none
+
+  type(struct_t), intent(in) :: stru
+
+  real(DPk)    :: alpha, beta, gamma, cosPhi, phi
+  integer      :: i, j
+
 ! << Output (to module LATT) >>
-! VUC      -- the volume of the primitive unit cell
 ! BR1(i,:) -- the real space lattice vectors a_i of the conventional unit cell
 ! BR2(i,:) -- the real space lattice vectors a_i of the primitive unit cell
 ! BR3(i,:) -- the reciprocal lattice vectors b_i of the conventional unit cell
@@ -31,54 +25,46 @@ subroutine LATGEN(LATTIC,A,ALP,ORTHO,PRIM)
 ! Caution: The lattice vectors setup here must precisely co-incide with 
 !          those used within LAPW2 !
 ! 
-      ALPHA = alp(1) * PI / 180
-      BETA  = alp(2) * PI / 180
-      GAMMA = alp(3) * PI / 180
+      ALPHA = stru%alpha(1) * PI / 180
+      BETA  = stru%alpha(2) * PI / 180
+      GAMMA = stru%alpha(3) * PI / 180
 
       BR1=0; BR2=0
 
-      IF(LATTIC(1:1).EQ.'P')THEN
+      IF(STRU%LATTIC(1:1).EQ.'P')THEN
 ! -------------------------------------------------------------------------
-!       << primitive lattice : P a b c alp(1) alp(2) alp(3) >>
+!       << primitive lattice : P a b c alp bet gam >>
 !
-!       a_1 = a * (sin(alp(2))*sin(phi),sin(alp(2))*cos(phi),cos(alp(2)))
-!       a_2 = b * (        0        ,      sin(alp(1))   ,cos(alp(1)))
+!       a_1 = a * (sin(bet)*sin(phi),sin(bet)*cos(phi),cos(bet))
+!       a_2 = b * (        0        ,      sin(alp)   ,cos(alp))
 !       a_3 = c * (        0        ,        0        ,  1     )
 !       with
-!       cos(phi) := ( cos(alp(3)) - cos(alp)*cos(alp(2)) ) / sin(alp)*sin(alp(2))
+!       cos(phi) := ( cos(gam) - cos(alp)*cos(bet) ) / sin(alp)*sin(bet)
 !
-!       VUC = a*b*c * sin(alp(1))*sin(alp(2))*sin(phi)
-!       
 !       triclinic, monoclinic, orthorhombic, tetragonal, cubic
 !
-!       b_1 = ( 1/sin(alp(2))*sin(phi)                    ,     0     ,0) / a
-!       b_2 = (-1/sin(alp(1))*tan(phi)                    , 1/sin(alp(1)),0) / b
-!       b_3 = ( 1/tan(alp(1))*tan(phi)-1/tan(alp(2))*sin(phi),-1/tan(alp(1)),1) / c
+!       b_1 = ( 1/sin(bet)*sin(phi)                    ,     0     ,0) / a
+!       b_2 = (-1/sin(alp)*tan(phi)                    , 1/sin(alp),0) / b
+!       b_3 = ( 1/tan(alp)*tan(phi)-1/tan(bet)*sin(phi),-1/tan(alp),1) / c
 ! -------------------------------------------------------------------------
         COSPHI=(COS(GAMMA)-COS(ALPHA)*COS(BETA))/SIN(ALPHA)/SIN(BETA)
         PHI=ACOS(COSPHI)
 !       << primitive unit cell >>
-        BR2(1,1)=A(1)*SIN(BETA)*SIN(PHI)
-        BR2(1,2)=A(1)*SIN(BETA)*COS(PHI)
-        BR2(1,3)=A(1)*COS(BETA)
-        BR2(2,2)=A(2)*SIN(ALPHA)
-        BR2(2,3)=A(2)*COS(ALPHA)
-        BR2(3,3)=A(3)
+        BR2(1,1)=STRU%A(1)*SIN(BETA)*SIN(PHI)
+        BR2(1,2)=STRU%A(1)*SIN(BETA)*COS(PHI)
+        BR2(1,3)=STRU%A(1)*COS(BETA)
+        BR2(2,2)=STRU%A(2)*SIN(ALPHA)
+        BR2(2,3)=STRU%A(2)*COS(ALPHA)
+        BR2(3,3)=STRU%A(3)
 !       << conventional unit cell >>
         BR1 = BR2
-!       << further settings >>
-        VUC   = SIN(ALPHA)*SIN(BETA)*SIN(PHI) * A(1)*A(2)*A(3)
-        PRIM  = .TRUE.
-        ORTHO = ALP(1).EQ.90.0D0 .AND. ALP(2).EQ.90.0D0 .AND. ALP(3).EQ.90.0D0
-      ELSE IF(LATTIC(1:1).EQ.'H') THEN
+      ELSE IF(STRU%LATTIC(1:1).EQ.'H') THEN
 ! -------------------------------------------------------------------------
 !       << hexagonal lattice : H a * c * * * >>
 !
 !       a_1 = a * (sqrt(3)/2,-1/2,0)
 !       a_2 = a * (     0   ,  1 ,0)
 !       a_3 = c * (     0   ,  0 ,1)
-!
-!       VUC = a^2*c * sqrt(3)/2
 !
 !       this setting corresponds to the P a a c 90 90 120 setting
 !
@@ -87,25 +73,19 @@ subroutine LATGEN(LATTIC,A,ALP,ORTHO,PRIM)
 !       b_3 = (-2/sqrt(3),   0 ,   1 ) / c
 ! -------------------------------------------------------------------------
 !       << primitive unit cell >>
-        BR2(1,1)= A(1)*SQRT(3.0D0)/2.0D0
-        BR2(1,2)=-A(1)*0.5D0
-        BR2(2,2)= A(1)
-        BR2(3,3)= A(3)
+        BR2(1,1)= STRU%A(1)*SQ3/2
+        BR2(1,2)=-STRU%A(1)/2
+        BR2(2,2)= STRU%A(1)
+        BR2(3,3)= STRU%A(3)
 !       << conventional unit cell >>
         BR1 = BR2
-!       << further settings >>
-        VUC   = A(1)**2*A(3) * SQRT(3.0D0)/2.0D0
-        PRIM  = .TRUE.
-        ORTHO = .FALSE.
-      ELSE IF(LATTIC(1:1).EQ.'T'.OR.LATTIC(1:1).EQ.'R') THEN
+      ELSE IF(STRU%LATTIC(1:1).EQ.'T'.OR.STRU%LATTIC(1:1).EQ.'R') THEN
 ! -------------------------------------------------------------------------
 !       << rhombohedral or trigonal lattice : R a * c * * * >>
 !
 !       a_1 = ( a/(2*sqrt(3)),-a/2,c/3)
 !       a_2 = ( a/(2*sqrt(3)), a/2,c/3)
 !       a_3 = (-a/   sqrt(3) ,  0 ,c/3)
-!
-!       VUC = a^2*c / (2*sqrt(3))
 !
 !       Note: Although the trigonal lattice is treated as a primitive 
 !             lattice the lattice parameter correspond to the surrounding
@@ -116,29 +96,23 @@ subroutine LATGEN(LATTIC,A,ALP,ORTHO,PRIM)
 !       b_3 = (-2/(a*sqrt(3)),   0  , 1/c )
 ! -------------------------------------------------------------------------
 !       << primitive unit cell >>
-        BR2(1,1)= A(1)*0.5D0/SQRT(3.0D0)
-        BR2(1,2)=-A(1)*0.5D0
-        BR2(1,3)= A(3)/3.0D0
-        BR2(2,1)= A(1)*0.5D0/SQRT(3.0D0)
-        BR2(2,2)= A(1)*0.5D0
-        BR2(2,3)= A(3)/3.0D0
-        BR2(3,1)=-A(1)/SQRT(3.0D0)
-        BR2(3,3)= A(3)/3.0D0
+        BR2(1,1)= STRU%A(1)/2/SQ3
+        BR2(1,2)=-STRU%A(1)/2
+        BR2(1,3)= STRU%A(3)/3
+        BR2(2,1)= STRU%A(1)/2/SQ3
+        BR2(2,2)= STRU%A(1)/2
+        BR2(2,3)= STRU%A(3)/3
+        BR2(3,1)=-STRU%A(1)/SQ3
+        BR2(3,3)= STRU%A(3)/3
 !       << conventional unit cell >>
         BR1 = BR2
-!       << further settings >>
-        VUC   = A(1)**2*A(3) * 0.5D0/SQRT(3.0D0)
-        PRIM  = .TRUE.
-        ORTHO = .FALSE.
-      ELSE IF(LATTIC(1:1).EQ.'F') THEN
+      ELSE IF(STRU%LATTIC(1:1).EQ.'F') THEN
 ! -------------------------------------------------------------------------
 !       << face-centered lattice : F a b c * * * 
 !
 !       a_1 = ( 0 ,b/2,c/2)
 !       a_2 = (a/2, 0 ,c/2)
 !       a_3 = (a/2,b/2, 0 )
-!
-!       VUC = a*b*c / 4
 !
 !       orthorhombic, cubic
 !
@@ -147,29 +121,23 @@ subroutine LATGEN(LATTIC,A,ALP,ORTHO,PRIM)
 !       b_3 = (  1/a ,  1/b , -1/c )
 ! -------------------------------------------------------------------------
 !       << primitive unit cell >>
-        BR2(1,2)=A(2)*0.5D0
-        BR2(1,3)=A(3)*0.5D0
-        BR2(2,1)=A(1)*0.5D0
-        BR2(2,3)=A(3)*0.5D0
-        BR2(3,1)=A(1)*0.5D0
-        BR2(3,2)=A(2)*0.5D0
+        BR2(1,2)=STRU%A(2)/2
+        BR2(1,3)=STRU%A(3)/2
+        BR2(2,1)=STRU%A(1)/2
+        BR2(2,3)=STRU%A(3)/2
+        BR2(3,1)=STRU%A(1)/2
+        BR2(3,2)=STRU%A(2)/2
 !       << conventional unit cell >>
-        BR1(1,1)=A(1)
-        BR1(2,2)=A(2)
-        BR1(3,3)=A(3)
-!       << further settings >>
-        VUC   = A(1)*A(2)*A(3) / 4.0D0
-        PRIM  = .FALSE.
-        ORTHO = .TRUE.
-      ELSE IF(LATTIC(1:1).EQ.'B') THEN
+        BR1(1,1)=STRU%A(1)
+        BR1(2,2)=STRU%A(2)
+        BR1(3,3)=STRU%A(3)
+      ELSE IF(STRU%LATTIC(1:1).EQ.'B') THEN
 ! -------------------------------------------------------------------------
 !       << body-centered lattice : B a b c * * *
 !
 !       a_1 = (-a/2, b/2, c/2)
 !       a_2 = ( a/2,-b/2, c/2)
 !       a_3 = ( a/2, b/2,-c/2)
-!
-!       VUC = a*b*c / 2
 !
 !       orthorhombic, tetragonal, cubic
 !
@@ -178,137 +146,118 @@ subroutine LATGEN(LATTIC,A,ALP,ORTHO,PRIM)
 !       b_3 = ( 1/a , 1/b ,  0  )
 ! -------------------------------------------------------------------------
 !       << primitive unit cell >>
-        BR2(1,1)=-A(1)*0.5D0
-        BR2(1,2)= A(2)*0.5D0
-        BR2(1,3)= A(3)*0.5D0
-        BR2(2,1)= A(1)*0.5D0
-        BR2(2,2)=-A(2)*0.5D0
-        BR2(2,3)= A(3)*0.5D0
-        BR2(3,1)= A(1)*0.5D0
-        BR2(3,2)= A(2)*0.5D0
-        BR2(3,3)=-A(3)*0.5D0
+        BR2(1,1)=-STRU%A(1)/2
+        BR2(1,2)= STRU%A(2)/2
+        BR2(1,3)= STRU%A(3)/2
+        BR2(2,1)= STRU%A(1)/2
+        BR2(2,2)=-STRU%A(2)/2
+        BR2(2,3)= STRU%A(3)/2
+        BR2(3,1)= STRU%A(1)/2
+        BR2(3,2)= STRU%A(2)/2
+        BR2(3,3)=-STRU%A(3)/2
 !       << conventional unit cell >>
-        BR1(1,1)=A(1)
-        BR1(2,2)=A(2)
-        BR1(3,3)=A(3)
-!       << further settings >>
-        VUC   = A(1)*A(2)*A(3) / 2.0D0
-        PRIM  = .FALSE.
-        ORTHO = .TRUE.
-      ELSE IF(LATTIC(1:3).EQ.'CXY' .AND. ALP(3).EQ.90.0D0) THEN
+        BR1(1,1)=STRU%A(1)
+        BR1(2,2)=STRU%A(2)
+        BR1(3,3)=STRU%A(3)
+     else if(stru%lattic(1:3)=='CXY' .and. stru%alpha(3)==90) then
 ! -------------------------------------------------------------------------
-!       << base-centered (in the xy-plane) : CXY a b c alp(1) alp(2) 90 >>
+!       << base-centered (in the xy-plane) : CXY a b c alp bet 90 >>
 !
-!       Note: either alp(1) or alp(2) must be 90 degree
+!       Note: either alp or bet must be 90 degree
 !
-!       a_1 = (a*sin(alp(2))/2,-b*sin(alp(1))/2,a*cos(alp(2))/2-b*cos(alp(1))/2)
-!       a_2 = (a*sin(alp(2))/2, b*sin(alp(1))/2,a*cos(alp(2))/2+b*cos(alp(1))/2)
+!       a_1 = (a*sin(bet)/2,-b*sin(alp)/2,a*cos(bet)/2-b*cos(alp)/2)
+!       a_2 = (a*sin(bet)/2, b*sin(alp)/2,a*cos(bet)/2+b*cos(alp)/2)
 !       a_3 = (    0       ,    0       ,            c            )
 !
-!       VUC = a*b*c * sin(alp(1))*sin(alp(2))/2
-!       
 !       monoclinic, orthorhombic
 !       
-!       b_1 = ( 1/(a*sin(alp(2))),-1/(b*sin(alp(1))), 0 )
-!       b_2 = ( 1/(a*sin(alp(2))), 1/(b*sin(alp(1))), 0 )
-!       b_3 = (-1/(c*tan(alp(2))),-1/(c*tan(alp(1))),1/c)
+!       b_1 = ( 1/(a*sin(bet)),-1/(b*sin(alp)), 0 )
+!       b_2 = ( 1/(a*sin(bet)), 1/(b*sin(alp)), 0 )
+!       b_3 = (-1/(c*tan(bet)),-1/(c*tan(alp)),1/c)
 ! -------------------------------------------------------------------------
-        IF(ALP(1).NE.90.0D0 .AND. ALP(2).NE.90.0D0) STOP 'LATTIC NOT DEFINED'
+        if(stru%alpha(1)/=90 .and. stru%alpha(2)/=90) &
+             call croak('LATTIC NOT DEFINED: '//stru%lattic)
 !       << primitive unit cell >>
-        BR2(1,1)= A(1)*0.5D0*SIN(BETA)
-        BR2(1,2)=-A(2)*0.5D0*SIN(ALPHA)
-        BR2(1,3)= A(1)*0.5D0*COS(BETA) &
-                - A(2)*0.5D0*COS(BETA)
-        BR2(2,1)= A(1)*0.5D0*SIN(BETA)
-        BR2(2,2)= A(2)*0.5D0*SIN(ALPHA)
-        BR2(2,3)= A(1)*0.5D0*COS(BETA) &
-                + A(2)*0.5D0*COS(ALPHA)
-        BR2(3,3)= A(3)
+        BR2(1,1)= STRU%A(1)/2*SIN(BETA)
+        BR2(1,2)=-STRU%A(2)/2*SIN(ALPHA)
+        BR2(1,3)= STRU%A(1)/2*COS(BETA) &
+                - STRU%A(2)/2*COS(BETA)
+        BR2(2,1)= STRU%A(1)/2*SIN(BETA)
+        BR2(2,2)= STRU%A(2)/2*SIN(ALPHA)
+        BR2(2,3)= STRU%A(1)/2*COS(BETA) &
+                + STRU%A(2)/2*COS(ALPHA)
+        BR2(3,3)= STRU%A(3)
 !       << conventional unit cell >>
-        BR1(1,1)=A(1)*SIN(BETA)
-        BR1(1,3)=A(1)*COS(BETA)
-        BR1(2,2)=A(2)*SIN(ALPHA)
-        BR1(2,3)=A(2)*COS(ALPHA)
-        BR1(3,3)=A(3)
-!       << further settings >>
-        VUC   = A(1)*A(2)*A(3) * SIN(ALPHA)*SIN(BETA)/2.0D0
-        PRIM  = .FALSE.
-        ORTHO = ALP(1).EQ.90.0D0 .AND. ALP(2).EQ.90.0D0
-      ELSE IF(LATTIC(1:3).EQ.'CYZ' .AND. ALP(1).EQ.90.0D0) THEN
+        BR1(1,1)=STRU%A(1)*SIN(BETA)
+        BR1(1,3)=STRU%A(1)*COS(BETA)
+        BR1(2,2)=STRU%A(2)*SIN(ALPHA)
+        BR1(2,3)=STRU%A(2)*COS(ALPHA)
+        BR1(3,3)=STRU%A(3)
+     else if(stru%lattic(1:3)=='CYZ' .and. stru%alpha(1)==90) then
 ! -------------------------------------------------------------------------
-!       << base-centered (in the yz-plane) : CYZ a b c 90 alp(2) alp(3) >>
+!       << base-centered (in the yz-plane) : CYZ a b c 90 bet gam >>
 !
-!       Note: either alp(2) or alp(3) must be 90 degree
+!       Note: either bet or gam must be 90 degree
 !
-!       a_1 = (a*sin(alp(2))*sin(alp(3)),a*sin(alp(2))*cos(alp(3)),a*cos(alp(2)))
+!       a_1 = (a*sin(bet)*sin(gam),a*sin(bet)*cos(gam),a*cos(bet))
 !       a_2 = (        0        ,           b/2       ,  -c/2    )
 !       a_3 = (        0        ,           b/2       ,   c/2    )
 !
-!       VUC = a*b*c * sin(alp(2))*sin(alp(3))/2
-!       
 !       monoclinic, orthorhombic
 !       
-!       b_1 = ( 1/(a*sin(alp(2))*sin(alp(3)))               , 0 ,  0 )
-!       b_2 = (-1/(b*tan(alp(3)))+1/(c*tan(alp(2))*sin(alp(3))),1/b,-1/c)
-!       b_3 = (-1/(b*tan(alp(3)))-1/(c*tan(alp(2))*sin(alp(3))),1/b, 1/c)
+!       b_1 = ( 1/(a*sin(bet)*sin(gam))               , 0 ,  0 )
+!       b_2 = (-1/(b*tan(gam))+1/(c*tan(bet)*sin(gam)),1/b,-1/c)
+!       b_3 = (-1/(b*tan(gam))-1/(c*tan(bet)*sin(gam)),1/b, 1/c)
 ! -------------------------------------------------------------------------
-        IF(ALP(2).NE.90.0D0 .AND. ALP(3).NE.90.0D0) STOP 'LATTIC NOT DEFINED'
+        if(stru%alpha(2)/=90 .and. stru%alpha(3)/=90) &
+             call croak('LATTIC NOT DEFINED: '//stru%lattic)
 !       << primitive unit cell >>
-        BR2(1,1)= A(1)*SIN(BETA)*SIN(GAMMA)
-        BR2(1,2)= A(1)*SIN(BETA)*COS(GAMMA)
-        BR2(1,3)= A(1)*COS(BETA)
-        BR2(2,2)= A(2)*0.5D0
-        BR2(2,3)=-A(3)*0.5D0
-        BR2(3,2)= A(2)*0.5D0
-        BR2(3,3)= A(3)*0.5D0
+        BR2(1,1)= STRU%A(1)*SIN(BETA)*SIN(GAMMA)
+        BR2(1,2)= STRU%A(1)*SIN(BETA)*COS(GAMMA)
+        BR2(1,3)= STRU%A(1)*COS(BETA)
+        BR2(2,2)= STRU%A(2)/2
+        BR2(2,3)=-STRU%A(3)/2
+        BR2(3,2)= STRU%A(2)/2
+        BR2(3,3)= STRU%A(3)/2
 !       << conventional unit cell >>
-        BR1(1,1)=A(1)*SIN(BETA)*SIN(GAMMA)
-        BR1(1,2)=A(1)*SIN(BETA)*COS(GAMMA)
-        BR1(1,3)=A(1)*COS(BETA)
-        BR1(2,2)=A(2)
-        BR1(3,3)=A(3)
-!       << further settings >>
-        VUC   = A(1)*A(2)*A(3) * SIN(BETA)*SIN(GAMMA)/2.0D0
-        PRIM  = .FALSE.
-        ORTHO = ALP(2).EQ.90.0D0 .AND. ALP(3).EQ.90.0D0
-      ELSE IF(LATTIC(1:3).EQ.'CXZ' .AND. ALP(2).EQ.90.0D0) THEN
+        BR1(1,1)=STRU%A(1)*SIN(BETA)*SIN(GAMMA)
+        BR1(1,2)=STRU%A(1)*SIN(BETA)*COS(GAMMA)
+        BR1(1,3)=STRU%A(1)*COS(BETA)
+        BR1(2,2)=STRU%A(2)
+        BR1(3,3)=STRU%A(3)
+     else if(stru%lattic(1:3)=='CXZ' .and. stru%alpha(2)==90) then
 ! -------------------------------------------------------------------------
-!       << base-centered (in the xz-plane) : CXZ a b c alp(1) 90 alp(3) >>
+!       << base-centered (in the xz-plane) : CXZ a b c alp 90 gam >>
 !
-!       Note: either alp(1) or alp(3) must be 90 degree
+!       Note: either alp or gam must be 90 degree
 !
-!       a_1 = (a*sin(alp(3))/2,a*cos(alp(3))/2,  -c/2    )
-!       a_2 = (    0       ,b*sin(alp(1))  ,b*cos(alp(1)))
-!       a_3 = (a*sin(alp(3))/2,a*cos(alp(3))/2,   c/2    )
+!       a_1 = (a*sin(gam)/2,a*cos(gam)/2,  -c/2    )
+!       a_2 = (    0       ,b*sin(alp)  ,b*cos(alp))
+!       a_3 = (a*sin(gam)/2,a*cos(gam)/2,   c/2    )
 !
-!       VUC = a*b*c * sin(alp(1))*sin(alp(3))/2
-!       
 !       monoclinic, orthorhombic
 !
-!       b_1 = ( 1/(a*sin(alp(3)))         , 1/(c*tan(alp(1))),-1/c)
-!       b_2 = (-1/(b*tan(alp(3))*sin(alp(1))), 1/(b*sin(alp(1))),  0 )
-!       b_3 = ( 1/(a*sin(alp(3)))         ,-1/(c*tan(alp(1))), 1/c)
+!       b_1 = ( 1/(a*sin(gam))         , 1/(c*tan(alp)),-1/c)
+!       b_2 = (-1/(b*tan(gam)*sin(alp)), 1/(b*sin(alp)),  0 )
+!       b_3 = ( 1/(a*sin(gam))         ,-1/(c*tan(alp)), 1/c)
 ! -------------------------------------------------------------------------
-        IF(ALP(1).NE.90.0D0 .AND. ALP(3).NE.90.0D0) STOP 'LATTIC NOT DEFINED'
+        if(stru%alpha(1)/=90 .and. stru%alpha(3)/=90) &
+             call croak('LATTIC NOT DEFINED: '//stru%lattic)
 !       << primitive unit cell >>
-        BR2(1,1)= A(1)*0.5D0*SIN(GAMMA)
-        BR2(1,2)= A(1)*0.5D0*COS(GAMMA)
-        BR2(1,3)=-A(3)*0.5D0
-        BR2(2,2)= A(2)*SIN(ALPHA)
-        BR2(2,3)= A(2)*COS(ALPHA)
-        BR2(3,1)= A(1)*0.5D0*SIN(GAMMA)
-        BR2(3,2)= A(1)*0.5D0*COS(GAMMA)
-        BR2(3,3)= A(3)*0.5D0
+        BR2(1,1)= STRU%A(1)/2*SIN(GAMMA)
+        BR2(1,2)= STRU%A(1)/2*COS(GAMMA)
+        BR2(1,3)=-STRU%A(3)/2
+        BR2(2,2)= STRU%A(2)*SIN(ALPHA)
+        BR2(2,3)= STRU%A(2)*COS(ALPHA)
+        BR2(3,1)= STRU%A(1)/2*SIN(GAMMA)
+        BR2(3,2)= STRU%A(1)/2*COS(GAMMA)
+        BR2(3,3)= STRU%A(3)/2
 !       << conventional unit cell >>
-        BR1(1,1)=A(1)*SIN(GAMMA)
-        BR1(1,2)=A(1)*COS(GAMMA)
-        BR1(2,2)=A(2)*SIN(ALPHA)
-        BR1(2,3)=A(2)*COS(ALPHA)
-        BR1(3,3)=A(3)
-!       << further settings >>
-        VUC   = A(1)*A(2)*A(3) * SIN(ALPHA)*SIN(GAMMA)/2.0D0
-        PRIM  = .FALSE.
-        ORTHO = ALP(1).EQ.90.0D0 .AND. ALP(3).EQ.90.0D0
+        BR1(1,1)=STRU%A(1)*SIN(GAMMA)
+        BR1(1,2)=STRU%A(1)*COS(GAMMA)
+        BR1(2,2)=STRU%A(2)*SIN(ALPHA)
+        BR1(2,3)=STRU%A(2)*COS(ALPHA)
+        BR1(3,3)=STRU%A(3)
       ELSE
         STOP 'LATTIC NOT DEFINED'
       END IF
@@ -338,4 +287,4 @@ subroutine LATGEN(LATTIC,A,ALP,ORTHO,PRIM)
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-22 20:56:13 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-23 15:41:01 assman@faepop36.tu-graz.ac.at>
