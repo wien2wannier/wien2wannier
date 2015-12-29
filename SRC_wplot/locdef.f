@@ -1,16 +1,18 @@
 !!! wien2wannier/SRC_wplot/locdef.f
 
 SUBROUTINE LOCDEF(ROT0,IMAT,ROT)
-  use const
-  use latt
+  use latt, only: br2, br4
 
   !:17[
-  use param
+  use param, only: DPk, addloc, userot
   !:17]
 
-  IMPLICIT  REAL(R8) (A-H,O-Z)
-  DIMENSION ROT0(3,3),IMAT(3,3),ROT(3,3)
-  !
+  implicit none
+
+  real(DPk), intent(in)  :: rot0(3,3)
+  integer,   intent(in)  :: iMat(3,3)
+  real(DPk), intent(out) :: rot (3,3)
+
   ! Input:
   ! ROT0 : local reference rotation matrix (Cartesian coordinates)
   !        x'_i = Sum(j) (T^-1)_ij x_j  with  T_ji = (T^-1)_ij = ROT0(i,j)
@@ -29,8 +31,9 @@ SUBROUTINE LOCDEF(ROT0,IMAT,ROT)
   ! Algorithm:
   ! R := Q o T  with  Q_ik = Sum(m,n) am_i Q_mn bn_k
 
-  DIMENSION AMAT(3,3),BMAT(3,3)
-  !
+  real(DPk) :: Amat(3,3), Bmat(3,3)
+  integer   :: i,j,k,m
+
   !:17[
   IF(.NOT.USEROT)THEN
      !       << don't apply any local rotations, i.e. R := E >>
@@ -93,4 +96,4 @@ END SUBROUTINE LOCDEF
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2015-12-29 16:24:15 assman@faepop36.tu-graz.ac.at>
