@@ -1,11 +1,15 @@
 !!! wien2wannier/SRC_wplot/spcgen.f
 
 SUBROUTINE SPCGEN(NAT,RMT,ATMS)
-  use const
-  use latt
-  IMPLICIT REAL(R8) (A-H,O-Z)
-  DIMENSION RMT(NAT),ATMS(3,NAT)
-!
+  use param, only: DPk
+  use latt,  only: br4
+  
+  implicit none
+
+  integer,   intent(in)  :: NAt
+  real(DPk), intent(in)  :: RMT(NAT)
+  real(DPk), intent(out) :: ATMS(3,NAT)
+
 ! -----------------------------------------------------------------------
 ! For a given lattice basis {a_1,a_2,a_3} each muffin tin sphere 
 !   MTS := { r | |r| < Rmt }
@@ -24,9 +28,9 @@ SUBROUTINE SPCGEN(NAT,RMT,ATMS)
 !
 ! Output:
 ! ATMS(:,j) -- the size parameter s_i of the j-th inequivalent atom
-!
 
-  DIMENSION B(3)
+  real(DPk) :: B(3)
+  integer   :: i, jatom
 
   DO I=1,3
      B(I) = SQRT( BR4(I,1)**2 + BR4(I,2)**2 + BR4(I,3)**2 )
@@ -46,4 +50,4 @@ END SUBROUTINE SPCGEN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2015-12-28 12:22:05 assman@faepop36.tu-graz.ac.at>
