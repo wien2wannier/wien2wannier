@@ -1,19 +1,27 @@
 !!! wien2wannier/SRC_wplot/augpw.f
 
-      SUBROUTINE AUGPW(LATOM,NPW,ALM,ROTLOC,Y,bk,coef,nmat)
-      use struct
-      use atspdt
-      use bessfu
-      use lolog
-      use param
-      use const, only: R8, C16
+      subroutine AUGPW(latom, Npw, Alm, rotloc, Y, bk, coef, Nmat, iatnr)
+      use struct, only: POS, RMT
+      use atspdt, only: P, DP
+      use bessfu, only: irad, fj, dfj
+      use lolog,  only: lapw
+      use param,  only: DPk, kconjg, Lmax7, Nrf
 
-      IMPLICIT REAL(R8) (A-H,O-Z)
-      COMPLEX(C16) ALM((LMAX7+1)*(LMAX7+1),nrf)
-!
+      implicit none ! real(R8) (A-H,O-Z)
+
+      integer,      intent(in)  :: Latom, Npw, Nmat, iatnr(*)
+      real(DPk),    intent(in)  :: rotloc(3,3,*), BK(3,Nmat)
+      complex(DPk), intent(out) :: ALM((LMAX7+1)*(LMAX7+1),nrf)
+      complex(DPk), intent(out) :: Y((LMAX7+1)*(LMAX7+1))
+      complex(DPk), intent(in)  :: COEF(nmat)
+
+      complex(DPk) :: PHS, PHSLM
+      real(DPk)    :: RK(3), arg, al, bl
+      integer      :: i, imt, jatom, iPW, lm, l, m
+
 ! The PW part of the augmentation coefficients A_lm,a and B_lm,a 
 ! of a given eigen state at a given atom a in the unit cell
-! -----------------------------------------------------------------------------
+! ----------------------------------------------------------------------------
 ! Input:
 ! LATOM    -- the atom a 
 ! NPW      -- current number of PW basis functions
@@ -25,7 +33,7 @@
 !
 ! Working arrays:
 ! Y        -- to hold Y_lm(...)
-! -----------------------------------------------------------------------------
+! ----------------------------------------------------------------------------
 ! X_l,m,a = Sum(K) c_K/sqrt(V) exp(i(K+k)R_a) Y(*)_lm(T_a^-1(K+k)) X_l,a(|K+k|)
 !
 ! Here (*) stands for an optional complex conjugation on Y_lm(...)
@@ -41,18 +49,13 @@
 !       exp(i(K+k)R_a) = exp(i(K+k)t_a + i[Q_a^-1(K+k)]R_0)
 !
 !       which is the expression used in LAPW1 and LAPW2
-! -----------------------------------------------------------------------------
-      COMPLEX(C16) COEF(nmat) !changed by pwissgott
-      real(r8) BK(3,NMAT)
-!
-      COMPLEX(C16) PHS,PHSLM,Y((LMAX7+1)*(LMAX7+1))
-      DIMENSION  RK(3),ROTLOC(3,3,*)
-!
-      JATOM = IATNR(LATOM)
+! ---------------------------------------------------------------------------
+
+      JATOM = iatnr(LATOM)
       IMT   = IRAD (JATOM)
 !
 !     << initialize ALM and BLM >>
-        ALM = (0.0D0,0.0D0)
+        ALM = 0
 !
       DO 20 IPW=1,NPW
 !
@@ -63,6 +66,7 @@
                 + ROTLOC(I,3,LATOM)*BK(3,IPW)
    30   CONTINUE
         CALL YLM(RK,LMAX7,Y)
+
 !:17[
         IF(.NOT.KCONJG)THEN
 !         << WIEN95 convention : (*) =   >>
@@ -114,4 +118,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2015-12-29 18:38:22 assman@faepop36.tu-graz.ac.at>
