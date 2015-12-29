@@ -1,24 +1,33 @@
 !!! wien2wannier/SRC_wplot/auggen.f
 
-      SUBROUTINE AUGGEN(REL,NAT,WHPSI)
-      use struct
-      use radgrd
-      use lolog
-      use loabc
-      use atspdt
-      use radfu
-      use param
-      use const, only: R8
-!
-      IMPLICIT REAL(R8) (A-H,O-Z)
-!
-      CHARACTER(5) WHPSI
-      LOGICAL   REL, LARGE, rlo(1:nloat,0:lomax)
-!
-      DIMENSION AE(NRAD),BE(NRAD),VR(NRAD), &
-                E(0:LMAX7),ELO(0:LOMAX,NLOAT),PEI(0:LMAX7)
-      DIMENSION RAD1(NRAD,0:LMAX7,NRF),RAD2(NRAD,0:LMAX7,NRF)
-      COMMON /WORK1/   A(NRAD),B(NRAD)
+      SUBROUTINE AUGGEN(rel,stru,whpsi)
+      use struct,    only: RMT
+      use radgrd,    only: RM, dx
+      use lolog,     only: Nlo, ilo, lapw
+      use loabc,     only: Alo
+      use atspdt,    only: P, DP
+      use radfu,     only: rrad
+      use work1,     only: A, B
+      use param,     only: DPk, unit_out, unit_vsp, unit_vector, NLOat, &
+           Nrad, Nrf, Lmax7, LOmax
+      use structmod, only: struct_t
+
+      implicit none
+
+      logical,        intent(in) :: rel
+      type(struct_t), intent(in) :: stru
+      character(5),   intent(in) :: WHPSI
+
+      logical   :: large, rlo(1:nloat,0:lomax)
+      integer   :: i, j, k, l, m, jatom, jlo, jrf, imax, irf, nodes, kappa
+      real(DPk) :: cfac, znuc1, RMT2, rnorm, uve, duve, uv, uvb, duvb, duv
+      real(DPk) :: dele, delei, fl, ei, e1, cross, clight, r_m
+      real(DPk) :: pi12lo, pe12lo, xac, xbc, xcc, alonorm
+      real(DPk) :: E(0:LMAX7), ELO(0:LOMAX,NLOAT), PEI(0:LMAX7)
+
+      real(DPk), dimension(Nrad)             :: AE, BE, VR
+      real(DPk), dimension(NRAD,0:LMAX7,NRF) :: RAD1, RAD2
+
 !---------------------------------------------------------------------
       CFAC = 1.0D0 / 274.074D0
       IF(.NOT.REL) CFAC = 1.0D-11
@@ -32,9 +41,9 @@
       NLO = 0
       ALO = 0
       ILO = 0
-      DO 10 JATOM=1,NAT
-        IMAX = JRI(JATOM)
-        ZNUC1 = Znuc (JATOM)
+      DO 10 JATOM=1,STRU%NNEQ
+        IMAX = stru%Npt(JATOM)
+        ZNUC1 = stru%Z(JATOM)
         RMT2 = RMT(JATOM)*RMT(JATOM)
         WRITE(unit_out,2010)JATOM,RMT(JATOM)
 !
@@ -68,7 +77,7 @@
              GOTO 666
             ENDIF
  666        CONTINUE
-            NLO=NLO+(2*L+1)*MULT(JATOM)
+            NLO=NLO+(2*L+1)*stru%MULT(JATOM)
           ENDIF
          ENDDO
    30   CONTINUE
@@ -85,7 +94,7 @@
           E1=EI-DELE
           CALL OUTWIN(REL,VR,RM(1,JATOM),DX(JATOM),IMAX,E1, &
                       FL,UVB,DUVB,NODES,ZNUC1)
-          CALL RINT13(REL,A,B,A,B,RNORM,JATOM)
+          call RINT13(REL,A,B,A,B,RNORM,JATOM, stru)
           RNORM = 1.0D0/SQRT(RNORM)
           DO 50 M=1,IMAX
             AE(M) = RNORM * A(M)
@@ -96,7 +105,7 @@
           E1=EI+DELE
           CALL OUTWIN(REL,VR,RM(1,JATOM),DX(JATOM),IMAX,E1, &
                       FL,UVE,DUVE,NODES,ZNUC1)
-          CALL RINT13(REL,A,B,A,B,RNORM,JATOM)
+          call RINT13(REL,A,B,A,B,RNORM,JATOM, stru)
           RNORM = 1.0D0/SQRT(RNORM)
           UVE  = DELEI*(RNORM*UVE -UVB )
           DUVE = DELEI*(RNORM*DUVE-DUVB)
@@ -109,7 +118,7 @@
 !
           CALL OUTWIN(REL,VR,RM(1,JATOM),DX(JATOM),IMAX,EI, &
                       FL,UV,DUV,NODES,ZNUC1)
-          CALL RINT13(REL,A,B,A,B,RNORM,JATOM)
+          call RINT13(REL,A,B,A,B,RNORM,JATOM, stru)
           RNORM = 1.0D0/SQRT(RNORM)
           DO 70 M=1,IMAX
             A(M) = RNORM*A(M)
@@ -120,7 +129,7 @@
 !
 !         << insure orthogonality of d/dE u_l(r,E) on u_l(r,E) >>
 !
-          CALL RINT13(REL,A,B,AE,BE,CROSS,JATOM)
+          call RINT13(REL,A,B,AE,BE,CROSS,JATOM, stru)
           DO 80 M=1,IMAX
             AE(M) = (AE(M)-CROSS*A(M))
             BE(M) = (BE(M)-CROSS*B(M))
@@ -133,7 +142,7 @@
             RAD2(I,L,1) = B(I)
             RAD2(I,L,2) = BE(I)
           ENDDO
-          CALL RINT13(REL,AE,BE,AE,BE,PEI(L),JATOM)
+          call RINT13(REL,AE,BE,AE,BE,PEI(L),JATOM, stru)
           WRITE(unit_out,2030) L,E(L),P(L,1,JATOM),DP(L,1,JATOM),P(L,2,JATOM),DP(L,2,JATOM)
    40   CONTINUE
 !
@@ -163,7 +172,7 @@
             CALL outwin(rel,vr,RM(1,JATOM),dx(jatom),IMAX,   &
                         ei,fl,uv,duv,nodes,znuc1)
            ENDIF
-           CALL RINT13(REL,A,B,A,B,RNORM,JATOM)
+           call RINT13(REL,A,B,A,B,RNORM,JATOM, stru)
            RNORM = 1.0d0/SQRT(RNORM)
            DO M=1,IMAX
             RAD1(M,L,irf) = RNORM*A(M)
@@ -171,8 +180,8 @@
            ENDDO
            P(L,irf,jatom)  = RNORM*UV
            DP(L,irf,jatom) = RNORM*DUV
-           CALL RINT13(REL,RAD1(1,L,1),RAD2(1,L,1),RAD1(1,L,irf),RAD2(1,L,irf),PI12LO,JATOM)
-           CALL RINT13(REL,RAD1(1,L,2),RAD2(1,L,2),RAD1(1,L,irf),RAD2(1,L,irf),PE12LO,JATOM)
+           call RINT13(REL,RAD1(1,L,1),RAD2(1,L,1),RAD1(1,L,irf),RAD2(1,L,irf),PI12LO,JATOM, stru)
+           call RINT13(REL,RAD1(1,L,2),RAD2(1,L,2),RAD1(1,L,irf),RAD2(1,L,irf),PE12LO,JATOM, stru)
           ENDIF
         
           IF (LAPW(L,JATOM)) THEN
@@ -253,4 +262,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2015-12-29 18:27:54 assman@faepop36.tu-graz.ac.at>
