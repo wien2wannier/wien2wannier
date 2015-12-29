@@ -999,7 +999,7 @@ module structmod
      real(DPk)         :: lat2car(3,3) ! lattice to cartesian transformation
                                        ! (different from brlat in some cases)
      real(DPk)         :: stru2frac(3,3)!‘struct’ to “fractional” coords. 
-     logical           :: ortho        ! orthogonal axes?
+     logical           :: ortho, prim  ! orthogonal axes?  primitive latt.?
      real(DPk)         :: vol          ! u.c. volume
      integer, allocatable, dimension(:,:,:) &
           &            :: rsym, ksym   ! symmetry operations (3×3×N — can be
@@ -1117,7 +1117,9 @@ contains
        br2_rec = br1_rec
 
        rvfac = 2/SQ3
+
        stru%ortho = .false.
+       stru%prim  = .true.
 
     case ('S', 'P')             ! what's ‘S’??
        wurzel = sqrt(sinbc**2 - cosac**2 - cosab**2 + 2*cosbc*cosac*cosab)
@@ -1134,6 +1136,7 @@ contains
        rvfac = 1/wurzel
 
        stru%ortho = all(abs(alpha - PI/2) <= ortho_test)
+       stru%prim  = .true.
 
     case ('F')
        br1_rec(1,1) = pia(1)
@@ -1146,6 +1149,8 @@ contains
 
        rvfac = 4
        stru%ortho = .true.
+       stru%prim  = .false.
+
     case ('B')
        br1_rec(1,1) = pia(1)
        br1_rec(2,2) = pia(2)
@@ -1156,7 +1161,9 @@ contains
        br2_rec(3,:) = pia(3) * (/ 1, 1, 0 /)
 
        rvfac = 2
+
        stru%ortho = .true.
+       stru%prim  = .false.
 
     case ('R')
        br1_rec(1, :) = pia(1) * (/  1, 1, -2 /)/SQ3
@@ -1166,7 +1173,9 @@ contains
        br2_rec = br1_rec
 
        rvfac = 6/SQ3
+
        stru%ortho = .false.
+       stru%prim  = .true.
 
     case ('C')
        ! “defaults”, to be changed in nonorthogonal XZ-case
@@ -1175,7 +1184,8 @@ contains
        br1_rec(3,3) = pia(3)
 
        rvfac = 2
-       stru%ortho = .true.
+       stru%ortho = .true.      ! may be overridden for CXZ
+       stru%prim  = .false.
 
        C: select case (stru%lattic(2:3))
        case ('XY')
@@ -2053,4 +2063,4 @@ END MODULE wien2k
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-22 21:15:25 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2015-12-23 12:34:19 assman@faepop36.tu-graz.ac.at>
