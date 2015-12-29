@@ -1,25 +1,30 @@
 !!! wien2wannier/SRC_wplot/auglo.f
 
-      SUBROUTINE AUGLO(LATOM,IL,ALM,ROTLOC,Y,bk,coef,nmat)
-      use struct
-      use lolog
-      use loabc
-      use param
-      use const, only: R8, C16
-!
-      IMPLICIT REAL(R8) (A-H,O-Z)
-      COMPLEX(C16) ALM((LMAX7+1)*(LMAX7+1),NRF)
-      
-      COMPLEX(C16) COEF(nmat) !changed by pwissgott
-      real(r8) BK(3,NMAT)
-      COMPLEX(C16) PHS,PHSSUM(-LOMAX:LOMAX),Y((LOMAX+1)*(LOMAX+1))
-      DIMENSION  RK(3),ROTLOC(3,3,*)
-!
-      JATOM = IATNR(LATOM)
+      subroutine auglo(latom,il,Alm,rotloc,Y,bk,coef,nmat,stru)
+      use struct,    only: POS
+      use lolog,     only: iLO
+      use loabc,     only: Alo
+      use param,     only: DPk, Lmax7, LOmax, Nrf
+      use structmod, only: struct_t
+
+      implicit none
+
+      integer,        intent(in)    :: latom, Nmat
+      integer,        intent(inout) :: il
+      complex(DPk),   intent(inout) :: Alm((Lmax7+1)*(Lmax7+1),Nrf)
+      complex(DPk),   intent(in)    :: coef(Nmat)
+      real(DPk),      intent(in)    :: BK(3,NMAT), rotloc(3,3,*)
+      type(struct_t), intent(in)    :: stru
+
+      COMPLEX(DPk) :: PHS, PHSSUM(-LOMAX:LOMAX), Y((LOMAX+1)*(LOMAX+1))
+      real(DPk)    :: RK(3), arg
+      integer      :: i, l, lm, m, m1, irf, jlo, jatom, jneq
+
+      JATOM = stru%neq2at(LATOM)
       DO 10 L=0,LOMAX
          DO 20 jlo=1,ilo(L,JATOM)
             PHSSUM = (0.0D0,0.0D0)
-            DO 30 JNEQ=1,MULT(JATOM)
+            DO 30 JNEQ=1,stru%MULT(JATOM)
                DO M1=-L,L
                   IL=IL+1
                   DO I=1,3
@@ -57,4 +62,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2015-12-29 18:35:48 assman@faepop36.tu-graz.ac.at>
