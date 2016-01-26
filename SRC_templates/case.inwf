@@ -9,13 +9,3 @@ BOTH      # compute  Amn | Mmn | both
  2  2 +1  0.70710678  0.00000000
 1         #           [d-z2 orbital]
  2  2  0  1.00000000  0.00000000
-
-
-##/---
-## Local Variables:
-## mode:                  text
-## comment-start:         "#"
-## End:
-##\---
-##
-## Time-stamp: <2015-06-01 21:59:51 elias@hupuntu>
