@@ -164,7 +164,7 @@ status=$?
 
 
 ## Manage output files ##
-spfiles=".wout .werr _band.dat _centres.xyz .chk"
+spfiles=".wout .werr _band.dat _hr.dat _centres.xyz .chk"
 [[ $pp ]] && spfiles=
 [[ $updn ]] || spfiles=
 for s in $spfiles; do
@@ -182,4 +182,4 @@ done
 exit $status
 
 
-## Time-stamp: <2015-09-03 20:13:24 elias@hupuntu>
+## Time-stamp: <2016-01-26 16:59:46 assman@faepop36.tu-graz.ac.at>
