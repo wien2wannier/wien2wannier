@@ -2286,8 +2286,8 @@ cat <<EOF >$def
  18,'$file.vsp$updn',         'old',     'formatted',          0
  21,'$file.psink$updn',       'unknown', 'formatted',          0
  22,'$file.psiarg$updn',      'unknown', 'formatted',          0
- 31,'$file.inwf',             'unknown', 'formatted',          0
- 32,'$file.chk$soupdn',         'old',     'unformatted',        0
+ 31,'$file.inwf$upd',         'unknown', 'formatted',          0
+ 32,'$file.chk$soupdn',       'old',     'unformatted',        0
  90,'$file.tmp$updn',         'unknown', 'unformatted',        0
 EOF
 set def = ($def $wf)
@@ -2811,4 +2811,4 @@ if (-e $running) rm $running
 exit(1)
 
 
-## Time-stamp: <2015-12-21 13:56:42 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-01-26 17:05:39 assman@faepop36.tu-graz.ac.at>
