@@ -555,15 +555,15 @@ subroutine main()
 !       << read in individual eigen states >>
        
         COEF=0
-        DO I=1,NE
-340        READ(unit_vector,IOSTAT=IERR) IE,E,IEABS
-           READ(unit_vector) (CF(IK),IK=1,NMATK)
-           IF (ie>=nemin .and. ie<=nemax) THEN
+        do I=1,NE
+           read(unit_vector,IOSTAT=IERR) IE,E,IEABS
+           read(unit_vector) (CF(IK),IK=1,NMATK)
+           if (ie>=nemin .and. ie<=nemax) then
               do ik=1,nmatk
                  COEF(ik)=COEF(ik)+uu(ie-nemin+1)*cf(ik)
-              enddo
-           ENDIF
-        ENDDO
+              end do
+           end if
+        end do
 !
 !         << normalize the eigen functions properly >>
         COEF = PREFAC*COEF
@@ -647,32 +647,20 @@ subroutine main()
         DO IG=1,NPG
            tot(ig)=tot(ig)+psi(ig)
         ENDDO
-        cycle kpoints
 
 !         << correct for averaged phase factor >>
-        IF(DEPHAS)THEN
-           PHSAV = 0.0D0
-           DO IG=1,NPG
-              IF(ABS(PSI(IG)).GT.1D-18) &
+        if(DEPHAS) then
+           PHSAV = 0
+           do IG=1,NPG
+              if(abs(PSI(IG)) > 1e-18_DPk) &
                    PHSAV =  &
                    PHSAV + mod(atan2(aimag(psi(ig)), real(psi(ig)))+PI, PI)
-           end DO
+           end do
            PHSAV = PHSAV/real(NPG, DPk)
            PHS   = cmplx(cos(PHSAV), -sin(PHSAV), DPk)
-           DO IG=1,NPG
-              PSI(IG) = PSI(IG)*PHS
-           end DO
-        ENDIF
 
-        WRITE(BUF(1:20),"('k =',I5,' , n =',I6)") KKKABS,IEABS
-        WRITE(unit_psink,'(A)') BUF(1:67)
-
-!         << echo wave functions to the output >>
-        write(unit_out, &
-             "( ' band',I4,' : E = ',F12.6,'  (k-point:',I4,')')") &
-             IEABS,E,KKKABS
-
-        if(IE.lt.NE) goto 340
+           PSI = PSI * PHS
+        end if
      end do kpoints
   end do vecfiles
 
@@ -728,4 +716,4 @@ end subroutine main
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 19:57:42 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-01-26 17:02:43 assman@faepop36.tu-graz.ac.at>
