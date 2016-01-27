@@ -4,7 +4,7 @@
 ###
 ###    Wrapper script for ‘join_vectorfiles’
 ###
-### Copyright 2014-2015 Elias Assmann
+### Copyright 2014-2016 Elias Assmann
 
 onintr exit
 set name	= $0
@@ -42,9 +42,11 @@ set exe = $bin/join_vectorfiles
 
 set maxproc = `grep : .processes | grep  -v -e init: -e residue: | wc -l`
 
-if (! $?so) $bin/vec2old -p -local $updn
+## Fetch vector files if needed
+set vector=`grep -c '^ *10 *,' $def.def`
+# vec2old does not work on so
+if ($vector && $?so) $bin/vec2old -p -local $updn
 $exe $def.def $maxproc $cmplx
 exit 0
 
-
-## Time-stamp: <2015-12-21 17:22:53 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-01-27 16:29:55 assman@faepop36.tu-graz.ac.at>

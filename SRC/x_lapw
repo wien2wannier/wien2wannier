@@ -2338,12 +2338,16 @@ set exe=joinvec
 set dopara=1 para=para
 cat <<EOF >$def
   4,'$file.klist',                          'old',    'formatted',  0
- 10,'${scratch}$file.vector$sc$hf$so$updn', 'old',    'unformatted',0
- 11,'$file.vector$sc$hf$so$updn',	    'unknown','unformatted',0
  20,'$file.struct',   	     		    'old',    'formatted',  0
  50,'$file.energy$so$updn',                 'old',    'formatted',  0
  51,'$file.energy$so$updn',                 'unknown','formatted',  0
 EOF
+if (! $?enefile) then
+  cat <<EOF >>$def
+ 10,'${scratch}$file.vector$sc$hf$so$updn', 'old',    'unformatted',0
+ 11,'$file.vector$sc$hf$so$updn',	    'unknown','unformatted',0
+EOF
+endif
 breaksw
 
 case combine_spinfiles:
@@ -2570,6 +2574,7 @@ FLAGS:
 -rxes->         run tetra using case.rxes weight file for RXES-spectroscopy.
 -rxesw E1 E2->  run tetra and create case.rxes file for RXES for energies E1-E2
 -enefile    ->  spaghetti+tetra with case.energy instead case.qtl (only tot-DOS)
+                joinvec: only join case.energy_* files
 -delta->        run arrows program with difference between two structures
 -copy ->        runs pairhess and copies .minpair to .minrestart and .minhess
 -telnes  ->     run qtl after generating case.inq based on case.innes
@@ -2774,7 +2779,7 @@ echo 'x findbands (-emin e -emax E | -all e E) [-up/-dn -so -hf -efermi EF]'
 breaksw
 case join_vectorfiles:
 case joinvec:
-echo 'x joinvec [-up/-dn -so]'
+echo 'x joinvec [-up/-dn -so -enefile]'
 breaksw
 case combine_spinfiles:
 case w2waddsp:
@@ -2804,4 +2809,4 @@ if (-e $running) rm $running
 exit(1)
 
 
-## Time-stamp: <2016-01-27 14:29:45 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-01-27 16:32:44 assman@faepop36.tu-graz.ac.at>
