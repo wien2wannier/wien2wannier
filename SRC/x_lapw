@@ -332,7 +332,6 @@ while ($#argv)
         exit(3)
     endif
     set command = $1
-##    if($command == 'join_vectorfiles') goto continue
     shift; breaksw
   endsw
 end
@@ -417,12 +416,6 @@ set def	= $updn$command$sc.def
 
 switch ($command)
 
-
-##case join_vectorfiles:
-##set exe=($argv1)
-##set def=
-##if($#argv1 < 3) goto help
-##breaksw
 
 case lcore:
 set exe = lcore
@@ -2408,10 +2401,10 @@ case convert_Hamiltonian:
 case convert_hamiltonian:
 case convham
 cat >$def <<EOF
-  4, '$file.klist$band1', 'unknown',    'formatted', 0
-  8, '$file.struct',      'old',        'formatted', 0
-  9, '${file}_hr.dat',    'old',        'formatted', 0
- 10, '$file.hk',    'unknown',    'formatted', 0
+  4, '$file.klist$band1',   'unknown',    'formatted', 0
+  8, '$file.struct',        'old',        'formatted', 0
+  9, '${file}_hr.dat$updn', 'old',        'formatted', 0
+ 10, '$file.hk$updn',       'unknown',    'formatted', 0
 EOF
 set exe=convham
 breaksw
@@ -2811,4 +2804,4 @@ if (-e $running) rm $running
 exit(1)
 
 
-## Time-stamp: <2016-01-26 17:05:39 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-01-27 14:29:45 assman@faepop36.tu-graz.ac.at>
