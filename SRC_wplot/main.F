@@ -65,7 +65,7 @@ subroutine main()
   LOGICAL :: DEPHAS, rotate=.false.
 
   integer :: i, ie, ieabs, ierr, iG, ik, il, il1, imax, index, index1, irf
-  integer :: iskpt, iseig, iloop
+  integer :: iseig, iloop
   integer :: j, j2, j3, jatom, jneq, k, kkk, kkkabs, l, latom, lm, m, mu
   integer :: Nb, NE, NEmax, NEmin, Nmatk, Nmat, Nmt, Npw
   integer :: NP(3), Nskip
@@ -129,7 +129,7 @@ subroutine main()
   LARGE = WHPSI .EQ. 'LARGE'
 
 !     << read in wave function selection (and file handling) >>
-  READ (unit_in,*) ISKPT,ISEIG
+  READ (unit_in,*) ISEIG
   read(unit_inwf,*)
   read(unit_inwf,*)nemin,nemax
   nb=nemax-nemin+1
@@ -641,28 +641,29 @@ subroutine main()
               call WAVSPH(Rgrid(1,ig), PHS, ireg(ig), iri(ig), Psi(ig), Y, &
                    stru%neq2at)
            ENDIF
-!          write(93,*)IG,IREG(IG),PSI(IG)
         end DO
 
         DO IG=1,NPG
            tot(ig)=tot(ig)+psi(ig)
         ENDDO
-
-!         << correct for averaged phase factor >>
-        if(DEPHAS) then
-           PHSAV = 0
-           do IG=1,NPG
-              if(abs(PSI(IG)) > 1e-18_DPk) &
-                   PHSAV =  &
-                   PHSAV + mod(atan2(aimag(psi(ig)), real(psi(ig)))+PI, PI)
-           end do
-           PHSAV = PHSAV/real(NPG, DPk)
-           PHS   = cmplx(cos(PHSAV), -sin(PHSAV), DPk)
-
-           PSI = PSI * PHS
-        end if
      end do kpoints
   end do vecfiles
+
+  !         << correct for averaged phase factor >>
+  if(DEPHAS) then
+     PHSAV = 0
+     do IG=1,NPG
+        if(abs(tot(IG)) > 1e-18_DPk) &
+             PHSAV =  &
+             PHSAV + mod(atan2(aimag(tot(ig)), real(tot(ig)))+PI, PI)
+     end do
+     PHSAV = PHSAV/real(NPG, DPk)
+     PHS   = cmplx(cos(PHSAV), -sin(PHSAV), DPk)
+
+     write(0,*) PHS
+
+     tot = tot * PHS
+  end if
 
   write(unit_psink, 3020)(abs(tot(IG/kkk))**2,IG=1,NPG)
   write(unit_psiarg,3020)(atan2(aimag(tot(IG)), real(tot(IG))),IG=1,NPG)
@@ -716,4 +717,4 @@ end subroutine main
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-02-03 10:52:36 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-02-03 15:40:19 assman@faepop36.tu-graz.ac.at>
