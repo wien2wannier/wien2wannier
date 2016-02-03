@@ -2,10 +2,10 @@ BOTH      # compute  Amn | Mmn | both
  21 23    # band-lo, band-hi
  3   3    # max LJ in exp(ibr) expansion;  #(initial projections)
 2         # #(terms)  [d-xy orbital]
- 2  2 -2  0.00000000  0.70710677   # IAT;  l, m;  Re(coeff), Im(coeff)
- 2  2 +2  0.00000000 -0.70710677
+ 2  2 -2  0 +1   # IAT;  l, m;  Re(coeff), Im(coeff)
+ 2  2 +2  0 -1
 2         #           [d-(x2-y2) orbital]
- 2  2 -1  0.70710678  0.00000000
- 2  2 +1  0.70710678  0.00000000
+ 2  2 -1  1  0
+ 2  2 +1  1  0
 1         #           [d-z2 orbital]
- 2  2  0  1.00000000  0.00000000
+ 2  2  0  1  0
