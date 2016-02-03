@@ -3,7 +3,8 @@
 !!!    Collection of routines for wien2wannier
 !!!
 !!! Copyright 2010-2012 Philipp Wissgott
-!!!           2013-2015 Elias Assmann
+!!!           2013-2016 Elias Assmann
+
 
 !!/=== Things that are exported here =============
 !!
@@ -2063,4 +2064,4 @@ END MODULE wien2k
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-23 12:34:19 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-02-03 15:58:39 assman@faepop36.tu-graz.ac.at>
