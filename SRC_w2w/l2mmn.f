@@ -28,7 +28,7 @@ SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
 
   !------------------------------------------------------------------
 
-  TWOPI=2.D0*PI
+  TWOPI=2*PI
   FOURPI=4*PI
 
   OVERLAP = 0
@@ -208,4 +208,4 @@ END SUBROUTINE l2MMN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-28 15:13:21 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-02-03 14:46:29 assman@faepop36.tu-graz.ac.at>
