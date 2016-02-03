@@ -2275,13 +2275,13 @@ cat <<EOF >$def
   6,'$file.outputwplot$updn', 'unknown', 'formatted',          0
   7,'$file.grid',             'unknown', 'formatted',          0
   8,'$file.struct',           'old',     'formatted',          0
- 10,'${scratch}$file.vector$sc$hf$so$updn','old','unformatted', 0
+ 10,'${scratch}$file.vector$sc$hf$so$updn','old','unformatted',0
  18,'$file.vsp$updn',         'old',     'formatted',          0
  21,'$file.psink$updn',       'unknown', 'formatted',          0
  22,'$file.psiarg$updn',      'unknown', 'formatted',          0
  31,'$file.inwf$upd',         'unknown', 'formatted',          0
  32,'$file.chk$soupdn',       'old',     'unformatted',        0
- 90,'$file.tmp$updn',         'unknown', 'unformatted',        0
+ 33,'$file.wfrot$soupdn',     'unknown', 'formatted',          0
 EOF
 set def = ($def $wf)
 breaksw
@@ -2809,4 +2809,4 @@ if (-e $running) rm $running
 exit(1)
 
 
-## Time-stamp: <2016-01-27 16:32:44 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-02-03 15:38:20 assman@faepop36.tu-graz.ac.at>
