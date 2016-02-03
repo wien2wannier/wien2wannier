@@ -31,7 +31,7 @@ PROGRAM combine_spinfiles
      read(1, *, END=110) iunit, fname, status, form
      open(iunit, FILE=fname, STATUS=status, FORM=form)
   end do
-110 continue 
+110 continue
 
   inquire(unit_mmn1, OPENED=doMmn)
   inquire(unit_amn1, OPENED=doAmn)
@@ -51,7 +51,7 @@ PROGRAM combine_spinfiles
 
         mmnline: do iline = 1,num_bands**2
            read (unit_mmn1, *)          val1
-           read (unit_mmn2, *)          val2      
+           read (unit_mmn2, *)          val2
            write(unit_mmn, '(2F18.12)') val1+val2
         end do mmnline
      end do mmnblock

@@ -1,5 +1,5 @@
 !!! wien2wannier/SRC_trig/join_vectorfiles.f
-!!! 
+!!!
 !!!    Joins multiple WIEN2K vector files to one for further processing
 !!!
 !!!    Usage: join_vectorfiles [-up/-dn] [-c] <case> <numberofparallelfiles>
@@ -49,7 +49,7 @@ program join_vectorfiles
   if (command_argument_count() > 1) then
      call fetcharg(2, iproc)
   end if
-  if (command_argument_count() > 2) then 
+  if (command_argument_count() > 2) then
      call fetcharg(3, cmplxarg)
      if (cmplxarg%s == '-c') then
         complex = .true.
@@ -86,7 +86,7 @@ program join_vectorfiles
 
  files_ene: do j=1,iproc
     call paropen(unit_energy, enefn, iproc, j, FORM='formatted')
- 
+
    atoms_ene: do jatom= 1,stru%nneq
        read(unit_energy, fmt_header) E, eorb_ind
        read(unit_energy, fmt_header) ELO
@@ -98,9 +98,9 @@ program join_vectorfiles
 
     k_points_ene: do jk=1,nkpoints
        read (unit_energy,  fmt_kpt, end=101) &
-            SX, SY, SZ, KNAME, NV, NE, WEIGHT, IPGR 
+            SX, SY, SZ, KNAME, NV, NE, WEIGHT, IPGR
        write(unit_energy2, fmt_kpt) &
-            SX, SY, SZ, KNAME, NV, NE, WEIGHT, IPGR 
+            SX, SY, SZ, KNAME, NV, NE, WEIGHT, IPGR
 
        eig_ene: do jj = 1, NE
           read (unit_energy, *) I, EIGVAL

@@ -1,24 +1,24 @@
 !!! wien2wannier/SRC_w2w/outwin.f
 
-      SUBROUTINE OUTWIN(REL,V,RNOT,DH,JRI,EH,FL,VAL,SLO,Nodes,Z) 
+      SUBROUTINE OUTWIN(REL,V,RNOT,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
 !         Integration der skalarrel. Schroedingergleichung
 ! ----------------------------------------------------------------
 !  Input:
-!    EH    Energie in Hartree 
-!    FL    Drehimpuls 
+!    EH    Energie in Hartree
+!    FL    Drehimpuls
 !    Z     Kernladung
 !    V     rad.sym. Potential in Hartree
 !    RNOT  erster radialer Netzpunkt
 !    DH    log. Schrittweite
-!    JRI   Anzahl radialer Netzpunkte 
+!    JRI   Anzahl radialer Netzpunkte
 !  Output:
 !    VAL,SLO:  Wellenfunktion und Steigung am Kugelrand
-!    Nodes:    Anzahl Knoten 
+!    Nodes:    Anzahl Knoten
 !
-!    Rydberg Einheiten 
+!    Rydberg Einheiten
 !
         USE param
-        
+
         use const, only: R8
 
 ! ----------------------------------------------------------------
@@ -109,7 +109,7 @@
 !
       VAL = A(JRI)/RNET(JRI)
       SLO = DG3/(DH*RNET(JRI))
-      SLO = (SLO-VAL)/RNET(JRI) 
+      SLO = (SLO-VAL)/RNET(JRI)
       RETURN
       END
 

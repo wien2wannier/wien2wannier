@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_w2w/planew.F
 
-      SUBROUTINE PLANEW(NB,num_kpts,NNTOT,maxx,maxy,maxz)     
+      SUBROUTINE PLANEW(NB,num_kpts,NNTOT,maxx,maxy,maxz)
   USE param
   USE struct
   USE xa
@@ -16,26 +16,26 @@
       COMPLEX(C16)       PHSHEL
       COMPLEX(C16), allocatable, dimension(:,:,:) :: A_
       COMPLEX(C16), allocatable, dimension(:,:) :: B_
- 
-      COMMON /GENER/  BR1(3,3),BR2(3,3)                                 
+
+      COMMON /GENER/  BR1(3,3),BR2(3,3)
 
       !allocate memory to arrays
       allocate(FAC(-(2*maxx+1):(2*maxx+1),-(2*maxy+1):(2*maxy+1),-(2*maxz+1):(2*maxz+1)) )
       allocate(A_(NB,0:(2*maxx+1)*(2*maxy+1)*(2*maxz+1)-1,NUM_KPTS) )
       allocate(B_(NB,0:(2*maxx+1)*(2*maxy+1)*(2*maxz+1)-1) )
-      allocate(a_null(0:(2*maxx+1)*(2*maxy+1)*(2*maxz+1)-1,NUM_KPTS) )     
+      allocate(a_null(0:(2*maxx+1)*(2*maxy+1)*(2*maxz+1)-1,NUM_KPTS) )
       allocate(a_null_fin(0:(2*maxx+1)*(2*maxy+1)*(2*maxz+1)-1,NUM_KPTS) )
-    
-      TWOPI=2.D0*PI               
-      m2x=2*maxx+1     
-      m2y=2*maxy+1  
-      m2z=2*maxz+1 
-      max=m2x*m2y*m2z-1 
+
+      TWOPI=2.D0*PI
+      m2x=2*maxx+1
+      m2y=2*maxy+1
+      m2z=2*maxz+1
+      max=m2x*m2y*m2z-1
       write(unit_out,*)'MAX Q:',maxx,maxy,maxz
      t_b=0.d0
      t_prod=0.d0
-       
-      call cputim(t1)  
+
+      call cputim(t1)
       A_=0
       a_null=.false.
       a_null_fin=.false.
@@ -64,8 +64,8 @@
          a_null_fin(index,kkk)=.true.
         ENDDO
        ENDDO
-      ENDDO       
-      
+      ENDDO
+
       FAC=0
       LFIRST=1
       DO JATOM=1,NAT
@@ -100,7 +100,7 @@
       write(unit_out,*)'t_init=',t2-t1
 
 !............................................................................
-!.....READ IN K POINT AND BASIS VECTORS  
+!.....READ IN K POINT AND BASIS VECTORS
       pair_index=0
       DO 3 k1=1,num_kpts
        pair_index=pair_index+1
@@ -131,13 +131,13 @@
        DO 4 k2=1,NNTOT
         if (k2.gt.1) pair_index=pair_index+1
         kkk=KPB(pair_index)
-        !bugfix 07/23 p.wissgott 
+        !bugfix 07/23 p.wissgott
    !    id=-(BQZ(pair_index)*m2y+BQY(pair_index))*m2z-BQX(pair_index)-1
         id=-(BQZ(pair_index)*m2y+BQY(pair_index))*m2x-BQX(pair_index)-1
         SUMA=0
 !debug
  !id=0
-        DO J=0,max   
+        DO J=0,max
          id=id+1
 !        id=j-(BQZ(pair_index)*m2y+BQY(pair_index))*m2z-BQX(pair_index)
          if (a_null(j,kkk).and.0.le.id.and.id.lt.max) then
@@ -151,7 +151,7 @@
         endif
         ENDDO
 
- 
+
         overlap(1:nb,1:nb,pair_index) = overlap(1:nb,1:nb,pair_index) + SUMA
         write(unit_mmn,235)KP(pair_index),KPB(pair_index),BQX1(pair_index),BQY1(pair_index), &
                    BQZ1(pair_index)
@@ -166,7 +166,7 @@
        t_b=t_b+tt2-tt1
        t_prod=t_prod+tt3-tt2
        if (k1.eq.1) write(unit_out,*)'PLANEW TIME PER k-point:',t_b+t_prod
- 3    CONTINUE 
+ 3    CONTINUE
       write(unit_out,*)'t_b=',t_b
       write(unit_out,*)'t_prod=',t_prod
 
@@ -179,10 +179,10 @@
       deallocate(FAC)
       deallocate(A_)
       deallocate(B_)
-      deallocate(a_null)     
+      deallocate(a_null)
       deallocate(a_null_fin)
 
-      END                                                               
+      END
 
 
 !!/---

@@ -2,7 +2,7 @@
 
 SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
   USE param
-  USE struct 
+  USE struct
   USE xa
   USE xa3
   USE amn_mmn
@@ -25,11 +25,11 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
   complex(c16) alm((LMAX2+1)*(LMAX2+1),nb,ndif,nrf)
   !...............................
 
-  DATA CZERO/(0.0D0,0.0D0)/,IMAG/(0.0D0,1.0D0)/         
+  DATA CZERO/(0.0D0,0.0D0)/,IMAG/(0.0D0,1.0D0)/
 
-  !------------------------------------------------------------------     
-  
-  TWOPI=2.D0*PI  
+  !------------------------------------------------------------------
+
+  TWOPI=2.D0*PI
   FOURPI=4*PI
 
   do k=1,NUM_KPTS
@@ -39,15 +39,15 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
         enddo
      enddo
   enddo
-!     ---------------------------------                                 
-!     START LOOP FOR ALL ATOMS BY DO 50                                 
+!     ---------------------------------
+!     START LOOP FOR ALL ATOMS BY DO 50
 !     ---------------------------------
   rewind(unit_vsp)
-  READ(unit_vsp, '(50X,I2,//)') ISCF    
-  LFIRST=1 
-  atoms: DO JATOM=1,NAT 
-     IF(JATOM.GT.1) LFIRST=LFIRST + MULT(JATOM-1)                      
-     ITAP=30+JATOM                                                     
+  READ(unit_vsp, '(50X,I2,//)') ISCF
+  LFIRST=1
+  atoms: DO JATOM=1,NAT
+     IF(JATOM.GT.1) LFIRST=LFIRST + MULT(JATOM-1)
+     ITAP=30+JATOM
      itape=9
      jtape=unit_vsp
      rewind(itape)
@@ -67,12 +67,12 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
            BKY(I)=YK(kkk)+GY(I,kkk)
            BKZ(I)=ZK(kkk)+GZ(I,kkk)
         ENDDO
-        CALL HARMON(N,BKX,BKY,BKZ,LMAX2,FJ,DFJ,RMT(JATOM))    ! calculate Bessel functions j_l(|Q+k|*RMT)        
-        FAC=4.0D0*PI*RMT(JATOM)**2/SQRT(VOL)                              
+        CALL HARMON(N,BKX,BKY,BKZ,LMAX2,FJ,DFJ,RMT(JATOM))    ! calculate Bessel functions j_l(|Q+k|*RMT)
+        FAC=4.0D0*PI*RMT(JATOM)**2/SQRT(VOL)
         ALM=CZERO
         equiv1: DO MU=1,MULT(JATOM)    !  loop over equivalent atoms
            !  write(*,*)"debugatom",jatom,mu
-           latom=lfirst-1+mu  
+           latom=lfirst-1+mu
            if (kkk.eq.1) then
               do i=1,3
                  write(unit_out, '(3f12.6,4x,f12.4)') &
@@ -93,17 +93,17 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
                  bk(2)=bkrot(1)*br1(2,1)+bkrot(2)*br1(2,2)+bkrot(3)*br1(2,3)
                  bk(3)=bkrot(1)*br1(3,1)+bkrot(2)*br1(3,2)+bkrot(3)*br1(3,3)
                  CALL ROTATE (bk,rotloc(1,1,jatom),bkrloc) ! go to local (rotated) coords
-                 CALL YLM (bkrloc,LMAX2,YL) ! calculate Y_lm(Q+k)   
+                 CALL YLM (bkrloc,LMAX2,YL) ! calculate Y_lm(Q+k)
                  arg=bkrot(1)*pos(1,lfirst)+  &
                       bkrot(2)*pos(2,lfirst)+  &
                       bkrot(3)*pos(3,lfirst)+  &
                       bkx(i)*tauij(1,latom)+bky(i)*tauij(2,latom)+bkz(i)*tauij(3,latom)
                  phshel=EXP(imag*(arg*twopi))
-                 INDEX=0                                                           
-                 DO L=0,LMAX2                                                   
-                    MAX=2*L+1                                                         
-                    DO M=1,MAX                                                    
-                       INDEX=INDEX+1 
+                 INDEX=0
+                 DO L=0,LMAX2
+                    MAX=2*L+1
+                    DO M=1,MAX
+                       INDEX=INDEX+1
                        h_yl(index,i3)=conjg(yl(index))*phshel
                     ENDDO
                  ENDDO
@@ -114,16 +114,16 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
                  do i=ii,min(ii+iblock-1,N-(nlo+nlon+nlov))
                     i3=i3+1
                     if (lapw(l)) then
-                       h_AL(i3)=DFJ(L,I)*P(L,2)-FJ(L,I)*DP(L,2)           
-                       h_BL(i3)=FJ(L,I)*DP(L,1)-DFJ(L,I)*P(L,1) 
+                       h_AL(i3)=DFJ(L,I)*P(L,2)-FJ(L,I)*DP(L,2)
+                       h_BL(i3)=FJ(L,I)*DP(L,1)-DFJ(L,I)*P(L,1)
                     else
                        h_AL(i3)=FJ(L,I)/P(L,1)/RMT(JATOM)**2
                        h_BL(i3) = 0.d0
                     endif
                  enddo
                  MAX=2*L+1
-                 DO M=1,MAX                                                    
-                    INDEX=INDEX+1                                                     
+                 DO M=1,MAX
+                    INDEX=INDEX+1
                     i3=0
                     do i=ii,min(ii+iblock-1,N-(nlo+nlon+nlov))
                        i3=i3+1
@@ -197,14 +197,14 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
            ENDIF lo
 !*********************************************************
            INDEX=0
-           DO L=0,LMAX2                                                   
-              MAX=2*L+1                                                         
-              CFAC=IMAG**L                                                      
-              DO M=1,MAX                                                    
-                 INDEX=INDEX+1                                                     
+           DO L=0,LMAX2
+              MAX=2*L+1
+              CFAC=IMAG**L
+              DO M=1,MAX
+                 INDEX=INDEX+1
                  DO NUM=1,NB
-                    DO irf=1,nrf     
-                       ALM(INDEX,NUM,mu,irf)=ALM(INDEX,NUM,mu,irf)*FAC*CFAC 
+                    DO irf=1,nrf
+                       ALM(INDEX,NUM,mu,irf)=ALM(INDEX,NUM,mu,irf)*FAC*CFAC
                     ENDDO
                  ENDDO
               ENDDO
@@ -243,7 +243,7 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
         ENDDO equiv2
      ENDDO kpoints
   ENDDO atoms
-  
+
   DO KKK=1,NUM_KPTS
      DO num2=1,NPROJ
         DO num1=1,NB
@@ -253,7 +253,7 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
         ENDDO
      ENDDO
   ENDDO
-  
+
   RETURN
 END SUBROUTINE l2AMN
 

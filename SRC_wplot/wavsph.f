@@ -22,7 +22,7 @@
 !
 ! Here (*) stands for an optional additional complex conjugation on Y*_lm(...)
 ! WIEN95 : (*) =     and hence   *(*) = *
-! WIEN97 : (*) = *   and hence   *(*) = 
+! WIEN97 : (*) = *   and hence   *(*) =
 ! -----------------------------------------------------------------------
 ! Input:
 ! R    -- grid point in the local coordinate system of atom a

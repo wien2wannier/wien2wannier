@@ -6,7 +6,7 @@ subroutine FINDMT(P, atms, stru, iAt, iLat, iR, R)
       use param,     only: DPk
       use latt,      only: br2
       use structmod, only: struct_t
-      
+
       implicit none
 
       type(struct_t), intent(in)  :: stru
@@ -24,10 +24,10 @@ subroutine FINDMT(P, atms, stru, iAt, iLat, iR, R)
 ! Input:
 ! P(:)  -- the real space point in primitive fractional coordinates
 ! NAT   -- total number of atoms per unit cell
-! ATMS  -- the size of the smallest primitive unit cells surrounding 
+! ATMS  -- the size of the smallest primitive unit cells surrounding
 !          the muffin tin spheres of each group of sym.-eq. atoms
 !
-! module LATT    data on the Bravais lattice 
+! module LATT    data on the Bravais lattice
 !
 ! Output:
 ! IAT   -- the atom a the muffin tin sphere belongs to

@@ -33,7 +33,7 @@ subroutine rotdef(stru, IOP)
 ! IOP(i)   -- the symmetry operation which generates the i-th atom from
 !             the first atom of the corresponding set of inequivalent atoms
 !
-! Caution: The symmetry operations selected here to generate the individual 
+! Caution: The symmetry operations selected here to generate the individual
 !          atoms must precisely co-incide with those selected in LAPW2 !
 
 !

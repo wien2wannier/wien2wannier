@@ -74,7 +74,7 @@ all: real complex
 # we remove ‘*’ because ifort tends to leave other stuff than .mod and
 # .o files
 clean:
-	rm -f $(O_DIR)/* $(R_DIR)/* $(C_DIR)/* 
+	rm -f $(O_DIR)/* $(R_DIR)/* $(C_DIR)/*
 
 distclean: clean
 	rm -f $(R_EXEC) $(C_EXEC)

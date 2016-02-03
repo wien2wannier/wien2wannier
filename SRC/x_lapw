@@ -32,13 +32,13 @@ set sodum			# spinorbit-switch
 #set cmplx
 set cmplx1
 set cmplx2
-set para                        # parallel execution 
-set dopara                        # parallel execution 
+set para                        # parallel execution
+set dopara                        # parallel execution
 set sel                         # standard vector file in lapw7
 set band1                       # regular run in lapw1
-set eece                       
+set eece
 set grr
-set lcore                       
+set lcore
 set hf
 set diaghf
 set nonself
@@ -68,7 +68,7 @@ unset emax1                     # regular run in lapw2
 unset command			#command
 unset file			#file-head
 unset deffile_only		#create just def file
-unset fftstop			#for dstart	
+unset fftstop			#for dstart
 unset vresp			#for lapw2
 unset help_files 		#for lapw2
 unset super                     # for dstart, creates new.clmsum
@@ -76,9 +76,9 @@ unset rxes                      # for tetra, uses rxes-weight file
 unset rxesw                     # for tetra, writes rxes-weight file
 unset delta
 unset copy
-unset txt                       
+unset txt
 set readHinv
-unset writeHinv                  
+unset writeHinv
 unset in1orig
 unset fbz                       # for kgen, generates full BZ mesh
 unset make_inq                  # for qtl, construct case.inq from case.innes
@@ -91,7 +91,7 @@ set scratchstring =
 
 if ( $?SCRATCH && $SCRATCH != '') then
   set scratch=`echo $SCRATCH  | sed -e 's/\/$//'`/ # we are afraid
-				# different settings in different 
+				# different settings in different
 				# computing centers
 			        #use global variable for scratch if set
 endif
@@ -103,7 +103,7 @@ while ($#argv)
     shift; set file = $1
     shift; breaksw
   case -h:
-  case -H: 
+  case -H:
     set help
     shift; breaksw
   case -[t|T]:
@@ -141,27 +141,27 @@ while ($#argv)
     shift; breaksw
   case -it:
     set iter
-    shift; breaksw	
+    shift; breaksw
   case -noHinv:
     set iter
-    unset readHinv                  
-    shift; breaksw	
+    unset readHinv
+    shift; breaksw
   case -noHinv0:
     set iter
     unset readHinv
-    set writeHinv                  
-    shift; breaksw	
+    set writeHinv
+    shift; breaksw
 #  case -ne_it:
 #    shift;set ne_it=$1
-#    shift; breaksw  
+#    shift; breaksw
   case -emin:
     shift;set emin=$1;set emin1
     set testreal=`echo $emin | grep "\." `
     if($#testreal == 0) set emin=${emin}.
-    shift; breaksw  
+    shift; breaksw
   case -emax:
     shift;set emax=$1;set emax1
-    shift; breaksw  
+    shift; breaksw
   case -all:
     shift;set emin=$1;set emin1
     set testreal=`echo $emin | grep "\." `
@@ -169,39 +169,39 @@ while ($#argv)
     shift;set emax=$1;set emax1
     set testreal=`echo $emax | grep "\." `
     if($#testreal == 0) set emax=${emax}.
-    shift; breaksw  
+    shift; breaksw
   case -help_files:
     set help_files
-    shift; breaksw	
+    shift; breaksw
   case -vresp:
     set vresp
-    shift; breaksw	
+    shift; breaksw
   case -eece:
     set eece=eece
-    shift; breaksw	
+    shift; breaksw
   case -grr:
     set grr=grr
-    shift; breaksw	
+    shift; breaksw
   case -orb:
     set orb
-    shift; breaksw	
+    shift; breaksw
   case -nmat_only:
     set nmat_only
-    shift; breaksw	
+    shift; breaksw
   case -nohns:
     set nohns
-    shift; breaksw	
+    shift; breaksw
   case -enefile:
     set enefile
-    shift; breaksw	
+    shift; breaksw
   case -rxes:
     set rxes
-    shift; breaksw	
+    shift; breaksw
   case -rxesw:
     set rxesw
     shift;set rxese1 = $1
     shift;set rxese2 = $1
-    shift; breaksw	
+    shift; breaksw
   case -so:
     set so = 'so'
     set sodum = 'dum'
@@ -270,37 +270,37 @@ while ($#argv)
     shift; breaksw
   case -fermi:
     set fermi
-    shift; breaksw  
+    shift; breaksw
   case -super:
     set super
-    shift; breaksw  
+    shift; breaksw
   case -settol:
     shift;set settol = $1
-    shift; breaksw  
+    shift; breaksw
   case -delta:
     set delta
-    shift; breaksw  
+    shift; breaksw
   case -lcore:
     set lcore=lcore
-    shift; breaksw  
+    shift; breaksw
   case -copy:
     set copy
-    shift; breaksw  
+    shift; breaksw
   case -telnes:             #Kevin Jorissen
     set make_inq
     shift; breaksw
   case -nmr:
     set nmr
     shift; breaksw
-   case -writehs:     
-    set writehs 
-    shift; breaksw     
+   case -writehs:
+    set writehs
+    shift; breaksw
   case -sum
     set Rsum
-    shift; breaksw      
+    shift; breaksw
   case -txt
     set txt
-    shift; breaksw      
+    shift; breaksw
   case -scratch:
     shift;set scratch = $1
     set ncar=`echo $scratch |wc -m`
@@ -314,7 +314,7 @@ while ($#argv)
     else if(! -e "$scratch" ) then
         makescratch_lapw $scratch
     endif
-    shift; breaksw  
+    shift; breaksw
 ## w2w stuff ##
   case -pp:			# passed on to Wannier90
     shift; breaksw
@@ -338,13 +338,13 @@ end
 
 continue:
 
-if !($?file) then 
+if !($?file) then
 set file    = `pwd`
 set file    = $file:t		#tail of file-names
 endif
 
 touch $file.struct
-set cmplx1=`cut -b -6 $file.struct |awk 'BEGIN{c="c"};{if ($0 == "-1 0 0") {getline; {if ($0 == " 0-1 0"){getline; {if ($0 == " 0 0-1"){c= ""}}}}}};END{print c}'` 
+set cmplx1=`cut -b -6 $file.struct |awk 'BEGIN{c="c"};{if ($0 == "-1 0 0") {getline; {if ($0 == " 0-1 0"){getline; {if ($0 == " 0 0-1"){c= ""}}}}}};END{print c}'`
 if !($?cmplx) then
   set cmplx=$cmplx1
   if($cmplx == c ) set cmplx2='-c'
@@ -394,11 +394,11 @@ else if ($command == spinorbitc) then
 else if ($command == opticc) then
   set cmplx = c
   set command = optic
-#Clas-start     
+#Clas-start
 else if ($command == lapwkpc) then
-   set cmplx = c  
-   set command = lapwkp         
- #Clas-end      
+   set cmplx = c
+   set command = lapwkp
+ #Clas-end
 else if ($command == w2wc) then
   set cmplx = c
   set command = w2w
@@ -425,7 +425,7 @@ cat << theend > $def
  8,'$file.vsp$updn',    'old',    'formatted',0
  9,'$file.clmcor$updn', 'unknown','formatted',0
 19,'$file.vns$updn',    'unknown','formatted',0
-20,'$file.struct',      'old',    'formatted',0         
+20,'$file.struct',      'old',    'formatted',0
 21,'$file.scfc$updn',   'unknown','formatted',0
 28,'$file.vrespcor$updn',   'unknown','formatted',0
 29,'$file.corewf$updn',   'unknown','formatted',0
@@ -471,8 +471,8 @@ breaksw
 case kgen:
 set exe = kgen
 cat << theend > $def
- 8,'$file.klist',     'unknown','formatted',0    
-15,'$file.kgen',      'unknown','formatted',0      
+ 8,'$file.klist',     'unknown','formatted',0
+15,'$file.kgen',      'unknown','formatted',0
 66,'$file.outputkgen','unknown','formatted',0
 theend
 if ( $hf == 'hf' ) echo "10,'$file.outputkgenhf','unknown','formatted',0" >>$def
@@ -490,14 +490,14 @@ if ($so == so ) then
     echo "20,'$file.ksym',      'old','formatted',0" >>$def
   else
     echo "$file.ksym not present, using $file.struct because inversion is present"
-    echo "20,'$file.struct',    'old','formatted',0" >>$def   
+    echo "20,'$file.struct',    'old','formatted',0" >>$def
   endif
 else
-  echo "20,'$file.struct',    'old','formatted',0" >>$def   
+  echo "20,'$file.struct',    'old','formatted',0" >>$def
 endif
 breaksw
 
-case lapw0: 
+case lapw0:
 set exe = lapw0$para
 set dopara = 1
 set tmp = ($file.poissn $file.r2v $file.vcoul)
@@ -539,7 +539,7 @@ cat << theend > $def
 17,'$file.vsp${grr2}dn',   'unknown','formatted',0
 18,'$file.vns$grr2$updn','unknown','formatted',0
 19,'$file.vns${grr2}dn',   'unknown','formatted',0
-20,'$file.struct',  'old',    'formatted',0         
+20,'$file.struct',  'old',    'formatted',0
 21,'$file.scf0$grr2',    'unknown','formatted',0
 28,'$file.vrespsum','unknown','formatted',0
 29,'$file.vresp$endvup', 'unknown','formatted',0
@@ -557,7 +557,7 @@ endif
 
 breaksw
 
-case lapw9: 
+case lapw9:
 set exe = lapw9$para
 set dopara = 1
 set tmp = ($file.poissn $file.r2v $file.vcoul)
@@ -596,7 +596,7 @@ cat << theend > $def
 17,'$file.vsp${grr2}dn',   'unknown','formatted',0
 18,'$file.vns$grr2$updn','unknown','formatted',0
 19,'$file.vns${grr2}dn',   'unknown','formatted',0
-20,'$file.struct',  'old',    'formatted',0         
+20,'$file.struct',  'old',    'formatted',0
 21,'$file.scf0$grr2',    'unknown','formatted',0
 28,'$file.vrespsum','unknown','formatted',0
 29,'$file.vresp$endvup', 'unknown','formatted',0
@@ -822,7 +822,7 @@ set exe = lapwso$para
 set dopara = 1
 set def = lapwso.def
 cat << theend > $def
-4 ,'$file.in1$cmplx$sc',   'old',    'formatted',0   
+4 ,'$file.in1$cmplx$sc',   'old',    'formatted',0
 5 ,'$file.inso', 'old',    'formatted',0
 6 ,'$file.outputso',   'unknown','formatted',0
 8 ,'$file.scfso',       'unknown','formatted',0
@@ -886,7 +886,7 @@ set updn_old=$updn{_old}
 if ( $para == para ) then
     set pip = '_1'
     set para
-    endif  
+    endif
 cat << theend > $def
  5,'$file.inorb',         'old',    'formatted',0
  6,'$file.outputorb$updn',   'unknown','formatted',0
@@ -993,30 +993,30 @@ set exe = optimize
   touch optimize.job
   chmod +x optimize.job
 cat << theend > $def
-20,'${file}_initial.struct',      'unknown',    'formatted',0         
+20,'${file}_initial.struct',      'unknown',    'formatted',0
 16,'optimize.job','unknown','formatted',0
-17,'$file.struct',      'old',    'formatted',0         
+17,'$file.struct',      'old',    'formatted',0
 theend
 breaksw
 
 case eosfit:
 set exe = eosfit
 cat << theend > $def
-20,'$file.struct',     'old',    'formatted',0         
-55,'$file.vol',        'old',    'formatted',0         
-66,'$file.outputeos',     'unknown','formatted',0         
-9,'$file.eosfit',     'unknown','formatted',0         
-11,'$file.eosfitb',     'unknown','formatted',0         
+20,'$file.struct',     'old',    'formatted',0
+55,'$file.vol',        'old',    'formatted',0
+66,'$file.outputeos',     'unknown','formatted',0
+9,'$file.eosfit',     'unknown','formatted',0
+11,'$file.eosfitb',     'unknown','formatted',0
 theend
 breaksw
 
 case eosfit6:
 set exe = eosfit6
 cat << theend > $def
-10,'$file.ene',        'old',    'formatted',0         
-11,'$file.latparam',        'old',    'formatted',0         
-12,'$file.enefit',     'unknown','formatted',0         
-66,'$file.outputeos6',     'unknown','formatted',0         
+10,'$file.ene',        'old',    'formatted',0
+11,'$file.latparam',        'old',    'formatted',0
+12,'$file.enefit',     'unknown','formatted',0
+66,'$file.outputeos6',     'unknown','formatted',0
 theend
 breaksw
 
@@ -1186,7 +1186,7 @@ if ( $gw == 'gw' )             echo "48,'$file.gw$updn'      ,'unknown','formatt
 breaksw
 
 case lstart:
-set exe = lstart  
+set exe = lstart
 #touch $file.inst_sigma
 if ($?sigma) then
 #  if(  -z $file.inst_sigma ) then
@@ -1219,7 +1219,7 @@ else
   echo " 5,'$file.inst',          'old',    'formatted'" >>$def
 endif
 breaksw
- 
+
 case mini:
 set exe = mini
 if !(-e $file.clmvalup || -z $file.clmvalup) then
@@ -1404,7 +1404,7 @@ theend
 breaksw
 
 case tetra:
-set exe = tetra  
+set exe = tetra
 if ($hf == hf) then
   set ending = '_fbz'
 endif
@@ -1431,7 +1431,7 @@ endif
 breaksw
 
 case lapw5:
-set exe = lapw5$cmplx  
+set exe = lapw5$cmplx
 cat << theend > $def
 5 ,'$file.in5$cmplx', 'old',    'formatted',0
 6 ,'$file.output5',   'unknown','formatted',0
@@ -1473,7 +1473,7 @@ theend
 breaksw
 
 case lapw3:
-set exe = $command$cmplx  
+set exe = $command$cmplx
 cat << theend > $def
 66,'$file.output3',  'unknown','formatted',0
 4 ,'$file.in2$cmplx','old',    'formatted',0
@@ -1484,7 +1484,7 @@ theend
 breaksw
 
 case symmetry:
-set exe = symmetry  
+set exe = symmetry
 cat << theend > $def
 6, '$file.outputs','unknown','formatted',0
 17,'$file.in2_sy', 'unknown','formatted',0
@@ -1494,7 +1494,7 @@ theend
 breaksw
 
 case symmetso:
-set exe = symmetso  
+set exe = symmetso
 cat << theend > $def
  5,'$file.inso',   'old',    'formatted',0
  6,'$file.outsymso','unknown','formatted',0
@@ -1540,7 +1540,7 @@ breaksw
 
 
 case spaghetti:
-set exe = spaghetti  
+set exe = spaghetti
 set typ=1
 set updnso=$updn
 if ($so == so ) then
@@ -1592,7 +1592,7 @@ theend
 if(! $?enefile) then
   echo "7, '$file.output$typ$updnso',  'old','formatted',0" >>$def
 else
-  echo "8, '$file.energy$so$updn',  'old','formatted',0" >>$def           
+  echo "8, '$file.energy$so$updn',  'old','formatted',0" >>$def
 endif
 #endif
 breaksw
@@ -1964,7 +1964,7 @@ xyz2struct <$file.xyz
 echo "File  xyz2struct.struct   has been created"
 exit(0)
 else
- echo "You need a xyz-file: $file.xyz " 
+ echo "You need a xyz-file: $file.xyz "
  exit(1)
 endif
 breaksw
@@ -1980,7 +1980,7 @@ case plane:
 if (-e plane.input) then
  plane <plane.input
 else
- echo "You need a file:  plane.input (see top of $WIENROOT/SRC_trig/plane.f)" 
+ echo "You need a file:  plane.input (see top of $WIENROOT/SRC_trig/plane.f)"
  exit(1)
 endif
 breaksw
@@ -2081,8 +2081,8 @@ breaksw
 case sgroup:
 set settol1 = `echo "scale = 8; $settol / 10" | bc`
 set exe = $command
-$bin/$command -wi $file.struct  -set-TOL=$settol $file.outputsgroup 
-$bin/$command -wi $file.struct  -set-TOL=$settol1 $file.outputsgroup1 
+$bin/$command -wi $file.struct  -set-TOL=$settol $file.outputsgroup
+$bin/$command -wi $file.struct  -set-TOL=$settol1 $file.outputsgroup1
 set test=`diff $file.outputsgroup $file.outputsgroup1 |wc`
 if ( $test[1] != '0' ) then
     echo "Accuracy problem. Please run with different tolerance (x sgroup -settol $settol1)"
@@ -2422,7 +2422,7 @@ endsw
 
 if ($?deffile_only) then
   if($exe == lapw1para || $exe == lapw1cpara ) then
-     $t $bin/$exe -norun $cmplx2 $scratchstring  $def 
+     $t $bin/$exe -norun $cmplx2 $scratchstring  $def
   endif
   rm $running
   exit(0)
@@ -2458,10 +2458,10 @@ if ( $para == para && $dopara) then
    if ($gw == 'gw') then
       set exe = ($exe -gw)
    endif
-endif  	
+endif
 
 echo $exe >>$running
-$t $bin/$exe $def 
+$t $bin/$exe $def
 
 if($status != 0) then
   echo "error: command   $bin/$exe $def   failed"
@@ -2486,10 +2486,10 @@ if("$lapw2test" == 'lapw2') then
       if( -e .oldin2 ) mv .oldin2 $file.in2$cmplx
     endif
     if(! $?in1orig & ! $?band & ! $?emin1 & ! $?emax1) then
-	if( -e $file.scf2$sc$updn && ! -z $file.scf2$sc$updn) then 
+	if( -e $file.scf2$sc$updn && ! -z $file.scf2$sc$updn) then
 	    if($cmplx == 'c') then
               if(! (-e $file.in1$cmplx$sc && ! -z $file.in1$cmplx$sc)) set cmplx
-            endif 
+            endif
 	    set eferm=`grep ':FER  :' $file.scf2$sc$updn|cut -f 2 -d=`
 	    set efold=`head -1 $file.in1$cmplx${sc}|cut -c11-17 | sed -e "s/[a-zA-Z(,=]//g"`
             if($#efold == 0 ) set efold=0.5
@@ -2513,10 +2513,10 @@ exit(0)
 error:
 rm $running
 
-help:					#help exit 
-cat << theend 
+help:					#help exit
+cat << theend
 
-USAGE:	$0 PROGRAMNAME [flags] 
+USAGE:	$0 PROGRAMNAME [flags]
 
 PURPOSE:runs WIEN executables:  afminput,aim,arrows,broadening,cif2struct,
       clmaddsub,clmcopy,clminter,convham,conv2prim,dftd3,dipan,dmftproj,
@@ -2531,12 +2531,12 @@ FLAGS:
 -f FILEHEAD ->	FILEHEAD for path of struct & input-files
 -t/-T ->	suppress output of running time
 -h/-H ->	help
--d    ->	create only the def-file 
+-d    ->	create only the def-file
 -up   ->	runs up-spin
 -dn   ->	runs dn-spin
 -du   ->	runs up/dn-crossterm
 -sc   ->	runs semicore calculation
--c    ->	complex calculation (no inversion symmetry present)	
+-c    ->	complex calculation (no inversion symmetry present)
 -p    ->        run lapw0/1/2/hf/so/dm/optic in parallel (needs .machines or .processes file)
 -scratch dir/ ->defines (and makes) $SCRATCH variable
 -grr  ->        lapw0 for mBJ or hf (using $file.in0_grr)
@@ -2549,14 +2549,14 @@ FLAGS:
 -nohns ->	runs lapw1 without HNS
 -nmat_only->	runs lapw1 and yields only the matrixsize
 -nmr  ->	runs lapw1 in NMR mode
--in1orig  ->	runs lapw2 but does not modify case.in1 
+-in1orig  ->	runs lapw2 but does not modify case.in1
 -emin X ->	runs lapw2 with EMIN=X (in $file.in2$cmplx)
 -all X Y ->	runs lapw2 with ALL and E-window X-Y (in $file.in2$cmplx)
--qtl  ->        runs lapw2 and calculates QTL 
--alm  ->        runs lapw2 and calculates ALM,BLM 
+-qtl  ->        runs lapw2 and calculates QTL
+-alm  ->        runs lapw2 and calculates ALM,BLM
 -almd  ->       runs lapw2 and calculates ALM,BLM in lapw2 for DMFT (Aichhorn)
 -qdmft ->       runs lapw2 and calculates charges including DMFT (Aichhorn)
--help_files ->  runs lapw2 and creates case.helpXX files 
+-help_files ->  runs lapw2 and creates case.helpXX files
 -vresp->        runs lapw2 and creates case.vrespval (for TAU/meta-GGA)
 -fermi->        runs lapw2 with FERMI switch
 -efg  ->        runs lapw2 with EFG switch
@@ -2630,103 +2630,103 @@ breaksw
 case dstart:
 echo 'x dstart [-up/-dn -c -fft -super -lcore -p]'
 breaksw
-case eosfit: 
+case eosfit:
 echo 'x eosfit'
 breaksw
-case eosfit6 
+case eosfit6
 echo 'x eosfit6'
 breaksw
 case fleur2wien:
 echo 'x fleur2wien'
 breaksw
-case initxspec: 
+case initxspec:
 echo 'x initxspec [-up/-dn]'
 breaksw
-case irrep: 
+case irrep:
 echo 'x irrep [-so -up/-dn -p -hf -scratch dir]'
 breaksw
-case joint: 
+case joint:
 echo 'x joint [-up/-dn -hf -scratch dir]'
 breaksw
-#case join_vectorfiles: 
+#case join_vectorfiles:
 #echo 'x join_vectorfiles [-up/-dn/-so/soup/-sodn] [-c] case number_of_parallel_files'
 #breaksw
-case kgen: 
+case kgen:
 echo 'x kgen [-so -fbz -hf]     (-so switch does not add inversion and uses case.ksym file generated by initso_lapw)'
 breaksw
-case kram: 
+case kram:
 echo 'x kram [-up/-dn]'
 breaksw
-case lapw0: 
+case lapw0:
 echo 'x lapw0 [-p -eece -grr]'
 breaksw
-case lapw1: 
+case lapw1:
 echo 'x lapw1 [-c -up/-dn -it -noHinv -noHinv0 -p -nohns -orb -band -nmat_only -nmr -scratch dir]'
 breaksw
-case lapw2: 
+case lapw2:
 echo 'x lapw2 [-c -up/-dn -p -so -qtl -alm -almd -qdmft -fermi -efg -hf -band -eece -vresp -in1orig -help_files -emin X -all X Y -scratch dir ]'
 breaksw
-case hf: 
+case hf:
 echo 'x hf [-c -up/-dn -p -band -diaghf -gw -nonself -noibz -newklist -redklist -nmrhf -scratch dir]'
 breaksw
-case lapw3: 
+case lapw3:
 echo 'x lapw3 [-c]'
 breaksw
-case lapw5: 
+case lapw5:
 echo 'x lapw5 [-c -up/-dn]'
 breaksw
-case filtvec: 
+case filtvec:
 echo 'x filtvec [-c -up/-dn -hf -scratch dir ]'
 breaksw
-case lapw7: 
+case lapw7:
 echo 'x lapw7 [-c -up/-dn -sel -hf -scratch dir]'
 breaksw
-case lapwdm: 
+case lapwdm:
 echo 'x lapwdm [ -up -p -c -hf  -scratch dir]'
 breaksw
-case lapwso: 
+case lapwso:
 echo 'x lapwso [ -up -p -c -orb -scratch dir ]'
 breaksw
-case lcore: 
+case lcore:
 echo 'x lcore [-up/-dn]'
 breaksw
-case lorentz: 
+case lorentz:
 echo 'x lorentz [-up/-dn]'
 breaksw
-case lstart: 
+case lstart:
 echo 'x lstart [-sigma]'
 breaksw
-case mini: 
+case mini:
 echo 'x mini'
 breaksw
-case mixer: 
+case mixer:
 echo 'x mixer [-eece -orb]'
 breaksw
-case nn: 
+case nn:
 echo 'x nn'
 breaksw
-case optic: 
+case optic:
 echo 'x optic [-c -up/-dn -so -p -hf  -scratch dir]'
 breaksw
-case optimize: 
+case optimize:
 echo 'x optimize'
 breaksw
-case orb: 
+case orb:
 echo 'x orb [ -up/-dn/-du -eece]'
 breaksw
-case pairhess: 
+case pairhess:
 echo 'x pairhess [-copy]'
 breaksw
-case plane: 
+case plane:
 echo 'x plane  ( needs plane.input, see   head $WIENROOT/SRC_trig/plane.f )'
 breaksw
-case qtl: 
+case qtl:
 echo 'x qtl [ -up/-dn -so -p -telnes -hf -scratch dir]'
 breaksw
-case sgroup: 
+case sgroup:
 echo 'x sgroup [-settol 0.000x]  (try 0.001 - 0.0000001)'
 breaksw
-case spaghetti: 
+case spaghetti:
 echo 'x spaghetti [-up/-dn -so -p -hf -enefile]'
 breaksw
 case struct2cif:
@@ -2735,26 +2735,26 @@ breaksw
 case struct_afm_check:
 echo 'x struct_afm_check '
 breaksw
-case sumpara: 
+case sumpara:
 echo 'x sumpara -d [-up/-dn/-dui -eece]     and than '
 echo 'sumpara [up/dn]sumpara.def #_of_processors'
 breaksw
-case supercell: 
+case supercell:
 echo 'x supercell'
 breaksw
-case symmetry: 
+case symmetry:
 echo 'x symmetry'
 breaksw
-case symmetso: 
+case symmetso:
 echo 'x symmetso [-c]'
 breaksw
-case tetra: 
+case tetra:
 echo 'x tetra [-up/-dn -rxes  -rxesw E1 E2 -hf -enefile -so]'
 breaksw
-case txspec: 
+case txspec:
 echo 'x txspec [-up/-dn]'
 breaksw
-case xspec: 
+case xspec:
 echo 'x xspec [-up/-dn]'
 breaksw
 case telnes3:

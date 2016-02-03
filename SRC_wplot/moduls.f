@@ -21,11 +21,11 @@ module param
 !     LAPW1 and LAPW2 they have been added to LAPW7 as well. To allow
 !     access to these optional features four logical control parameters
 !     have been introduced which have to be set to .TRUE. to activate
-!     the LAPW1/LAPW2 features. Any other choice of these parameters 
+!     the LAPW1/LAPW2 features. Any other choice of these parameters
 !     is possible as well, but the code has not been optimized for any
 !     of these alternative choices. For more details see the "trick 17"
 !     sections C:17[ ... C:17] in the code (Uwe Birkenheuer)
-!      
+!
   logical, parameter :: &
        kconjg=.true., UseRot=.true., AddLoc=.true., mvatom=.true.
 !:17]
@@ -69,7 +69,7 @@ module atspdt
   use const, only: DPk
   implicit none
 
-  real(DPk),allocatable :: P(:,:,:),DP(:,:,:) 
+  real(DPk),allocatable :: P(:,:,:),DP(:,:,:)
 end module atspdt
 
 module bessfu
@@ -100,7 +100,7 @@ module latt
 ! BR2(i,:) -- the real space lattice vectors a_i of the primitive unit cell
 ! BR3(i,:) -- the reciprocal lattice vectors b_i of the conventional u.c
 ! BR4(i,:) -- the reciprocal lattice vectors b_i of the primitive unit cell
-  
+
 
   real(DPk) :: BR1(3,3), BR2(3,3), BR3(3,3), BR4(3,3)
 end module latt
@@ -109,10 +109,10 @@ module loabc
   use const, only: DPk
   implicit none
 
-  real(DPk),allocatable :: ALO(:,:,:,:)  
+  real(DPk),allocatable :: ALO(:,:,:,:)
 end module loabc
 
-module lolog 
+module lolog
   implicit none
 
   integer :: NLO
@@ -134,7 +134,7 @@ module radfu
   real(DPk),allocatable ::  RRAD(:,:,:,:)
 end module radfu
 
-module radgrd 
+module radgrd
   use const, only: DPk
   implicit none
 

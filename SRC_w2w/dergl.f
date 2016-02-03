@@ -27,7 +27,7 @@
          r(i) = rnot*exp(dx*(i-1))
          f_l(i) = g_l(i)/r(i)
       enddo
-         
+
 !rschmid
 !  Use unsymmetric 6-point formulae for the first derivative at the
 !  first 3 mesh points.
@@ -50,7 +50,7 @@
             DER1(2)=dfldi(2)/RAD/DX
             RAD=R(3)
             DER1(3)=dfldi(3)/RAD/DX
-!rschmid    
+!rschmid
 !  Use symmetric 7-point formula to generate the first derivative at
 !  all intermediate mesh points.
 !rschmid
@@ -76,7 +76,7 @@
                      / 60.D0
       RAD=R(MESH-2)
       DER1(MESH-2)=dfldi(MESH-2)/RAD/DX
-      
+
       dfldi(MESH-1) = - (-  12.D0*f_l(MESH  ) &
                                 -  65.D0*f_l(MESH-1) &
                                 + 120.D0*f_l(MESH-2) &
@@ -94,7 +94,7 @@
                                 -  75.D0*f_l(MESH-4) &
                                 +  12.D0*f_l(MESH-5) ) &
                      / 60.D0
-     
+
       RAD=R(MESH)
       DER1(MESH)=dfldi(MESH)/RAD/DX
 

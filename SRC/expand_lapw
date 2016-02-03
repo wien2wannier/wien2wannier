@@ -5,13 +5,13 @@
 ###    This is the wien2wannier version of expand_lapw.
 
 set name  = $0
-set bin   = $name:h             
+set bin   = $name:h
 
 if !($#argv == 0) then
     if ($1 == -h || $1 == -H) then
 	echo "expand_lapw expands all WIEN tar-files in the current subdir"
 	exit(1)
-    endif	
+    endif
 endif
 
 #
@@ -19,9 +19,9 @@ echo "WARNING: This will expand all WIEN.tar files \!\!\!"
 echo "It will overwrite all changes you have made previously in the WIEN subdirectories"
 echo "continue (y/n) "
 set b=($<)
-if ($b == 'y') then 
+if ($b == 'y') then
    foreach i ( SRC*.tar TiC.tar fccni.tar TiO2.tar example_struct_files.tar )
-   
+
     if (-e $i) then
 	echo "tar -xf $i"
 	tar -xf $i
@@ -40,7 +40,7 @@ foreach i ( SRC/*_lapw )
             echo "$i   copied and linked to   $fn"
 	  else
 	    echo "$i not found\!"
-	  endif  
+	  endif
 end
 
 
@@ -53,7 +53,7 @@ foreach i ( case.* )
             echo "$i   linked to   $fn"
 	  else
 	    echo "$i not found\!"
-	  endif  
+	  endif
 end
 cd ..
 
@@ -93,11 +93,11 @@ if($status == 1 ) then
        set pythonpath=/usr/bin/python
        echo python not found in your path
        echo BerryPI will not work without Python
-       echo install python2.7 yourself and configure $PWD/config.py 
+       echo install python2.7 yourself and configure $PWD/config.py
      else
-       echo python found at $pythonpath. 
+       echo python found at $pythonpath.
        echo BerryPI requires Python2.7, make sure your Python version is 2.7 or higher.
-     endif 
+     endif
 else
      set numpyver=`$pythonpath -c 'import numpy; print numpy.__version__'`
      if("$numpyver" != "1.6.2") then
@@ -107,7 +107,7 @@ else
 endif
 sed -e "s?DEFAULT_BIN_PATH=.*"'$'"?DEFAULT_BIN_PATH=$PWD?" <config.py >tmp
 sed -e "s?DEFAULT_PYTHON_PATH=.*"'$'"?DEFAULT_PYTHON_PATH=$pythonpath?" <tmp >config.py
-echo "configuring Berry-PI (config.py):" 
+echo "configuring Berry-PI (config.py):"
 echo setting   DEFAULT_BIN_PATH to $PWD
 echo and       DEFAULT_PYTHON_PATH to $pythonpath
 cd ../..

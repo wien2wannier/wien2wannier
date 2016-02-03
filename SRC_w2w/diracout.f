@@ -5,19 +5,19 @@
 
 !rschmid
 !         Integration of Dirac equation.
-! 
+!
 !  Input:
-! 
+!
 !    rel    switch for relativ. - nonrelativ. calculation
 !    v      rad.sym. potential in Hartree
 !    rnot   first radial meshpoint
 !    dstep  log. step
 !    nmax    number of radial meshpoints
 !    eh     energy in hartree
-!    nqk    relativistic quantum number kappa 
+!    nqk    relativistic quantum number kappa
 !    z      charge of nucleus
 !
-!  Output: 
+!  Output:
 !
 !    val,slo:  Wellenfunktion und Steigung am Kugelrand
 !    nodes:    nomber of nodes
@@ -41,7 +41,7 @@
 
 !rschmid
 !     dp    =  large component of the solution of the dirac equation
-!     dq    =  small component of the solution 
+!     dq    =  small component of the solution
 !rschmid
       real(r8)     dp(nrad),dq(nrad)
       DIMENSION  AP(NRAD),BP(NRAD),AE(NRAD),BE(NRAD)
@@ -73,7 +73,7 @@
 
       if (rel) then
          dvc = clight
-      else 
+      else
          dvc = 1.d+10
       endif
       dsal = 2.d0*dvc
@@ -106,12 +106,12 @@
 30    continue
       end if
       dq1 = nqk/iabs(nqk)
-     
+
 !rschmid
 !  Determine expansion of the potential at the origin.
 !rschmid
       test =1.e-8
-    
+
       CALL INOUH (dp,dq,dr,dq1,dfl,dv(1),Z,TEST,nuc,NSTOP)
 
 !rschmid
@@ -152,7 +152,7 @@
 
       val = dp(nmax)/dr(nmax)
       slo = dep(5)/(dstep*dr(nmax))/dvc*2.d0
-      slo = (slo-val)/dr(nmax) 
+      slo = (slo-val)/dr(nmax)
 
       RETURN
       END

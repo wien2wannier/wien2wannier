@@ -272,7 +272,7 @@ contains
   subroutine realloc_r_d1(tf, nd)
     integer,               intent(in)    :: nd
     real(r8), allocatable, intent(inout) :: tf(:)
-                         
+
     real(r8), allocatable :: hilfsfeld(:)
     integer               :: min1
 
@@ -286,7 +286,7 @@ contains
   subroutine realloc_r_d2(tf, nd1, nd2)
     integer,               intent(in)    :: nd1, nd2
     real(r8), allocatable, intent(inout) :: tf(:,:)
-                         
+
     real(r8), allocatable :: hilfsfeld(:,:)
     integer               :: min1, min2
 
@@ -302,7 +302,7 @@ contains
   subroutine realloc_r_d3(tf, nd1, nd2, nd3)
     integer,               intent(in)    :: nd1, nd2, nd3
     real(r8), allocatable, intent(inout) :: tf(:,:,:)
-                         
+
     real(r8), allocatable :: hilfsfeld(:,:,:)
     integer               :: min1, min2, min3
 
@@ -319,7 +319,7 @@ contains
   subroutine realloc_c_d1(tf, nd)
     integer,                   intent(in)    :: nd
     complex(c16), allocatable, intent(inout) :: tf(:)
-                             
+
     complex(c16), allocatable :: hilfsfeld(:)
     integer                   :: min1
 
@@ -334,7 +334,7 @@ contains
   subroutine realloc_c_d2(tf, nd1, nd2)
     integer,                   intent(in)    :: nd1, nd2
     complex(c16), allocatable, intent(inout) :: tf(:,:)
-                             
+
     complex(c16), allocatable :: hilfsfeld(:,:)
     integer                  :: min1, min2
 
@@ -350,7 +350,7 @@ contains
   subroutine realloc_c_d3(tf, nd1, nd2, nd3)
     integer,                   intent(in)    :: nd1, nd2, nd3
     complex(c16), allocatable, intent(inout) :: tf(:,:,:)
-                             
+
     complex(c16), allocatable :: hilfsfeld(:,:,:)
     integer                   :: min1, min2, min3
 
@@ -367,7 +367,7 @@ contains
   subroutine realloc_i_d1(tf, nd)
     integer,              intent(in)    :: nd
     integer, allocatable, intent(inout) :: tf(:)
-                        
+
     integer, allocatable :: hilfsfeld(:)
     integer              :: min1
 
@@ -382,7 +382,7 @@ contains
   subroutine realloc_i_d2(tf, nd1, nd2)
     integer,              intent(in)    :: nd1, nd2
     integer, allocatable, intent(inout) :: tf(:,:)
-                        
+
     integer, allocatable  :: hilfsfeld(:,:)
     integer               :: min1, min2
 
@@ -529,13 +529,13 @@ contains
 
        t%flush = ios==0 ! ios>0 signals error, ios<0 means flush not supported
     end if
-       
+
     call ptick(t)
   end subroutine ptime_setunit
 
   subroutine ptick(timer)
     type(ptimer), target, intent(inout), optional :: timer
-    
+
     type(ptimer), pointer :: t
     t                      => default_timer
     if (present(timer)) t  => timer
@@ -546,7 +546,7 @@ contains
 
   subroutine ptock(timer)
     type(ptimer), target, intent(inout), optional :: timer
-    
+
     real(DPk)             :: cpu2
     integer               :: wall2
     type(ptimer), pointer :: t
@@ -641,7 +641,7 @@ contains
   end function lowercase
 
 
-  integer function line_count(fid)  
+  integer function line_count(fid)
     !>Returns the number of lines in a file.
     !>\param fname Name of the file
     !>\return Number of lines in the file.
@@ -650,7 +650,7 @@ contains
 
     !input parameters
     !character(len=*) fname   !filename of the file to count
-    integer, intent(in) :: fid 
+    integer, intent(in) :: fid
 
     !local parameters
     character(20) dummy
@@ -663,7 +663,7 @@ contains
     do while (.not. ioEndFlag )
        read(fid,"(A20)", iostat=ioStat ) dummy
        if( iostat .eq. 0) line_count = line_count + 1
-       if( iostat < 0 ) ioEndFlag = .TRUE. 
+       if( iostat < 0 ) ioEndFlag = .TRUE.
     end do
     rewind(fid)
   END FUNCTION line_count
@@ -700,7 +700,7 @@ contains
 !!! We would like to use the NEWUNIT keyword to open(), but many
 !!! compilers do not support that yet.  Workaround from
 !!! <http://fortranwiki.org/fortran/show/newunit>:
-!!! 
+!!!
   ! This is a simple function to search for an available unit.
   ! LUN_MIN and LUN_MAX define the range of possible LUNs to check.
   ! The UNIT value is returned by the function, and also by the optional
@@ -732,7 +732,7 @@ module clio
   use iso_fortran_env, only: ERROR_UNIT, OUTPUT_UNIT
   use util,            only: string
   use const,           only: BUFSZ, DPk
-  
+
   implicit none
   private
 
@@ -998,7 +998,7 @@ module structmod
      real(DPk)         :: brlat(3,3)   ! Bravais lattice (row is a vector)
      real(DPk)         :: lat2car(3,3) ! lattice to cartesian transformation
                                        ! (different from brlat in some cases)
-     real(DPk)         :: stru2frac(3,3)!‘struct’ to “fractional” coords. 
+     real(DPk)         :: stru2frac(3,3)!‘struct’ to “fractional” coords.
      logical           :: ortho, prim  ! orthogonal axes?  primitive latt.?
      real(DPk)         :: vol          ! u.c. volume
      integer, allocatable, dimension(:,:,:) &
@@ -1366,7 +1366,7 @@ contains
     case default
        call croak('unknown MODE in inwf, '//inwf%mode)
     end select
-       
+
     read(lun, *) inwf%bmin, inwf%bmax
     if (inwf%bmax < inwf%bmin) &
          call croak('bmin > bmax in inwf')
@@ -1697,10 +1697,10 @@ module Wannier90
      complex(DPk), pointer      :: u_matrix    (:,:,:)
      ! overlaps M_mn are stored in ‘chk’ for restart (#WF × #WF × #nn × #k)
      complex(DPk), allocatable  :: m_matrix(:,:,:,:)
-     !                            [Å] (3 × #WF),        [Å²] (#WF) 
+     !                            [Å] (3 × #WF),        [Å²] (#WF)
      real(DPk),    allocatable :: wannier_centres(:,:), wannier_spreads(:)
      ! kpoints in lattice vecs (3 × #k)
-     real(DPk),    allocatable :: kpt_latt(:,:) 
+     real(DPk),    allocatable :: kpt_latt(:,:)
 
      ! disentanglement parameters
      logical                    :: have_disentangled
@@ -1907,7 +1907,7 @@ module wien2k
 !
     END SUBROUTINE ERRFLG
 
-    
+
     SUBROUTINE ERRCLR(FNAME)
       CHARACTER*(*)      FNAME
 
@@ -1928,7 +1928,7 @@ module wien2k
 !           FORTRAN 77 SUBROUTINE
 !
 ! 2.     PURPOSE
-!           Read the commandline-argument 
+!           Read the commandline-argument
 !           specifying the name of the definition file ('lapw1.def')
 !           and generate the name of the error file by replacing the
 !           extension of the definition filename with '.error'. If no
@@ -1986,7 +1986,7 @@ module wien2k
 !           - if found replace all characters after that '.' with
 !             'error' giving the error filename
 !           - otherwise append '.error' giving the error filename
-!           
+!
 ! 6.     DATE
 !           25. August 1993                                 Version 1.01
 !

@@ -3,7 +3,7 @@
 SUBROUTINE SPCGEN(NAT,RMT,ATMS)
   use param, only: DPk
   use latt,  only: br4
-  
+
   implicit none
 
   integer,   intent(in)  :: NAt
@@ -11,13 +11,13 @@ SUBROUTINE SPCGEN(NAT,RMT,ATMS)
   real(DPk), intent(out) :: ATMS(3,NAT)
 
 ! -----------------------------------------------------------------------
-! For a given lattice basis {a_1,a_2,a_3} each muffin tin sphere 
+! For a given lattice basis {a_1,a_2,a_3} each muffin tin sphere
 !   MTS := { r | |r| < Rmt }
 ! is surrounded by a (smallest) parallel epiped
 !   SPC := Sum(i=1,3) [-s_i,+s_i] * a_i
 ! with s_i > 0 for all three (primitive) lattice vectors a_i  .
 !
-! The mininal realization of such a parallel epiped is given by 
+! The mininal realization of such a parallel epiped is given by
 !   s_i = Rmt * |b_i|
 ! where {b_1,b_2,b_3} is the reciprocal lattice basis of {a_1,a_2,a_3}.
 ! -----------------------------------------------------------------------

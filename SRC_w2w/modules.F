@@ -18,16 +18,16 @@ MODULE param
   real(r8)             clight
   PARAMETER (IBLOCK= 128)
   !.....Optimize IBLOCK and IBLCK for your hardware (32-255)
-  PARAMETER (LMAX2=  5)                                              
-  PARAMETER (LOMAX=   3)                                              
+  PARAMETER (LMAX2=  5)
+  PARAMETER (LOMAX=   3)
   INTEGER        :: NATO =    0
-  PARAMETER (NCOM=   49)                                              
+  PARAMETER (NCOM=   49)
   ! for ncom parameter check format 1003 in l2main.frc
   INTEGER        :: NDIF =    0
   PARAMETER (NGAU= 1500)
   INTEGER        :: NMAT =    0
-  PARAMETER (NRAD=  881)                                              
-  INTEGER        :: NSYM =    0 
+  PARAMETER (NRAD=  881)
+  INTEGER        :: NSYM =    0
   INTEGER        :: NUME =    0
   ! for x-dos set lxdos to 3
   parameter (lxdos= 3)
@@ -91,8 +91,8 @@ MODULE struct
 
     read (unit_struct,1000) title
     read (unit_struct,1010)  lattic,nat,cform,irel
-    REL=.TRUE.                                     
-    IF(IREL.EQ.'NREL') REL=.FALSE.                                    
+    REL=.TRUE.
+    IF(IREL.EQ.'NREL') REL=.FALSE.
     ALLOCATE(aname(nat),mult(nat),jrj(nat),r0(nat),dx(nat),rmt(nat))
     allocate(zz(nat),rotloc(3,3,nat),v(nat))
     v=0.0d0
@@ -115,15 +115,15 @@ MODULE struct
        WRITE (unit_out,6000) jatom, index, mult(jatom)
        STOP
        ENDIF
-       DO m=1,mult(jatom)-1                                     
-        index=index+1                                            
-        READ(unit_struct,1031)iatnr,(pos(j,index),j=1,3)         
+       DO m=1,mult(jatom)-1
+        index=index+1
+        READ(unit_struct,1031)iatnr,(pos(j,index),j=1,3)
        ENDDO
        READ(unit_struct,1050) aname(jatom),jrj(jatom),r0(jatom),rmt(jatom), &
             zz(jatom)
-       dx(jatom)=LOG(rmt(jatom)/r0(jatom)) / (jrj(jatom)-1)           
-       rmt(jatom)=r0(jatom)*EXP( dx(jatom)*(jrj(jatom)-1) )           
-       READ(unit_struct,1051) ((rotloc(i,j,jatom),i=1,3),j=1,3)                
+       dx(jatom)=LOG(rmt(jatom)/r0(jatom)) / (jrj(jatom)-1)
+       rmt(jatom)=r0(jatom)*EXP( dx(jatom)*(jrj(jatom)-1) )
+       READ(unit_struct,1051) ((rotloc(i,j,jatom),i=1,3),j=1,3)
     ENDDO
     ndif=index
     CALL realloc(pos, 3, ndif)
@@ -133,14 +133,14 @@ MODULE struct
     DO j=1,iord
        READ(unit_struct,1101)((iz(j1,j2,j),j1=1,3),tau(j2,j),j2=1,3),inum
     ENDDO
-  
-1000 FORMAT(A80)                                                       
-1010 FORMAT(A4,23X,I3,1x,a4,/,13X,A4,18X,A4)                                 
-1020 FORMAT(6F10.7,10X,F10.7)                                          
-1030 FORMAT(4X,I4,4X,F10.7,3X,F10.7,3X,F10.7,/,15X,I2,17X,I2)          
-1031 FORMAT(4X,I4,4X,F10.7,3X,F10.7,3X,F10.7)                          
-1050 FORMAT(A10,5X,I5,5X,F10.9,5X,F10.5,5X,F10.5)                      
-1051 FORMAT(20X,3F10.8)                                             
+
+1000 FORMAT(A80)
+1010 FORMAT(A4,23X,I3,1x,a4,/,13X,A4,18X,A4)
+1020 FORMAT(6F10.7,10X,F10.7)
+1030 FORMAT(4X,I4,4X,F10.7,3X,F10.7,3X,F10.7,/,15X,I2,17X,I2)
+1031 FORMAT(4X,I4,4X,F10.7,3X,F10.7,3X,F10.7)
+1050 FORMAT(A10,5X,I5,5X,F10.9,5X,F10.5,5X,F10.5)
+1051 FORMAT(20X,3F10.8)
 1101 FORMAT(3(3I2,F11.8/),I8)
 1151 FORMAT(I4)
 6000 FORMAT(///,3X,'ERROR IN LAPW0 : MULT(JATOM)=0 ...', &
@@ -153,7 +153,7 @@ MODULE bessel
   use const
   REAL(R8), ALLOCATABLE  ::rj(:,:),ri_mat(:,:)
 
-CONTAINS 
+CONTAINS
   SUBROUTINE init_bessel(LMAX2,LJMAX,NRAD,NRF)
     L=0
     DO L1=0,LMAX2

@@ -13,7 +13,7 @@ LOGICAL FUNCTION ORTH(A)
 
   !
   ! Function to check whether A is orthogonal or not
-  ! 
+  !
 
   ORTH = .FALSE.
   DO I=1,3

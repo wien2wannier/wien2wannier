@@ -183,7 +183,7 @@
            call RINT13(REL,RAD1(1,L,1),RAD2(1,L,1),RAD1(1,L,irf),RAD2(1,L,irf),PI12LO,JATOM, stru)
            call RINT13(REL,RAD1(1,L,2),RAD2(1,L,2),RAD1(1,L,irf),RAD2(1,L,irf),PE12LO,JATOM, stru)
           ENDIF
-        
+
           IF (LAPW(L,JATOM)) THEN
            XAC=(P(L,irf,jatom)*DP(L,2,JATOM)-DP(L,irf,jatom)*P (L,2,JATOM))*RMT2
            XBC=(P(L,1,jatom)*DP(L,irf,JATOM)-P(L,irf,JATOM)*DP(L,1,jatom))*RMT2
@@ -202,7 +202,7 @@
             xac=sqrt(1+xbc**2+2*xbc*PI12LO)
             ALO(l,jlo,1,jatom)=1.d0/xac
             ALO(l,jlo,irf,jatom)=xbc/xac
-           endif  
+           endif
           ENDIF
   110    CONTINUE
   100   CONTINUE
@@ -213,7 +213,7 @@
          enddo
         ENDDO
 
-!   
+!
 !       << re-scale radial augmentation functions  >>
 !       << with VR just being a working array here >>
         DO 135 I=1,IMAX

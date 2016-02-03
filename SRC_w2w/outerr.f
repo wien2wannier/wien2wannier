@@ -61,7 +61,7 @@
 !           For instance: STDERR = 7 on HP9000 (800/700) under HPUX
 !                                = 0 on IBM RS6000 under AIX
 !                                = 0 on Siemens/Fujitsu S100 under UXP/M
-!           
+!
 ! 4.     REMARKS
 !           In the program LAPW1 (part of the WIEN93 software package),
 !           error messages are written to a special error-file, accessed

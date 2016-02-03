@@ -15,17 +15,17 @@ SUBROUTINE GRDGEN(MODE,NP)
 ! Input Format
 ! ~~~~~~~~~~~~
 ! Record 1: (A4)
-! MODE   --  'ANY '     if an arbitrary list of grid points is to be handled 
+! MODE   --  'ANY '     if an arbitrary list of grid points is to be handled
 !            '<n>D <f>' if an n-dim. grid of grid points is to be handled
 !                       n = 0, 1, 2, 3 and f = ' ', 'O'(ORTHO.), 'N'(ON-ORTHO.)
-! 
+!
 ! MODE == 'ANY '
 ! --------------
 ! Record 2: (*)
 ! NPG  --  total number of grid points
 !
 ! FOR EACH grid point
-!   Record 3: from unit 7 (*) 
+!   Record 3: from unit 7 (*)
 !   RGRID(1:3)  --  the grid points in Cartesian coordinates
 ! DONE
 !
@@ -51,11 +51,11 @@ SUBROUTINE GRDGEN(MODE,NP)
 ! MODE       -- input mode
 !
 ! for MODE = 'ANY'
-! 
+!
 ! for MODE = '<n>D <f>' (n > 0)
 ! NP(a)      -- number of grid points along the a-axis
 !
-! in any case 
+! in any case
 ! NPG        -- total number of grid points
 ! RGRID(:,i) -- the i-th grid point in primitive fractional coordinates
 
@@ -162,7 +162,7 @@ SUBROUTINE GRDGEN(MODE,NP)
 
      NP(NDIM+1 : 3) = 1
 
-     
+
 !!! Write grid info
      select case (Ndim)
      case (-1)
@@ -231,7 +231,7 @@ SUBROUTINE GRDGEN(MODE,NP)
                 STOP 'NON-ORTHOGONAL AXES'
         end do
      end do
-     
+
      ! << b) transform into primitive fractional coordinates >>
      O(:) = BR4(:,1)*X(1,0)+BR4(:,2)*X(2,0)+BR4(:,3)*X(3,0)
      DO K=1,NDIM

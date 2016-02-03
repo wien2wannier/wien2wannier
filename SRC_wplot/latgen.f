@@ -22,9 +22,9 @@ subroutine LATGEN(stru)
 !
 ! Here, the reciprocal lattice vectors are evaluated without a factor of 2pi !
 !
-! Caution: The lattice vectors setup here must precisely co-incide with 
+! Caution: The lattice vectors setup here must precisely co-incide with
 !          those used within LAPW2 !
-! 
+!
       ALPHA = stru%alpha(1) * PI / 180
       BETA  = stru%alpha(2) * PI / 180
       GAMMA = stru%alpha(3) * PI / 180
@@ -87,7 +87,7 @@ subroutine LATGEN(stru)
 !       a_2 = ( a/(2*sqrt(3)), a/2,c/3)
 !       a_3 = (-a/   sqrt(3) ,  0 ,c/3)
 !
-!       Note: Although the trigonal lattice is treated as a primitive 
+!       Note: Although the trigonal lattice is treated as a primitive
 !             lattice the lattice parameter correspond to the surrounding
 !             (non-primitive) hexagonal unit cell.
 !
@@ -108,7 +108,7 @@ subroutine LATGEN(stru)
         BR1 = BR2
       ELSE IF(STRU%LATTIC(1:1).EQ.'F') THEN
 ! -------------------------------------------------------------------------
-!       << face-centered lattice : F a b c * * * 
+!       << face-centered lattice : F a b c * * *
 !
 !       a_1 = ( 0 ,b/2,c/2)
 !       a_2 = (a/2, 0 ,c/2)
@@ -170,7 +170,7 @@ subroutine LATGEN(stru)
 !       a_3 = (    0       ,    0       ,            c            )
 !
 !       monoclinic, orthorhombic
-!       
+!
 !       b_1 = ( 1/(a*sin(bet)),-1/(b*sin(alp)), 0 )
 !       b_2 = ( 1/(a*sin(bet)), 1/(b*sin(alp)), 0 )
 !       b_3 = (-1/(c*tan(bet)),-1/(c*tan(alp)),1/c)
@@ -204,7 +204,7 @@ subroutine LATGEN(stru)
 !       a_3 = (        0        ,           b/2       ,   c/2    )
 !
 !       monoclinic, orthorhombic
-!       
+!
 !       b_1 = ( 1/(a*sin(bet)*sin(gam))               , 0 ,  0 )
 !       b_2 = (-1/(b*tan(gam))+1/(c*tan(bet)*sin(gam)),1/b,-1/c)
 !       b_3 = (-1/(b*tan(gam))-1/(c*tan(bet)*sin(gam)),1/b, 1/c)

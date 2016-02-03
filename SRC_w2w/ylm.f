@@ -17,17 +17,17 @@
 !           for vector V (given in Cartesian coordinates)
 !           are calculated. In the Condon Shortley convention the
 !           spherical harmonics are defined as
-!                             +------+ 
+!                             +------+
 !                        m    |   1     m              im(Phi)
 !           Y(l,m) = (-1)  -+ | -----  P (cos(Theta)) e
 !                            \| 2(Pi)   l
-!                  m      
+!                  m
 !           where P (cos(Theta)) is the normalized Associated Legendre
 !                  l
 !           function. Thus,
 !                                          m      *
 !                            Y(l,-m) = (-1) Y(l,m)
-!           
+!
 !
 ! 3.     USAGE
 !           DOUBLE PRECISION V(3), Y(5*5)
@@ -102,19 +102,19 @@
 !
 !        Start:
 !                        +------+
-!                        |   1     
-!           Y(0,0) =  -+ | -----  
-!                       \| 4(Pi)  
+!                        |   1
+!           Y(0,0) =  -+ | -----
+!                       \| 4(Pi)
 !
 !                                   +------+
-!                                   |   3     
-!           Y(1,0) =  cos(Theta) -+ | -----  
-!                                  \| 4(Pi)  
+!                                   |   3
+!           Y(1,0) =  cos(Theta) -+ | -----
+!                                  \| 4(Pi)
 !
 !                                     +------+
 !                                     |   3    i(Phi)
 !           Y(1,1) =  - sin(Theta) -+ | ----- e
-!                                    \| 8(Pi)  
+!                                    \| 8(Pi)
 !
 !        Formula 1:
 !
@@ -122,32 +122,32 @@
 !                           +--------+
 !                           | (2l+1)   i(Phi)
 !            -sin(Theta) -+ | ------  e       Y(l-1,l-1)
-!                          \|   2l  
+!                          \|   2l
 !
 !        Formula 2:
-!                                  +---------------+  
-!                                  |  (2l-1)(2l+1)   
+!                                  +---------------+
+!                                  |  (2l-1)(2l+1)
 !           Y(l,m) = cos(Theta) -+ | -------------- Y(l-1,m)  -
-!                                 \|   (l-m)(l+m)       
+!                                 \|   (l-m)(l+m)
 !
-!                                    +--------------------+  
+!                                    +--------------------+
 !                                    |(l-1+m)(l-1-m)(2l+1)
 !                              -  -+ |-------------------- Y(l-2,m)
-!                                   \|  (2l-3)(l-m)(l+m)                 
+!                                   \|  (2l-3)(l-m)(l+m)
 !
 !        Formula 3: (not used in the algorithm because of the division
 !                    by sin(Theta) which may be zero)
 !
-!                                    +--------------+  
+!                                    +--------------+
 !                      cos(Theta)    |  4(m+1)(m+1)   -i(Phi)
 !           Y(l,m) = - ---------- -+ | ------------  e       Y(l,m+1) -
-!                      sin(Theta)   \| (l+m+1)(l-m)       
+!                      sin(Theta)   \| (l+m+1)(l-m)
 !
-!                                    +--------------+  
+!                                    +--------------+
 !                                    |(l-m-1)(l+m+2)  -2i(Phi)
 !                              -  -+ |-------------- e        Y(l,m+2)
-!                                   \| (l-m)(l+m+1)                         
-!                                  
+!                                   \| (l-m)(l+m+1)
+!
 ! 6.     DATE
 !           26. April 1994                                   Version 1.2
 !

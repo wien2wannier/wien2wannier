@@ -19,7 +19,7 @@
 !! 51 fermi	'old'     'formatted'
 !!\---
 
-program wf                                                      
+program wf
   use param
   use const,    only: R8, C16, BUFSZ
   use struct,   only: aa,bb,cc, irel, alpha, Nat, lattic, title, init_struct
@@ -35,7 +35,7 @@ program wf
   implicit none
 
   character(len=    3)  :: mode
-  character(len=   11)  :: status,form                                      
+  character(len=   11)  :: status,form
   character(len=   67)  :: errmsg
   character(len=BUFSZ)  :: deffn, errfn, aline
   character(len=BUFSZ)  :: fname, vecfn, enefn
@@ -48,10 +48,10 @@ program wf
 
   real(r8) :: t1, t2, t3, x1, x2
   real(r8) :: br1(3,3), br2(3,3)
-  real(r8) :: efermi 
+  real(r8) :: efermi
   common /GENER/ br1, br2
 
-!-----------------------------------------------------------------------  
+!-----------------------------------------------------------------------
 
   call init_ams
   call gtfnam(deffn,errfn,iproc)
@@ -71,7 +71,7 @@ program wf
   end do def
 20 close(unit_def)
 
-!!!.....READ STRUCT                                                       
+!!!.....READ STRUCT
   CALL init_struct
 !!!....Find nmat and Nk
 !!! Nk could be gotten easier from ‘klist’ -- can we get nmat
@@ -79,7 +79,7 @@ program wf
   Nk=0
 
   enefile: do iloop=1,max(iproc,1)
-     call paropen(unit_ene, ENEFN, iproc, iloop, STATUS='old') 
+     call paropen(unit_ene, ENEFN, iproc, iloop, STATUS='old')
 
      header: DO I=1,NAT
         READ(unit_ene,*)
@@ -98,7 +98,7 @@ program wf
      CLOSE(unit_ene)
   end do enefile
 
-!!!.....READ INPUT AND POTE  
+!!!.....READ INPUT AND POTE
   nnkpt: do
      read(unit_nnkp,'(a80)',end=114) aline
      if(index(aline,'begin kpoints').ne.0) then
@@ -118,7 +118,7 @@ program wf
      endif
   end do nnkpt
 114 close(unit_nnkp)
-  
+
   write(unit_out,*)'NUM_KPTS=',Nk
   write(unit_out,*)'NNTOT=',NNTOT
   write(unit_out,*)'N_pair=',N_pair
@@ -126,9 +126,9 @@ program wf
   MMN=.true.
   AMN=.true.
   READ(unit_in,*)MODE
-  IF (MODE.eq.'MMN') AMN=.false.  
+  IF (MODE.eq.'MMN') AMN=.false.
   IF (MODE.eq.'AMN') MMN=.false.
-  write(unit_out,*)'MODE=' 
+  write(unit_out,*)'MODE='
   if (MMN) write(unit_out,*)'MMN'
   if (AMN) write(unit_out,*)'AMN'
   READ(unit_in,*)NEMIN,NEMAX
@@ -164,7 +164,7 @@ program wf
            READ(unit_in,*,err=925,end=926)IA,L,M,X1,X2
            ind=L*(L+1)+M+1
            C(I,ind,IA)=X1 + (0,1)*X2
-           CENTERATOM(I)=IA 
+           CENTERATOM(I)=IA
         ENDDO
      ENDDO
 
@@ -183,21 +183,21 @@ program wf
 
   call init_bessel(LMAX2,LJMAX,NRAD,NRF)
   call gaunt2
-  WRITE(unit_out,800)                                                      
-  WRITE(unit_out,805)  TITLE    
+  WRITE(unit_out,800)
+  WRITE(unit_out,805)  TITLE
   if (amn) then
-     write(unit_amn,806) TITLE 
+     write(unit_amn,806) TITLE
      write(unit_amn,807) NEMAX-NEMIN+1,Nk,NPROJ
   endif
   if (mmn) then
      write(unit_mmn,806) TITLE
      write(unit_mmn,807) NEMAX-NEMIN+1,Nk,NNTOT
   endif
-  
-  WRITE(unit_out,810)  LATTIC                                              
-  WRITE(unit_out,820)  AA,BB,CC                                            
-  WRITE(unit_out,840)  NAT                                                 
-  WRITE(unit_out,850)  IREL                                                
+
+  WRITE(unit_out,810)  LATTIC
+  WRITE(unit_out,820)  AA,BB,CC
+  WRITE(unit_out,840)  NAT
+  WRITE(unit_out,850)  IREL
 
   CALL LATGEN
   !     rotate boundary vectors
@@ -208,7 +208,7 @@ program wf
      bqz(i) = int(bx*br2(3,1) + by*br2(3,2) + bz*br2(3,3))
   enddo
   write(unit_out,*)' alpha test',(alpha(i),i=1,3)
-  !.....CALCULATE CHARGE DENSITY CLM(R) IN SPHERES,  PARTIAL CHARGES      
+  !.....CALCULATE CHARGE DENSITY CLM(R) IN SPHERES,  PARTIAL CHARGES
 
   ! l2mmn, l2amn need vector file to be open
   call paropen(unit_vector, vecfn, iproc, 1, STATUS='old', FORM='unformatted')
@@ -234,7 +234,7 @@ program wf
   endif
 
   CALL ERRCLR(ERRFN)
-  STOP 'W2W END'                                                 
+  STOP 'W2W END'
 
 !!!        error handling
 !!!
@@ -275,8 +275,8 @@ program wf
   CALL OUTERR('w2w',ERRMSG)
   GOTO 999
 999 STOP 'w2w - Error'
-  !                                                                       
-  !                                                                       
+  !
+  !
 800 FORMAT(////,30X,50(1H-),/,33X,'S T R U C T U R A L   ', &
          & 'I N F O R M A T I O N',/,30X,50(1H-),//)
 805 FORMAT(3X,'SUBSTANCE',20X,'= ',A80,/)

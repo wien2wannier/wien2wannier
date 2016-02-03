@@ -1,5 +1,5 @@
 !!! wien2wannier/SRC_wplot/wplot.f
-!!! 
+!!!
 !!!    Main program ‘wplot’
 !!!
 !!! Copyright 2010-2012 Jan Kuneš, Philipp Wissgott

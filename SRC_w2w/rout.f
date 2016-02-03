@@ -17,10 +17,10 @@
       DO 13 IRF2=1,NRF
       if (abs(RI_MAT(LL,IRF1,IRF2,IS1,IS2)).gt.1d-4) &
       WRITE(unit_out,*)irf1,irf2,'     ',is1,is2,RI_MAT(LL,IRF1,IRF2,IS1,IS2)
- 13   continue 
- 12   continue 
- 11   continue 
- 10   continue 
+ 13   continue
+ 12   continue
+ 11   continue
+ 10   continue
       end
 
 

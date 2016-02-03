@@ -24,7 +24,7 @@ import math
 import glob
 import numpy as np
 
-__version__ = "$version: v1.0.0-6-gceb0691$"
+__version__ = "$version: v1.0.0-78-g2e3e8fb$"
 
 try:
     __version__ = re.search(":\s*(.*?)\s*\$", __version__).group(1)
@@ -176,7 +176,7 @@ verbalize(" + wplot2xsf converting", nwf, "Wannier function"
           + ('s' if nwf>1 else ''), '+')
 verbalize()
 
-if args.struct_file is None: 
+if args.struct_file is None:
     args.struct_file = open("%s.struct"%(args.case))
 
 ## The following two are needed for the shift and are useful only
@@ -330,7 +330,7 @@ def printVectors(file,pattern,readLines=3,waitLines=0,printIndices=(2,3,4),
                         continue
                     if convB2A is True:
                         print>>out, str(b2a(float(lineArr[i])))+' ',
-                    else: 
+                    else:
                         print>>out, str(int(lineArr[i]))+' ',
                 wfOffset=None
                 print>>out

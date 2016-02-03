@@ -1,10 +1,10 @@
 !!! wien2wannier/SRC_wplot/inth.f
 
-      SUBROUTINE INTH (DP,DQ,DV,DR)                                     
-!                                                                       
+      SUBROUTINE INTH (DP,DQ,DV,DR)
+!
 ! INTEGRATION PAR LA METHODE DE ADAMS A 5 POINTS DE LA GRANDE COMPOSANTE
-! DP ET DE LA PETITE COMPOSANTE DQ AU POINT DR,DV ETANT LE POTENTIEL EN 
-! CE POINT                                                              
+! DP ET DE LA PETITE COMPOSANTE DQ AU POINT DR,DV ETANT LE POTENTIEL EN
+! CE POINT
 ! **********************************************************************
       use param
       use ps1, only: dep, deq, db=>dd, dvc, dsal, dk, dm=>dm1
@@ -14,11 +14,11 @@
       real(DPk), intent(out) :: dp, dq
       real(DPk), intent(in)  :: dv, dr
 
-! DEP,DEQ DERIVEES DE DP ET DQ   DB=ENERGIE/DVC    DVC VITESSE DE LA    
-! LUMIERE EN U.A.   DSAL=2.*DVC   DK NOMBRE QUANTIQUE KAPPA             
-! DM=PAS EXPONENTIEL/720.                                               
-! DKOEF1=405./502., DKOEF2=27./502.                                     
-! ********************************************************************* 
+! DEP,DEQ DERIVEES DE DP ET DQ   DB=ENERGIE/DVC    DVC VITESSE DE LA
+! LUMIERE EN U.A.   DSAL=2.*DVC   DK NOMBRE QUANTIQUE KAPPA
+! DM=PAS EXPONENTIEL/720.
+! DKOEF1=405./502., DKOEF2=27./502.
+! *********************************************************************
 
       ! dkoef1 is inferred from old numerical literal
       real(DPk), parameter :: dkoef1 = 475 / 502._DPk
@@ -27,18 +27,18 @@
       real(DPk) :: DPR, DQR, dsum
       integer   :: i
 
-      DPR=DP+DM*((251.*DEP(1)+2616.*DEP(3)+1901.*DEP(5))-(1274.*DEP(2)+2774.*DEP(4)))                                                     
-      DQR=DQ+DM*((251.*DEQ(1)+2616.*DEQ(3)+1901.*DEQ(5))-(1274.*DEQ(2)+2774.*DEQ(4)))                                                     
+      DPR=DP+DM*((251.*DEP(1)+2616.*DEP(3)+1901.*DEP(5))-(1274.*DEP(2)+2774.*DEP(4)))
+      DQR=DQ+DM*((251.*DEQ(1)+2616.*DEQ(3)+1901.*DEQ(5))-(1274.*DEQ(2)+2774.*DEQ(4)))
 
       DO 13 I=2,5
          DEP(I-1)=DEP(I)
          DEQ(I-1)=DEQ(I)
  13   CONTINUE
 
-      DSUM=(DB-DV/DVC)*DR                                               
+      DSUM=(DB-DV/DVC)*DR
 
-      DEP(5)=-DK*DPR + (DSAL*DR+DSUM)*DQR                                 
-      DEQ(5)= DK*DQR -  DSUM*DPR                                            
+      DEP(5)=-DK*DPR + (DSAL*DR+DSUM)*DQR
+      DEQ(5)= DK*DQR -  DSUM*DPR
 
       DP=DP+DM*((106.*DEP(2)+646.*DEP(4)+251.*DEP(5))-(19.*DEP(1)+264.*DEP(3)))
       DQ=DQ+DM*((106.*DEQ(2)+646.*DEQ(4)+251.*DEQ(5))-(19.*DEQ(1)+264.*DEQ(3)))
@@ -46,8 +46,8 @@
       DQ = DKOEF1 * DQ + DKOEF2 * DQR
       DEP(5) = -DK * DP + (DSAL*DR+DSUM)*DQ
       DEQ(5) =  DK * DQ - DSUM * DP
-      RETURN                                                            
-      END                                                               
+      RETURN
+      END
 
 
 !!/---

@@ -1,5 +1,5 @@
 !!! wien2wannier/SRC_w2w/read_vec.f
-!!! 
+!!!
 !!!    Read a ‘vector’ file
 !!!
 !!! Copyright 2010-2012 Jan Kuneš, Philipp Wissgott
@@ -21,7 +21,7 @@ SUBROUTINE read_vec(NEMIN,NEMAX,kkk,maxx,maxy,maxz,efermi)
   integer :: i, j, n, NB, NE, num
 
   real(r8) :: E(1000)
-  
+
   CHARACTER(10)    BNAME
 
   DO I=1,NAT
@@ -49,13 +49,13 @@ SUBROUTINE read_vec(NEMIN,NEMAX,kkk,maxx,maxy,maxz,efermi)
            READ(unit_vector)
         endif
      ENDDO
-     
+
      DO NUM=NEMIN,NEMAX
         NB=NUM-NEMIN+1
         write(unit_eig,"(2I12,F22.16)")NB,kkk, ryd_ev*(E(NUM)-efermi)
      ENDDO
   end do kpoint
-  
+
 998 write(unit_out,*)'vector read in',kkk
 END SUBROUTINE read_vec
 

@@ -27,13 +27,13 @@ PROGRAM write_wplotin
      call fetcharg(iarg, arg)
 
      if (arg%s(1:1).eq.'-') then
-        if (arg%s(2:3) == 'up' .or. arg%s(2:3) == 'dn') then     
+        if (arg%s(2:3) == 'up' .or. arg%s(2:3) == 'dn') then
            !for spin-polarized calc. the argendings have additional up/dn
            woutfileend = ".wout"//arg%s(2:3)
         elseif (arg%s(2:2).eq.'h') then
            write(*,*) "prepares input file `case.wplotin' for wplot"
            write(*,*) 'Usage: write_wplotin [-up/-dn] CASE'
-           stop 
+           stop
         else
            call croak("unknown option: " // trim(arg%s))
         endif

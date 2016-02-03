@@ -11,7 +11,7 @@ SUBROUTINE ATPAR (JATOM,LATOM,itape,jtape)
   real(r8)           :: VR(NRAD)
   LOGICAL            :: rlo(1:nloat, 0:lomax)
   DIMENSION     emist(0:lomax,nloat),E(0:LMAX2),elo(0:LOMAX,nloat), &
-       pei(0:lmax2) 
+       pei(0:lmax2)
 
   COMMON /UHELP/   A(NRAD),B(NRAD),AE(NRAD),BE(NRAD)
   COMMON /ATSPDT/  P(0:LMAX2,nrf),DP(0:LMAX2,nrf)
@@ -19,33 +19,33 @@ SUBROUTINE ATPAR (JATOM,LATOM,itape,jtape)
   COMMON /RINTEG/  RI_MAT(0:lmax2,nrf,nrf)
   common /loabc/   alo(0:lomax,2,nloat,nrf)
 
-2022 FORMAT(3X,4E19.12) 
+2022 FORMAT(3X,4E19.12)
 
   dummy=latom                   ! silence unused variable warning
 
-  !.....READ TOTAL SPHERICAL POTENTIAL V(0,0) OF TAPEjtape=VSP               
-  !     NORM OF V(0,0)=V00(R)*R/SQRT(4.D0*PI)     
+  !.....READ TOTAL SPHERICAL POTENTIAL V(0,0) OF TAPEjtape=VSP
+  !     NORM OF V(0,0)=V00(R)*R/SQRT(4.D0*PI)
 
-  READ(jtape,1980)                                                     
-  READ(jtape,2000)IDUMMY                                              
-  READ(jtape,2031)                                                     
-  READ(jtape,2022)(VR(J),J=1,JRJ(JATOM))                           
-  READ(jtape,2031)                                                     
+  READ(jtape,1980)
+  READ(jtape,2000)IDUMMY
+  READ(jtape,2031)
+  READ(jtape,2022)(VR(J),J=1,JRJ(JATOM))
+  READ(jtape,2031)
   READ(jtape,2030)
 
-  do J=1,JRJ(JATOM)                                             
+  do J=1,JRJ(JATOM)
      VR(J)=VR(J)/2.0D0
   end do
 
-  write(unit_out,*)'ATPAR'  
+  write(unit_out,*)'ATPAR'
   nlo=0
   nlov=0
   nlon=0
   ilo=0
   n_rad=2
 
-  atoms: do I=1,JATOM                                                   
-     READ(itape)E 
+  atoms: do I=1,JATOM
+     READ(itape)E
      READ(itape)elo
      IF(i.EQ.jatom) THEN
         DO l=0,lmax2
@@ -77,9 +77,9 @@ SUBROUTINE ATPAR (JATOM,LATOM,itape,jtape)
         end do
      end do LOs
   end do atoms
-  
+
   if(jatom /= nat) then
-     do I=JATOM+1,NAT  
+     do I=JATOM+1,NAT
         READ(itape) EMIST
         READ(itape) EMIST
         do l=0,lomax
@@ -90,80 +90,80 @@ SUBROUTINE ATPAR (JATOM,LATOM,itape,jtape)
         end do
      end do
   end if
-  
+
   WRITE(unit_out,7) ANAME(JATOM)
   WRITE(unit_out,5) E
   WRITE(unit_out,14)
 
-  lloop: DO l=0,LMAX2                                                  
-     DELE=2.0D-3                                                       
-     DELEI=0.25D0/DELE                                                 
-     FL=L                                                              
-     EI=E(l)/2.0d0        
-     !     CALCULATE ENERGY-DERIVATIVE BY FINITE DIFFERENCE                  
-     !     DELE IS THE UPWARD AND DOWNWARD ENERGY SHIFT IN HARTREES          
+  lloop: DO l=0,LMAX2
+     DELE=2.0D-3
+     DELEI=0.25D0/DELE
+     FL=L
+     EI=E(l)/2.0d0
+     !     CALCULATE ENERGY-DERIVATIVE BY FINITE DIFFERENCE
+     !     DELE IS THE UPWARD AND DOWNWARD ENERGY SHIFT IN HARTREES
 
-     E1=EI-DELE  
+     E1=EI-DELE
      CALL OUTWIN(REL,VR,R0(JATOM),DX(JATOM),JRJ(JATOM),E1,            &
-          FL,UVB,DUVB,NODEL,ZZ(jatom))                                                
-     CALL RINT13(A,B,A,B,OVLP,JATOM)                               
-     TRX=1.0D0/SQRT(OVLP)                                              
-     IMAX=JRJ(JATOM)                                                   
-     DO M=1,IMAX               
-        AE(M)=TRX*A(M)                                                    
-        BE(M)=TRX*B(M)                                                    
+          FL,UVB,DUVB,NODEL,ZZ(jatom))
+     CALL RINT13(A,B,A,B,OVLP,JATOM)
+     TRX=1.0D0/SQRT(OVLP)
+     IMAX=JRJ(JATOM)
+     DO M=1,IMAX
+        AE(M)=TRX*A(M)
+        BE(M)=TRX*B(M)
      end do
-     UVB=TRX*UVB                                                       
-     DUVB=TRX*DUVB                                                     
-     E1=EI+DELE                                                        
+     UVB=TRX*UVB
+     DUVB=TRX*DUVB
+     E1=EI+DELE
      CALL OUTWIN(REL,VR,R0(JATOM),DX(JATOM),JRJ(JATOM),E1,            &
-          FL,UVE,DUVE,NODE,ZZ(jatom))                                                 
-     CALL RINT13(A,B,A,B,OVLP,JATOM)                               
-     TRX=1.0d0/SQRT(OVLP)                                                
-     UVE=DELEI*(TRX*UVE-UVB)                                           
-     DUVE=DELEI*(TRX*DUVE-DUVB)                                        
-     IMAX=JRJ(JATOM)                                                   
-     DO M=1,IMAX                                                    
-        AE(M)=DELEI*(TRX*A(M)-AE(M))                                      
-        BE(M)=DELEI*(TRX*B(M)-BE(M))                                      
+          FL,UVE,DUVE,NODE,ZZ(jatom))
+     CALL RINT13(A,B,A,B,OVLP,JATOM)
+     TRX=1.0d0/SQRT(OVLP)
+     UVE=DELEI*(TRX*UVE-UVB)
+     DUVE=DELEI*(TRX*DUVE-DUVB)
+     IMAX=JRJ(JATOM)
+     DO M=1,IMAX
+        AE(M)=DELEI*(TRX*A(M)-AE(M))
+        BE(M)=DELEI*(TRX*B(M)-BE(M))
      end DO
-     !                                                                       
-     !     CALCULATE FUNCTION AT EI                                          
-     !                                                                       
+     !
+     !     CALCULATE FUNCTION AT EI
+     !
      CALL OUTWIN(REL,VR(1),R0(JATOM),DX(JATOM),JRJ(JATOM),EI,         &
-          FL,UV,DUV,NODES,ZZ(jatom))                                                  
-     CALL RINT13(A,B,A,B,OVLP,JATOM)                               
-     TRX=1.0d0/SQRT(OVLP)                                                
-     P(l,1)=TRX*UV                                                       
-     DP(l,1)=TRX*DUV                                                     
-     IMAX=JRJ(JATOM)                                                   
+          FL,UV,DUV,NODES,ZZ(jatom))
+     CALL RINT13(A,B,A,B,OVLP,JATOM)
+     TRX=1.0d0/SQRT(OVLP)
+     P(l,1)=TRX*UV
+     DP(l,1)=TRX*DUV
+     IMAX=JRJ(JATOM)
      DO M=1,IMAX
         A(M)=TRX*A(M)
         B(M)=TRX*B(M)
      end DO
-     !                                                                       
-     !     INSURE ORTHOGONALIZATION                                          
-     !                                                                       
-     CALL RINT13(A,B,AE,BE,CROSS,JATOM)                            
-     TRY=-CROSS                                                        
-     IMAX=JRJ(JATOM)                                                   
-     DO M=1,IMAX                                                    
+     !
+     !     INSURE ORTHOGONALIZATION
+     !
+     CALL RINT13(A,B,AE,BE,CROSS,JATOM)
+     TRY=-CROSS
+     IMAX=JRJ(JATOM)
+     DO M=1,IMAX
         AE(M)=(AE(M)+TRY*A(M))
         BE(M)=(BE(M)+TRY*B(M))
      end DO
-     IMAX=JRJ(JATOM)                                                   
-     DO I=1,IMAX                                                    
-        RF1(I,l,1)=A(I)                                              
-        RF2(I,l,1)=B(I)                                           
-        RF1(I,l,2)=AE(I)                                              
-        RF2(I,l,2)=BE(I)                                               
+     IMAX=JRJ(JATOM)
+     DO I=1,IMAX
+        RF1(I,l,1)=A(I)
+        RF2(I,l,1)=B(I)
+        RF1(I,l,2)=AE(I)
+        RF2(I,l,2)=BE(I)
      end DO
-     P(l,2)=UVE+TRY*P(l,1)                                          
-     DP(l,2)=DUVE+TRY*DP(l,1) 
-     CALL RINT13(AE,BE,AE,BE,PEI(l),JATOM)                            
+     P(l,2)=UVE+TRY*P(l,1)
+     DP(l,2)=DUVE+TRY*DP(l,1)
+     CALL RINT13(AE,BE,AE,BE,PEI(l),JATOM)
      WRITE(unit_out,8) L,P(l,1),DP(l,1),P(l,2),DP(l,2)
   end DO lloop
-!                         
+!
 ! nun fur lo
 !
   loloop: DO l=0,lomax
@@ -217,7 +217,7 @@ SUBROUTINE ATPAR (JATOM,LATOM,itape,jtape)
   write(unit_out,651)(n_rad(l),l=0,lmax2)
 651 format('number of rad. functions per L:',8I3)
 
-  RETURN                                                            
+  RETURN
 
 5 FORMAT(10X,' ENERGY PARAMETERS ARE',7F7.2)
 7 FORMAT(/10X,'ATOMIC PARAMETERS FOR ',A10/)

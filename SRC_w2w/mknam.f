@@ -1,8 +1,8 @@
 !!! wien2wannier/SRC_w2w/mknam.f
 
       SUBROUTINE MKNAM(FNAME,OLDNAM,ILOOP)
-      
-! create a filename with running index ILOOP from 
+
+! create a filename with running index ILOOP from
 ! a given 'parental' file name OLDNAM
 
       CHARACTER(180) FNAME,OLDNAM

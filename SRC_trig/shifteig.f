@@ -12,7 +12,7 @@ PROGRAM shift_energy
   use wien2k,     only: gtfnam, errflg, errclr
   use util,       only: string
   use const,      only: DPk, BUFSZ
-  
+
   implicit none
 
   integer, parameter :: unit_eig=11, Ninit=10, Ninc=10

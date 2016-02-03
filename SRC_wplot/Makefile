@@ -77,7 +77,7 @@ complex: $(C_EXEC)
 all: real complex
 
 clean:
-	rm -f $(O_DIR)/* $(R_DIR)/* $(C_DIR)/* 
+	rm -f $(O_DIR)/* $(R_DIR)/* $(C_DIR)/*
 
 distclean: clean
 	rm -f $(R_EXEC) $(C_EXEC)

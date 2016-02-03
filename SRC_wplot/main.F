@@ -292,7 +292,7 @@ subroutine main()
         CALL LOCDEF(ROT0,IMAT(1,1,IOP(INDEX)),ROTLOC(1,1,INDEX))
      end DO
   end DO
-  
+
   write(unit_out, &
        "(/' SYMMETRY ADAPTED LOCAL ROTATION MATRICES' &
        & /' ----------------------------------------' &
@@ -324,7 +324,7 @@ subroutine main()
 !     << find the surrounding primitve cell SPC of each atomic sphere >>
 ! ---------------------------------------------------------------
 ! SPC := Sum(i=1,3) [-s_i,+s_i] * a_i  with  s_i > 0
-! and {a_1,a_2,a_3} being the primitive lattice vectors 
+! and {a_1,a_2,a_3} being the primitive lattice vectors
 ! ---------------------------------------------------------------
   CALL SPCGEN(stru%Nneq,RMT,ATMS)
   write(unit_out, &
@@ -346,9 +346,9 @@ subroutine main()
 ! if in muffin tin sphere around R(NX,NY,NZ) + R0(IAT)
 ! IREG (  i) -- the atom IAT for the i-th grid point
 ! ILAT (:,i) -- the lattice vector (NX,NY,NZ) for the i-th grid point
-!               in primitive fractional coordinates 
+!               in primitive fractional coordinates
 ! IRI  (  i) -- the radial interval the i-th grid point falls in
-! RGRID(:,i) -- the value r - R - R0 for the i-th grid point 
+! RGRID(:,i) -- the value r - R - R0 for the i-th grid point
 !               in the local Cartesian coordinates of atom IAT
 ! -------------------------------------------------------------------------
   NREG(:) = 0
@@ -501,7 +501,7 @@ subroutine main()
            endif
            uu(j)=local_contribution
         enddo
-        
+
         IF(IERR.GT.0) KKKABS = KKK
         NPW = NMATK - NLO
 
@@ -553,7 +553,7 @@ subroutine main()
         call BESSEL(NPW,NMATK,BK,NMT,RAD,LMAX7,FJ,DFJ)
 !
 !       << read in individual eigen states >>
-       
+
         COEF=0
         do I=1,NE
            read(unit_vector,IOSTAT=IERR) IE,E,IEABS
@@ -581,7 +581,7 @@ subroutine main()
 !
 ! Here (*) stands for an optional additional complex conjugation on Y*_lm(...)
 ! WIEN95 : (*) =     and hence   *(*) = *
-! WIEN97 : (*) = *   and hence   *(*) = 
+! WIEN97 : (*) = *   and hence   *(*) =
 ! ----------------------------------------------------------------------------
         IL1 = NPW
         LATOM  = 0
@@ -596,11 +596,11 @@ subroutine main()
               call auglo(latom, il, Alm, rotloc, Y, bk, coef, nmatk, &
                    stru)
               IF (JNEQ.EQ.STRU%MULT(JATOM)) IL1=IL
-                          
+
 !             << add 4pi*i^l Rmt^2 factor to ALM, BLM and CLM and >>
 !             << set up the eigen state's augmentation functions  >>
 ! ----------------------------------------------------------------------------
-! w_lm,a(r) = 4pi*i^l Rmt_a^2 * [ A_l,m,a *      u_l,a(r,E _l,a) + 
+! w_lm,a(r) = 4pi*i^l Rmt_a^2 * [ A_l,m,a *      u_l,a(r,E _l,a) +
 !                                 B_l,m,a * d/dE u_l,a(r,E _l,a) +
 !                                 C_l,m,a *      u_l,a(r,E'_l,a) ]
 ! ----------------------------------------------------------------------------

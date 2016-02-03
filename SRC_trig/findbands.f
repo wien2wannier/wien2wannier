@@ -30,7 +30,7 @@ program find_bands
      read(1, *, END=110) iunit, fname, status, form
      open(iunit, FILE=fname, STATUS=status, FORM=form)
   end do
-110 continue 
+110 continue
 
   read(unit_in,*) emin, emax, efermi
 
@@ -68,7 +68,7 @@ program find_bands
 
            if (eband > emax) goto 130
 
-           if (eband >= emin) then 
+           if (eband >= emin) then
               nband = nband+1
            else
               loband = loband+1

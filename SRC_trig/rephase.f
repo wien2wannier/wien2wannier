@@ -36,7 +36,7 @@ PROGRAM rephase
   character(70) dummy,startmessage
   character(8) inwffileend
   character(9) psiargfileend
-  real(DPk), allocatable :: phases(:,:)!phases 
+  real(DPk), allocatable :: phases(:,:)!phases
   integer, allocatable :: iphases(:) !integer index version of phases int(phases*100)
   integer :: maxel ! element in phase mesh with maximal occurance
   real(DPk) :: mphase !median phase from psiarg file
@@ -59,13 +59,13 @@ PROGRAM rephase
      do j=1,iarg
         call get_command_argument(j,dummy)
         if (dummy(1:1).eq.'-') then
-           if ((dummy(2:3).eq.'up').or.(dummy(2:3).eq.'dn')) then     
+           if ((dummy(2:3).eq.'up').or.(dummy(2:3).eq.'dn')) then
               !for spin-polarized calc. the fileendings have additional up/dn
               inwffileend = ".inwf"//dummy(2:3)
               psiargfileend = ".psiarg"//dummy(2:3)
               startmessage = "++ Rewriting a spin-polarized input file:"//dummy(2:3)//" ++"
            elseif (dummy(2:4).eq.'wf=') then
-              !if this option is given, only the wannier function following the flag is 
+              !if this option is given, only the wannier function following the flag is
               !rephased, otherwise all Wannier function are rephased
               read(dummy(5:6),"(I2)")widx
            elseif (dummy(2:2).eq.'w') then
@@ -184,7 +184,7 @@ PROGRAM rephase
         enddo
         counter(:) = 0
         do j2=1,pcounttmp-1
-           !count phases falling in certain slices of the phase mesh 
+           !count phases falling in certain slices of the phase mesh
            counter(iphases(j2)) = counter(iphases(j2)) + 1
         enddo
         !find the slice with maximal occurance

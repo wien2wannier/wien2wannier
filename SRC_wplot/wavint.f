@@ -11,7 +11,7 @@ SUBROUTINE WAVINT(R,NPW,PSI,bk,coef,nmat)
   complex(DPk), intent(in)  :: coef(NMat)
 
 ! evaluation of the wave function in the interstitial region:
-! psi(r) = Sum(K) c_K/sqrt(V) e^i(K+k)r 
+! psi(r) = Sum(K) c_K/sqrt(V) e^i(K+k)r
 ! --------------------------------------------------------------
 ! Input:
 ! R    -- grid point in (gobal) Cartesian coordinates

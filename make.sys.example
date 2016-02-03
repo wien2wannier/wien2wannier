@@ -26,7 +26,7 @@ R_LIBS 	?= -llapack -lblas
 # FFLAGS += -I$(MKLROOT)/include/intel64/lp64 -I$(MKLROOT)/include
 
 #R_LIBS 	?= -llapack -lf77blas -lcblas -latlas
-#R_LIBS 	?= -llapack 
+#R_LIBS 	?= -llapack
 
 # $(MODOPT) should be the option that tells the compiler where to put
 # .mod files

@@ -1,29 +1,29 @@
 !!! wien2wannier/SRC_w2w/abc.f
 
-subroutine abc(l,jatom,pei,pi12lo,pe12lo,jlo,lapw)                           
+subroutine abc(l,jatom,pei,pi12lo,pe12lo,jlo,lapw)
   USE param
   USE struct
 
   use const, only: R8
 
-  !     abc calculates the cofficients a,b,c of the lo    
+  !     abc calculates the cofficients a,b,c of the lo
   IMPLICIT REAL(R8) (A-H,O-Z)
   common /loabc/   alo(0:lomax,nloat,nrf)
   COMMON /ATSPDT/  P(0:LMAX2,nrf),DP(0:LMAX2,nrf)
-  logical lapw     
-  !---------------------------------------------------------------------  
-  !      
+  logical lapw
+  !---------------------------------------------------------------------
+  !
   do irf=1,nrf
      alo(l,jlo,irf)=0.d0
   end do
   if (lapw) then
-     irf=2+jlo                                    
+     irf=2+jlo
      xac=p(l,irf)*dp(l,2)-dp(l,irf)*p(l,2)
      xac=xac*rmt(jatom)*rmt(jatom)
      xbc=p(l,irf)*dp(l,1)-dp(l,irf)*p(l,1)
      xbc=-xbc*rmt(jatom)*rmt(jatom)
      clo=xac*(xac+2.0D0*pi12lo)+xbc* &
-          (xbc*pei+2.0D0*pe12lo)+1.0D0  
+          (xbc*pei+2.0D0*pe12lo)+1.0D0
      clo=1.0D0/sqrt(clo)
      write(unit_out,*)clo
      if (clo.gt.2.0D2) clo=2.0d2

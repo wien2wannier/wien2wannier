@@ -4,7 +4,7 @@
 ###
 ### Copyright 2013-2015 Elias Assmann
 
-git-describe := $(lastword '$version: v1.0.0-28-g78bd696$')
+git-describe := $(lastword '$version: v1.0.0-78-g2e3e8fb$')
 
 VERSION := $(git-describe)
 

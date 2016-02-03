@@ -247,7 +247,7 @@ contains
        print '(A)', 'Bohr'
     else
        print '(A)', trim(line)
-       
+
        read(*, '(A)') line
        unit: if (index(adjustl(lowercase(line)), 'bohr') == 1) then
           print '(A)', trim(line)
@@ -391,7 +391,7 @@ contains
        print '("!!! BZ-Path for band structure !!!")'
        if (.not. bandsplot_done) print '("bands_plot = ", L1)', bands_plot
        print '(A)', head
-    elseif (write_kpath) then    ! otherwise, print_block() will 
+    elseif (write_kpath) then    ! otherwise, print_block() will
        print '(A)', trim(line)   ! include the ‘begin’
     end if
 

@@ -1,7 +1,7 @@
 !!! wien2wannier/SRC_w2w/cputim_sgi.f
 
       SUBROUTINE CPUTIM(TIME)
-      real*8 time                                                  
+      real*8 time
       time=second()
       end
       function second(dummy)

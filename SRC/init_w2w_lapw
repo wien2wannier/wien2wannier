@@ -142,9 +142,9 @@ while ($#argv)
         set numk=( $numk:q "$1" )
         shift
       end
-      breaksw      
+      breaksw
 
-    case -e: 
+    case -e:
       shift; set stopafter = $1; sb
     case -s:
       shift; set next  = $1; sb
@@ -187,13 +187,13 @@ if ($next == "") then
   set next = 'kgen'		#default start with kgen
 else if ($next == 'stop' ) then
   set next = 'kgen'	        #default start with kgen
-else if !($next == 'kgen') then 
+else if !($next == 'kgen') then
   set b=r
   if (! $?batch) then
     echo "continue with " $next  "or restart with kgen?  (c/r)"
     set b=($<)
   endif
-  if ($b == 'r') then 
+  if ($b == 'r') then
     set next='kgen'
   endif
 endif
@@ -201,15 +201,15 @@ endif
 
 start:
 printf "\n\n    start \t(%s) " "`date`"	> $dayfile
-echo next is $next 
+echo next is $next
 goto $next
 
 
 kgen:
 if (! $?batch) then
   total_exec kgen -fbz
-  echo "-----> check $file.klist for generated K-points" 
-  editor $file.klist 
+  echo "-----> check $file.klist for generated K-points"
+  editor $file.klist
   echo "-----> continue with findbands or execute kgen again (c/e)?"
   set b=($<)
   if ($b == 'e') goto kgen
@@ -269,7 +269,7 @@ if (! $?batch) then
   output write_inwf -f $file
   $bin/write_inwf -f $file
   teststatus
-  echo "-----> check $file.inwf for bands, ljmax and projections" 
+  echo "-----> check $file.inwf for bands, ljmax and projections"
   editor $file.inwf
   echo "-----> continue with write_win or execute write_inwf again (c/e)?"
   set b=($<)
@@ -302,7 +302,7 @@ wannier90.x:
 wannier90:
 w90:
 nnkp:
-if (! $?batch) echo "-----> wannier90.x -pp computes kmesh..." 
+if (! $?batch) echo "-----> wannier90.x -pp computes kmesh..."
 total_exec wannier90 -pp
 if (! $?batch) echo "-----> wannier90.x done"
 
@@ -310,13 +310,13 @@ if (! $?batch) echo "-----> wannier90.x done"
 stop:					#normal exit
 printf "%s\n\n" "init_w2w finished" 	>> $dayfile
 printf "\n   stop\n"			>> $dayfile
-exit 0 
+exit 0
 
-error:					#error exit	
+error:					#error exit
 printf "\n   stop error\n"		>> $dayfile
 exit 1
 
-help:					#help exit 
+help:					#help exit
 cat << theend
 PROGRAM:	$0
 

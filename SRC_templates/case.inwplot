@@ -5,5 +5,5 @@
  0  0  1  1   #  z-end:  x, y, z; idiv
 20 20 20      # #(grid points) in x, y, z dir.
 NO            # DEP(HASING) | NO (POST-PROCESSING)
-ANG   LARGE   # units: ANG|ATU;  rel. comp.: LARGE|SMALL 
- 1            # Wannier function index   
+ANG   LARGE   # units: ANG|ATU;  rel. comp.: LARGE|SMALL
+ 1            # Wannier function index

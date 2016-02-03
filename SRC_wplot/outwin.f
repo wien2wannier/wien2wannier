@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_wplot/outwin.f
 
-SUBROUTINE OUTWIN(REL,V,RI,DH,JRI,EH,FL,VAL,SLO,Nodes,Z) 
+SUBROUTINE OUTWIN(REL,V,RI,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
 !     Integration of the scalar-relativistic Schroedinger equation
 !     with psi(r) = u_l(|r|) Y_lm(r/|r|)
 ! ----------------------------------------------------------------
@@ -10,7 +10,7 @@ SUBROUTINE OUTWIN(REL,V,RI,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
 !    RI(:) radial mesh points
 !    DH    (logical) step width
 !    JRI   number of radial mesh points
-!    EH    energy in Hartree 
+!    EH    energy in Hartree
 !    FL    angular momentum
 !    Z     charge of nucleus
 !
@@ -23,7 +23,7 @@ SUBROUTINE OUTWIN(REL,V,RI,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
 !    A(:)   r * u _l(r)     at mesh points
 !    B(:)   r * us_l(r) * c at mesh points (2nd rel. component)
 !
-!           Note, that here <(u,us)|(v,vs)> := <u|v> + <us|vs>  
+!           Note, that here <(u,us)|(v,vs)> := <u|v> + <us|vs>
 !
 !  Rydberg units
 !
@@ -31,7 +31,7 @@ SUBROUTINE OUTWIN(REL,V,RI,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
 
   use param, only: DPk, Nrad, clight
   use work1, only: A, B
-  
+
   implicit none
 
   logical,   intent(in)  :: rel
@@ -119,7 +119,7 @@ SUBROUTINE OUTWIN(REL,V,RI,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
 
   VAL = A(JRI)/RI(JRI)
   SLO = DG3/(DH*RI(JRI))
-  SLO = (SLO-VAL)/RI(JRI) 
+  SLO = (SLO-VAL)/RI(JRI)
 END SUBROUTINE OUTWIN
 
 

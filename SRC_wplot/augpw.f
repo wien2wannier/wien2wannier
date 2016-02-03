@@ -19,17 +19,17 @@
       real(DPk)    :: RK(3), arg, al, bl
       integer      :: i, imt, jatom, iPW, lm, l, m
 
-! The PW part of the augmentation coefficients A_lm,a and B_lm,a 
+! The PW part of the augmentation coefficients A_lm,a and B_lm,a
 ! of a given eigen state at a given atom a in the unit cell
 ! ----------------------------------------------------------------------------
 ! Input:
-! LATOM    -- the atom a 
+! LATOM    -- the atom a
 ! NPW      -- current number of PW basis functions
 ! ROTLOC   -- the local rotation matrices T_a of each atom
 !             [ stored as (T_a^-1)_ij = ROTLOC(i,j,a) ]
 !
 ! Output:
-! ALM  -- the PW part of the augmentation coefficients for each (l,m) 
+! ALM  -- the PW part of the augmentation coefficients for each (l,m)
 !
 ! Working arrays:
 ! Y        -- to hold Y_lm(...)
@@ -37,9 +37,9 @@
 ! X_l,m,a = Sum(K) c_K/sqrt(V) exp(i(K+k)R_a) Y(*)_lm(T_a^-1(K+k)) X_l,a(|K+k|)
 !
 ! Here (*) stands for an optional complex conjugation on Y_lm(...)
-! WIEN95 : (*) =   
+! WIEN95 : (*) =
 ! WIEN97 : (*) = *
-! 
+!
 ! R_a   : center of atom a
 ! T_a   : local rotation matrix of atom a
 ! X_l,a : PW augmentation coefficients for atom a
@@ -84,7 +84,7 @@
 !       << A_l,a and B_l,a (without Rmt^2 factor) >>
 ! -----------------------------------------------------------------
 ! A_a,l = - [ d/dE d/dr u_l,a(Rmt,E)      j_l(Rmt*|K+k|) -
-!             d/dE      u_l,a(Rmt,E) d/dr j_l(Rmt*|K+k|) ] 
+!             d/dE      u_l,a(Rmt,E) d/dr j_l(Rmt*|K+k|) ]
 !
 ! B_a,l = - [           u_l,a(Rmt,E) d/dr j_l(Rmt*|K+k|) -
 !                  d/dr u_l,a(Rmt,E)      j_l(Rmt*|K+k|) ]

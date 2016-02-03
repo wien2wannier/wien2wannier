@@ -2,7 +2,7 @@
 
 SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
   USE param
-  USE struct 
+  USE struct
   USE xa
   USE xa3
   USE bessel
@@ -26,9 +26,9 @@ SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
   integer :: k1_prog_itvl
   k1_prog_itvl = min(max(num_kpts/10, 1), 100)
 
-  !------------------------------------------------------------------     
+  !------------------------------------------------------------------
 
-  TWOPI=2.D0*PI  
+  TWOPI=2.D0*PI
   FOURPI=4*PI
 
   OVERLAP = 0
@@ -37,9 +37,9 @@ SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
   !     LOOP FOR ALL ATOMS
   !     ------------------
 
-  READ(unit_vsp,2032) ISCF    
+  READ(unit_vsp,2032) ISCF
   LFIRST=1
-  atoms: DO JATOM=1,NAT 
+  atoms: DO JATOM=1,NAT
      write(unit_out, "(/, '===== atom', I5, ' /', I5, ' =====' /)") jatom, nat
 
      ALLOCATE(ALM(NB,NRF,(LMAX2+1)*(LMAX2+1),MULT(JATOM)),  &
@@ -48,8 +48,8 @@ SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
      tmeas1=0.
      tmeas2=0.
      call cputim(t1)
-     IF(JATOM.GT.1) LFIRST=LFIRST+MULT(JATOM-1)                      
-     ITAP=30+JATOM                                                     
+     IF(JATOM.GT.1) LFIRST=LFIRST+MULT(JATOM-1)
+     ITAP=30+JATOM
      itape=unit_vector
      jtape=unit_vsp
      rewind(itape)
@@ -97,7 +97,7 @@ SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
               ARG1=BX*POS(1,LATOM)*TWOPI
               ARG2=BY*POS(2,LATOM)*TWOPI
               ARG3=BZ*POS(3,LATOM)*TWOPI
-              PHSHEL=EXP((0,1)*(ARG1+ARG2+ARG3))*FOURPI 
+              PHSHEL=EXP((0,1)*(ARG1+ARG2+ARG3))*FOURPI
 
               ! overlap=conjg(alm(2))*alm(1)*gaunt(2,j,1)*rad_int(2,j,1)
               L_index=0
@@ -157,11 +157,11 @@ SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
              &    k1, num_kpts, (100*k1)/num_kpts
   END DO atoms
 
-  ! ....END LOOP OVER ALL ATOMS     
+  ! ....END LOOP OVER ALL ATOMS
 
   RETURN
 
-2032 FORMAT(50X,I2,//)                                                        
+2032 FORMAT(50X,I2,//)
    contains
      subroutine ptime(descr, unit)
        character(len=*), intent(in), optional :: descr
