@@ -77,10 +77,14 @@ Changes in 1.0.1 (update to Wien2k_14.2) include:
 
 * fixed `w2w' to work with `-p -so'
 
+* fixed the normalization of real-space Wannier functions in
+  `case.psink' by number of k-points (previously, the WFs as printed
+  included a factor of `N_k')
+
 
 Many thanks to Marc Höppner, Hong Jiang, Gernot Kraberger, Oleg Rubel,
-Liang Si, Yundi Quan, Jiaxu Yan, Jianxin Zhu, and Manuel Zingl for
-their valuable comments on past versions.
+Liang Si, Yundi Quan, Ulrich Wedig, Jiaxu Yan, Jianxin Zhu, and Manuel
+Zingl for their valuable comments on past versions.
 
 
 Changes in 1.0 (included in Wien2k_14.2) include:
@@ -246,5 +250,5 @@ new:       id=-(BQZ(pair_index)*m2y+BQY(pair_index))*m2x-BQX(pair_index)-1
 ## comment-start: "#"
 ## End:
 ##
-## Time-stamp: <2015-12-21 16:47:39 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-02-03 10:59:51 assman@faepop36.tu-graz.ac.at>
 ##\---
