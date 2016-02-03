@@ -45,7 +45,7 @@ FFLAGS += -warn all -free -traceback -g #-check bounds #-debug all -gen-interfac
 ## -warn all has sometimes caused errors in compiling w2w!
 MODOPT ?= -module
 else ifndef MODOPT
-$(error unknown compiler ``$(FC)'', please specify variables manually)
+$(error unknown compiler ``$(FC)'', please specify variable MODOPT manually)
 endif
 
 ifneq "$(findstring gcc,$(CC))" ""
@@ -66,4 +66,4 @@ W2W_DIR  = ../../wien2wannier/
 ## End:
 ##\---
 ##
-## Time-stamp: <2015-12-21 13:57:18 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-02-01 14:16:47 assman@faepop36.tu-graz.ac.at>
