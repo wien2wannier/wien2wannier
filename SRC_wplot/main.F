@@ -664,7 +664,7 @@ subroutine main()
      end do kpoints
   end do vecfiles
 
-  write(unit_psink, 3020)(abs(tot(IG))**2/kkk,IG=1,NPG)
+  write(unit_psink, 3020)(abs(tot(IG/kkk))**2,IG=1,NPG)
   write(unit_psiarg,3020)(atan2(aimag(tot(IG)), real(tot(IG))),IG=1,NPG)
 3020 format(1P,10E16.8)
 
@@ -716,4 +716,4 @@ end subroutine main
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-01-26 17:02:43 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-02-03 10:52:36 assman@faepop36.tu-graz.ac.at>
