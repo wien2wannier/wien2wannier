@@ -6,4 +6,4 @@
 20 20 20      # #(grid points) in x, y, z dir.
 NO            # DEP(HASING) | NO (POST-PROCESSING)
 ANG   LARGE   # units: ANG|ATU;  rel. comp.: LARGE|SMALL
- 1            # Wannier function index
+ 1    F       # Wannier function index; apply WF rotation?

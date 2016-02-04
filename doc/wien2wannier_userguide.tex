@@ -79,14 +79,14 @@ from the \dft calculation, yielding
 \end{gather*}
 %
 The resulting functions $w_{m\mb{R}}(\mb{r})$, parametrized by a
-direct lattice vector $\mb{R}$, are called Wannier functions. Due to
-the additional phase factors $U^{(\mb{k})}_{nm}$, which all lead to
-valid Wannier functions, there is considerable ambiguity in the choice
-of the real space basis set.  This can be overcome by choosing Wannier
-orbitals $w_{m\mb{R}}(\mb{r})$ with minimal real-space extent (spread
-$\langle\Delta \mb{r}^2\rangle$).  These are known as maximally
-localized Wannier functions~(\mlwf). A popular program to compute the
-\mlwf for a given set of Bloch functions is
+direct lattice vector $\mb{R}$, are called Wannier functions
+(\wf). Due to the additional phase factors $U^{(\mb{k})}_{nm}$, which
+all lead to valid Wannier functions, there is considerable ambiguity
+in the choice of the real space basis set.  This can be overcome by
+choosing Wannier orbitals $w_{m\mb{R}}(\mb{r})$ with minimal
+real-space extent (spread $\langle\Delta \mb{r}^2\rangle$).  These are
+known as maximally localized Wannier functions~(\mlwf). A popular
+program to compute the \mlwf for a given set of Bloch functions is
 \wannier~\cite{wannier90_orig,wannier90}.
 
 Unfortunately, the application of \wannier to the \lapw basis set of
@@ -466,9 +466,12 @@ It can be generated via \writeinwplot, or adapted from the template in
          & SMALL & small relativistic component
   \end{flin}
 
-  \begin{flin}[T]{iwan \rem{(free format)}}{Wannier function index}
+  \begin{flin}[T]{iwan, rot \rem{(free format)}}{\wf index, apply \wf
+      rotation?}
     iwan & int & index of the \wf to be plotted, unless overridden on
-                 command line
+                 command line\\
+    rot  & logical & read unitary matrix from \file{\case.wfrot} and
+                     apply before plotting
   \end{flin}
 \end{lines}
 
@@ -928,4 +931,4 @@ done
 
 where you have previously created suitable case.{inwf,win}{up,dn} files.
 
-%%% Time-stamp: <2016-02-03 14:33:47 assman@faepop36.tu-graz.ac.at>
+%%% Time-stamp: <2016-02-03 16:23:15 assman@faepop36.tu-graz.ac.at>

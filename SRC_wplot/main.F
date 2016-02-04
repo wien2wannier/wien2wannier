@@ -12,9 +12,9 @@ subroutine main()
   use bessfu,    only: fj, dfj, rad, irad
   use work,      only: aug
   use grid,      only: rgrid, ireg, ilat, iri, npg
-  use const,     only: DPk, BUFSZ, PI
+  use const,     only: DPk, BUFSZ, PI, error_unit
   use util,      only: paropen, uppercase
-  use clio,      only: croak
+  use clio,      only: croak, carp
   use Wannier90, only: chk_t, chk_read
   use structmod, only: struct_t, struct_read
   use param,     only: Nrad, Nsym, NRF, NLOAt, LOmax, Lmax7, idx_wann,      &
@@ -32,7 +32,7 @@ subroutine main()
      end function orth
   end interface
 
-  character(BUFSZ) :: buf, rotfilename
+  character(BUFSZ) :: buf
   character( 3)    :: switch, iunit
   character( 4)    :: GridMode
   character( 5)    :: whpsi
@@ -60,7 +60,7 @@ subroutine main()
   real(DPk),allocatable ::  ROTLOC(:,:,:),atms(:,:)
   integer,allocatable :: IOP(:),nreg(:)
   integer,allocatable ::  KX(:),KY(:),KZ(:)
-  complex(DPk), allocatable :: uu(:), rotmatrix(:,:)
+  complex(DPk), allocatable :: uu(:), rotmat(:,:)
   real(DPk),allocatable :: tmprot(:)
   LOGICAL :: DEPHAS, rotate=.false.
 
@@ -129,7 +129,7 @@ subroutine main()
   LARGE = WHPSI .EQ. 'LARGE'
 
 !     << read in wave function selection (and file handling) >>
-  READ (unit_in,*) ISEIG
+  read (unit_in,*) iseig, rotate
   read(unit_inwf,*)
   read(unit_inwf,*)nemin,nemax
   nb=nemax-nemin+1
@@ -162,20 +162,26 @@ subroutine main()
 
 !!! Apply WF rotation
   if (rotate) then
-     read(unit_in, "(A)") rotfilename
-     write(*,*) "rotate with matrix from ", trim(rotfilename)
-     open(unit_rot, file=trim(rotfilename), status='old')
-     allocate(rotmatrix(chk%num_wann, chk%num_wann), tmprot(chk%num_wann*2))
+     write(unit_out,*) "rotate with matrix from unit ", unit_rot
+     allocate(rotmat(chk%num_wann, chk%num_wann), tmprot(chk%num_wann*2))
 
-     do j=1,chk%num_wann
+     do i=1,chk%num_wann
         read(unit_rot,*) tmprot
 
-        do i=1,chk%num_wann
-           rotmatrix(j,i) = cmplx(tmprot(2*i-1), tmprot(2*i), DPk)
+        do j=1,chk%num_wann
+           rotmat(i,j) = cmplx(tmprot(2*j-1), tmprot(2*j), DPk)
         enddo
-        write(*,"(100F13.5)") rotmatrix(j,:)
      enddo
      close(unit_rot)
+
+     if (any(abs( matmul(rotmat, conjg(transpose(rotmat))) &
+          &       - Id(chk%num_wann))                      &
+          &  > 1e-10)) then
+        call carp("rotation matrix does not look unitary")
+        write(buf, '( "(", I0, "(F10.5, '' + '', F7.5, ''i''))" )') &
+             chk%num_wann
+        write(error_unit, buf) transpose(rotmat)
+     end if
   endif
 
   rewind(unit_in)               ! for grdgen()
@@ -468,8 +474,7 @@ subroutine main()
      kpoints: do
         ! FIXME: every one of these reads fails with “input statement
         ! requires too much data
-        read(unit_vector, IOSTAT=ierr) &
-             (FK(I),I=1,3),BNAME,NMATK,NE,WEIGHT,KKKABS
+        read(unit_vector, IOSTAT=ierr) FK, BNAME, NMATK, NE, WEIGHT, KKKABS
         if (ierr<0) exit kpoints
 
         KKK = KKK + 1
@@ -481,7 +486,7 @@ subroutine main()
                  if (rotate) then
                     do j3=1, chk%num_wann
                        local_contribution = local_contribution +&
-                            rotmatrix(iseig,j3) * &
+                            rotmat(iseig,j3) * &
                             chk%u_matrix(j2,j3,kkk)*chk%u_matrix_opt(j,j2,kkk)
                     enddo
                  else
@@ -493,7 +498,7 @@ subroutine main()
               if (rotate) then
                  do j2=1, chk%num_wann
                     local_contribution = local_contribution+ &
-                         rotmatrix(j2,iseig)*chk%u_matrix(j,j2,kkk)
+                         rotmat(j2,iseig)*chk%u_matrix(j,j2,kkk)
                  enddo
               else
                  local_contribution = chk%u_matrix(j,iseig,kkk)
@@ -708,6 +713,16 @@ contains
        open(unit, FILE=tmpnam, STATUS=s, FORM=f)
     end if
   end subroutine wfopen
+
+  pure function Id(N)
+    integer, intent(in) :: N
+    real(DPk)           :: Id(N,N)
+
+    integer :: i
+
+    Id = 0
+    forall(i=1:N) Id(i,i) = 1
+  end function Id
 end subroutine main
 
 
@@ -717,4 +732,4 @@ end subroutine main
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-02-03 15:40:19 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-02-04 13:11:56 assman@faepop36.tu-graz.ac.at>
