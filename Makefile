@@ -4,9 +4,10 @@
 ###
 ### Copyright 2013-2015 Elias Assmann
 
-git-describe := $(lastword '$version: v1.0.0-78-g2e3e8fb$')
-
-VERSION := $(git-describe)
+VERSION := $(shell git describe)
+ifeq "$(VERSION)" ""
+VERSION = $(lastword '$version: v1.0.0-87-gd0cb7b2$')
+endif
 
 SIMPLE      := SRC_trig doc
 REALCOMPLEX := SRC_w2w SRC_wplot
@@ -65,4 +66,4 @@ wien-dist: distclean doc/wien2wannier_userguide.pdf $(Morig)
 	rm -rf $(dir) $(Morig)
 
 
-## Time-stamp: <2015-12-29 14:10:09 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-02-09 14:14:51 assman@faepop36.tu-graz.ac.at>
