@@ -50,7 +50,9 @@ Other changes and new features include:
 Changes in 1.0.1 (update to Wien2k_14.2) include:
 
 * changed the format of `case.inwplot':
+
   - the `WAN' pseudo-switch is removed
+
   - added an option for a unitary rotation in the space of WFs
 
 * several fixes and changes to `write_win':
@@ -254,5 +256,5 @@ new:       id=-(BQZ(pair_index)*m2y+BQY(pair_index))*m2x-BQX(pair_index)-1
 ## comment-start: "#"
 ## End:
 ##
-## Time-stamp: <2016-02-04 13:16:22 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-02-04 13:21:28 assman@faepop36.tu-graz.ac.at>
 ##\---

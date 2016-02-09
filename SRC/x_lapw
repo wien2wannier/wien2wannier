@@ -2279,7 +2279,7 @@ cat <<EOF >$def
  18,'$file.vsp$updn',         'old',     'formatted',          0
  21,'$file.psink$updn',       'unknown', 'formatted',          0
  22,'$file.psiarg$updn',      'unknown', 'formatted',          0
- 31,'$file.inwf$upd',         'unknown', 'formatted',          0
+ 31,'$file.inwf$updn',        'unknown', 'formatted',          0
  32,'$file.chk$soupdn',       'old',     'unformatted',        0
  33,'$file.wfrot$soupdn',     'unknown', 'formatted',          0
 EOF
@@ -2809,4 +2809,4 @@ if (-e $running) rm $running
 exit(1)
 
 
-## Time-stamp: <2016-02-03 15:38:20 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-02-09 11:44:25 assman@faepop36.tu-graz.ac.at>
