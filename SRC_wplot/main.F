@@ -670,7 +670,7 @@ subroutine main()
      tot = tot * PHS
   end if
 
-  write(unit_psink, 3020)(abs(tot(IG/kkk))**2,IG=1,NPG)
+  write(unit_psink, 3020)(abs(tot(IG)/kkk)**2,IG=1,NPG)
   write(unit_psiarg,3020)(atan2(aimag(tot(IG)), real(tot(IG))),IG=1,NPG)
 3020 format(1P,10E16.8)
 
@@ -732,4 +732,4 @@ end subroutine main
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-02-04 13:11:56 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-02-09 13:59:21 assman@faepop36.tu-graz.ac.at>
