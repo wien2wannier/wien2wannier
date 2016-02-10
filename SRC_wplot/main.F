@@ -280,12 +280,12 @@ subroutine main()
           stru%Neq2at(INDEX),(stru%pos(I,INDEX),I=1,3),(R(J),J=1,3)
   end do
 
-  ! trans() updates POS
-  if (.not. stru%prim) call trans(stru%Nat)
+  ! trans() updates stru%pos, IMAT, TAU
+  if (.not. stru%prim) call trans(stru)
 
   ! rotdef() updates POS, sets IOP
   call rotdef(stru, IOP)
-!
+
 !     << set up local rotations for all basis atoms (in Cartesian coord.) >>
   INDEX=0
   DO JNEQ=1,stru%Nneq
@@ -732,4 +732,4 @@ end subroutine main
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-02-10 14:50:58 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-02-10 17:25:08 assman@faepop36.tu-graz.ac.at>

@@ -1,15 +1,15 @@
 !!! wien2wannier/SRC_wplot/trans.f
 
-subroutine trans(Npos)
-  use param,  only: DPk
-  use latt,   only: br1, br2, br3, br4
-  use param,  only: Nsym
-  use sym2,   only: tau, imat
-  use struct, only: pos
+subroutine trans(stru)
+  use param,     only: DPk
+  use latt,      only: br1, br2, br3, br4
+  use param,     only: Nsym
+  use sym2,      only: tau, imat
+  use structmod, only: struct_t
 
   implicit none
 
-  integer, intent(in) :: Npos
+  type(struct_t), intent(inout) :: stru
 
   real(DPk) :: F(3), S(3,3), T(3,3), Q(3,3)
   integer   :: i, k, n
@@ -57,13 +57,13 @@ subroutine trans(Npos)
   END DO
 
 !     << transform the real space vectors >>
-  DO N=1,NPOS
+  DO N=1,stru%Nat
      DO K=1,3
-        F(K) = T(K,1)*POS(1,N) + T(K,2)*POS(2,N) &
-             + T(K,3)*POS(3,N)
+        F(K) = T(K,1)*stru%pos(1,N) + T(K,2)*stru%pos(2,N) &
+             + T(K,3)*stru%pos(3,N)
      END DO
      DO K=1,3
-        POS(K,N) = F(K)
+        stru%pos(K,N) = F(K)
      END DO
   END DO
 
@@ -95,4 +95,4 @@ END SUBROUTINE TRANS
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-23 15:48:01 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-02-10 16:59:04 assman@faepop36.tu-graz.ac.at>

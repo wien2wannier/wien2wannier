@@ -114,7 +114,7 @@ MOD_USERS = auggen.o auglo.o augpw.o bessel.o dergl.o diracout.o	\
 	    spcgen.o sphbes.o trans.o wavint.o wavsph.o wplot.o ylm.o
 
 UTIL_USERS = auggen.o auglo.o findmt.o grdgen.o latgen.o main.o	\
-	     moduls.o rint13.o rotdef.o wplot.o
+	     moduls.o rint13.o rotdef.o trans.o wplot.o
 
 #........................................................................
 #
@@ -173,4 +173,4 @@ $(util_users): $(UTILOBJ)
 $(util_users): FFLAGS += -I$(UTILDIR)
 
 
-## Time-stamp: <2015-12-23 17:12:42 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-02-10 16:57:45 assman@faepop36.tu-graz.ac.at>
