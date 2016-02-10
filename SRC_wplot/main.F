@@ -66,7 +66,7 @@ subroutine main()
 
   integer :: i, ie, ieabs, ierr, iG, ik, il, il1, imax, index, index1, irf
   integer :: iseig, iloop
-  integer :: j, j2, j3, jatom, jneq, k, kkk, kkkabs, l, latom, lm, m, mu
+  integer :: j, j2, j3, jneq, jmult, k, kkk, kkkabs, l, latom, lm, m, mu
   integer :: Nb, NE, NEmax, NEmin, Nmatk, Nmat, Nmt, Npw
   integer :: NP(3), Nskip
 
@@ -221,28 +221,28 @@ subroutine main()
   if (any(stru%Npt > Nrad)) call croak('NRAD too small')
 
   NMT = 0
-
-  atoms: do jatom=1,stru%Nneq
-     do i=1, stru%Npt(jatom)
-        RM(i, jatom) = stru%r0(jatom) * exp( real(i-1, DPk) * dx(jatom) )
+  atoms: do jneq=1,stru%Nneq
+     do i=1, stru%Npt(jneq)
+        RM(i, jneq) = stru%r0(jneq) * exp( real(i-1, DPk) * dx(jneq) )
      end do
 
-     RMT(jatom) = RM(stru%Npt(JATOM), jatom)
+     RMT(jneq) = RM(stru%Npt(jneq), jneq)
 
-     rotloc(:,:, stru%at2neq(jatom)%p(1)) = &
-          transpose(stru%locrot(:,:, jatom))
+
+     rotloc(:,:, sum(stru%mult(1:jneq-1))+1) = &
+          transpose(stru%locrot(:,:, jneq))
 
      do j=1,NMT
-        if(RMT(jatom) == rad(j))then
-           irad(jatom) = j
+        if(RMT(jneq) == rad(j))then
+           irad(jneq) = j
            cycle atoms
         ENDIF
      end DO
 
-     NMT = NMT + 1
-     rad(NMT) = RMT(jatom)
-     irad(jatom) = NMT
-  end DO atoms
+     NMT        = NMT + 1
+     rad(NMT)   = RMT(jneq)
+     irad(jneq) = NMT
+  end do atoms
 
   allocate ( AUG(NRAD,(LMAX7+1)*(LMAX7+1), stru%nat))
 
@@ -277,7 +277,7 @@ subroutine main()
              + stru%pos(3,index)*BR1(3,J)
      end do
      write(unit_out,"(I5,1X,3F9.5,3X,3F13.7)") &
-          STRU%NEQ2AT(INDEX),(stru%pos(I,INDEX),I=1,3),(R(J),J=1,3)
+          stru%Neq2at(INDEX),(stru%pos(I,INDEX),I=1,3),(R(J),J=1,3)
   end do
 
   ! trans() updates POS
@@ -288,12 +288,12 @@ subroutine main()
 !
 !     << set up local rotations for all basis atoms (in Cartesian coord.) >>
   INDEX=0
-  DO JATOM=1,stru%Nneq
+  DO JNEQ=1,stru%Nneq
      INDEX1 = INDEX+1
 !       << store ROTLOC(1.atom) before updating it >>
      ROT0(:,:) = ROTLOC(:,:, index1)
 
-     DO MU=1,STRU%MULT(JATOM)
+     DO MU=1,STRU%MULT(JNEQ)
         INDEX = INDEX+1
         CALL LOCDEF(ROT0,IMAT(1,1,IOP(INDEX)),ROTLOC(1,1,INDEX))
      end DO
@@ -340,9 +340,9 @@ subroutine main()
        &  '  with  a_i = primitive lattice vector'              &
        &//' atom     RMT         s_1      s_2      s_3')")
 
-  DO JATOM=1, stru%Nneq
+  DO JNEQ=1, stru%Nneq
      write(unit_out,"(I5,F10.5,3X,3F9.5)") &
-          JATOM,RMT(JATOM),(ATMS(I,JATOM),I=1,3)
+          JNEQ,RMT(JNEQ),(ATMS(I,JNEQ),I=1,3)
   end DO
 !     << determine into which sphere each grid point r falls >>
 ! -------------------------------------------------------------------------
@@ -590,9 +590,9 @@ subroutine main()
 ! ----------------------------------------------------------------------------
         IL1 = NPW
         LATOM  = 0
-        DO JATOM=1,stru%Nneq
-           IMAX = STRU%NPT(JATOM)
-           DO JNEQ=1,STRU%MULT(JATOM)
+        DO JNEQ=1,stru%Nneq
+           IMAX = STRU%NPT(JNEQ)
+           DO JMULT=1,STRU%MULT(JNEQ)
               LATOM = LATOM + 1
               call augpw(latom, Npw, Alm, rotloc, Y, bk, coef, Nmatk, &
                    stru%neq2at)
@@ -600,7 +600,7 @@ subroutine main()
               IL=IL1
               call auglo(latom, il, Alm, rotloc, Y, bk, coef, nmatk, &
                    stru)
-              IF (JNEQ.EQ.STRU%MULT(JATOM)) IL1=IL
+              IF (JMULT.EQ.STRU%MULT(JNEQ)) IL1=IL
 
 !             << add 4pi*i^l Rmt^2 factor to ALM, BLM and CLM and >>
 !             << set up the eigen state's augmentation functions  >>
@@ -609,7 +609,7 @@ subroutine main()
 !                                 B_l,m,a * d/dE u_l,a(r,E _l,a) +
 !                                 C_l,m,a *      u_l,a(r,E'_l,a) ]
 ! ----------------------------------------------------------------------------
-              PHS = 4*PI * RMT(JATOM)*RMT(JATOM)
+              PHS = 4*PI * RMT(JNEQ)*RMT(JNEQ)
               LM = 0
               DO L=0,LMAX7
                  DO M=-L,L
@@ -617,7 +617,7 @@ subroutine main()
                     DO I=1,IMAX
                        ALMSUM=0
                        DO irf=1,nrf
-                          ALMSUM=ALMSUM+ALM(LM,irf)*RRAD(I,L,irf,JATOM)
+                          ALMSUM=ALMSUM+ALM(LM,irf)*RRAD(I,L,irf,JNEQ)
                        ENDDO
                        AUG(I,LM,LATOM)=ALMSUM*PHS
                     end DO
@@ -670,8 +670,8 @@ subroutine main()
      tot = tot * PHS
   end if
 
-  write(unit_psink, 3020)(abs(tot(IG)/kkk)**2,IG=1,NPG)
-  write(unit_psiarg,3020)(atan2(aimag(tot(IG)), real(tot(IG))),IG=1,NPG)
+  write(unit_psink, 3020) abs(tot/kkk)**2
+  write(unit_psiarg,3020) atan2(aimag(tot), real(tot))
 3020 format(1P,10E16.8)
 
   RETURN
@@ -732,4 +732,4 @@ end subroutine main
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-02-09 13:59:21 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-02-10 14:50:58 assman@faepop36.tu-graz.ac.at>
