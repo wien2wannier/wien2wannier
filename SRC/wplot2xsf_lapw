@@ -24,7 +24,7 @@ import math
 import glob
 import numpy as np
 
-__version__ = "$version: v1.0.0-78-g2e3e8fb$"
+__version__ = "$version: v1.0.0-90-g09dfc04$"
 
 try:
     __version__ = re.search(":\s*(.*?)\s*\$", __version__).group(1)
@@ -223,7 +223,7 @@ def a2b(x): return x/bohr2angstrom
 
 
 def read_struct(f):
-    title = f.readline()
+    f.readline()
     nneq = int(f.readline()[27:30])
     f.readline()                # “rela”
     f.readline()                # lattice
@@ -254,7 +254,7 @@ def read_struct(f):
         f.readline()
     verbalize()
 
-    return amap, nat, title
+    return amap, nat
 
 
 def xyz_centers(f):
@@ -344,7 +344,7 @@ def printVectors(file,pattern,readLines=3,waitLines=0,printIndices=(2,3,4),
 # Preparations #
 ################
 
-atom_map, nat, title = read_struct(args.struct_file)
+atom_map, nat = read_struct(args.struct_file)
 args.struct_file.close()
 
 if args.xyz_file is None:
@@ -436,4 +436,4 @@ for i, N, psink, psiarg, xsf, wplot in \
     print>>xsf, "END_BLOCK_DATAGRID_3D"
 
 
-## Time-stamp: <2015-12-21 15:22:46 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-02-11 11:37:49 assman@faepop36.tu-graz.ac.at>
