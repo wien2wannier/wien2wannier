@@ -28,7 +28,7 @@
 !!
 !! clio: Helper procedures for command line interface
 !!
-!!    croak(), carp(), cluck(), fetcharg(), type(argstr)
+!!    croak(), carp(), cluck(), type(argstr), fetcharg(), fetchenv()
 !!
 !!
 !! structmod: ‘struct_t’ type and associated procedures
@@ -737,7 +737,15 @@ module clio
   implicit none
   private
 
-  public :: croak, carp, cluck, fetcharg, argstr
+  public :: croak, carp, cluck, argstr, fetcharg, fetchenv
+
+  type argstr
+#ifdef HAVE_VARLEN_STR
+     character(len=:), allocatable :: s
+#else
+     character(len=BUFSZ) :: s
+#endif
+  end type argstr
 
   interface fetcharg
 #ifdef HAVE_VARLEN_STR
@@ -749,13 +757,15 @@ module clio
      module procedure fetcharg_str, fetcharg_int, fetcharg_real
   end interface fetcharg
 
-  type argstr
+  interface fetchenv
 #ifdef HAVE_VARLEN_STR
-     character(len=:), allocatable :: s
+     module procedure fetchenv_alloc
 #else
-     character(len=BUFSZ) :: s
+     module procedure fetchenv_buf
 #endif
-  end type argstr
+
+     module procedure fetchenv_str, fetchenv_int, fetchenv_real
+  end interface fetchenv
 
   type(argstr) :: progname
   logical      :: got_progname = .false.
@@ -985,6 +995,280 @@ contains
        end if
     end if
   end subroutine fetcharg_real
+
+
+!!!                               fetchenv ()                              !!!
+!!!
+!!! If STATUS is supplied, it is returned as set by
+!!! get_environment_variable():
+!!!
+!!!    STATUS= 1: variable not defined
+!!!          =-1: VALUE buffer is supplied but too short
+!!!          > 1: “other error”
+!!!
+!!! (This table derived from a comparison of gfortran and ifort docs.)
+!!!
+!!! Else, for <0 and >1 we raise an error; a non-existent variable
+!!! will be returned as blank.
+#ifdef HAVE_VARLEN_STR
+  !! This elegant variable-length version of `fetchenv´ does not work
+  !! on pre-4.8 gfortran
+  subroutine fetchenv_alloc(name, str, message, status, trim_name)
+    character(len=*), intent(in)            :: name
+    type(argstr),     intent(out)           :: str
+    character(len=*), intent(in),  optional :: message
+    integer,          intent(out), optional :: status
+    logical,          intent(in),  optional :: trim_name
+
+    integer :: s, l
+    logical :: t
+
+    t = .true.
+    if (present(trim_name)) t=trim_name
+
+    if (allocated(str%s)) deallocate(str%s)
+
+    call get_environment_variable(name, length=l, status=s, trim_name=t)
+    if (present(status)) then
+       status = s
+    elseif (s > 1) then
+       if (present(message)) then
+          call croak(message)
+       else
+          if (t) then
+             call croak("FETCHENV: failed to get environment variable `" // &
+                  &     trim(name) // "'s length: " // trim(string(s)))
+          else
+             call croak("FETCHENV: failed to get environment variable `" // &
+                  &     name // "'s length: " // trim(string(s)))
+       end if
+    end if
+
+    allocate(character(len=l) :: str%s)
+    !! zero-length arguments seem to need special treatment
+    !! (hooray Fortran!)
+    if (l==0) return
+
+    call get_environment_variable(name, value=str%s, status=s, trim_name=t)
+    if (present(status)) then
+       status = s
+    elseif (s < 0 .or. s > 1) then
+       if (present(message)) then
+          call croak(message)
+       else
+          if (t) then
+             call croak("FETCHENV: failed to get environment variable `" // &
+                  &     trim(name) // "': " // trim(string(s)))
+          else
+             call croak("FETCHENV: failed to get environment variable `" // &
+                  &     name // "': " // trim(string(s)))
+          end if
+       end if
+    end if
+  end subroutine fetchenv_alloc
+#else
+  subroutine fetchenv_buf(name, str, message, status, trim_name)
+    character(len=*), intent(in)            :: name
+    type(argstr),     intent(out)           :: str
+    character(len=*), intent(in),  optional :: message
+    integer,          intent(out), optional :: status
+    logical,          intent(in),  optional :: trim_name
+
+    integer :: s
+    logical :: t
+
+    t = .true.
+    if (present(trim_name)) t=trim_name
+
+    !! here, a zero-length argument is okay
+    !! (probably because len(str%s) /= 0)
+    call get_environment_variable(name, value=str%s, status=s, trim_name=t)
+    if (present(status)) then
+       status = s
+    elseif (s < 0 .or. s > 1) then
+       if (present(message)) then
+          call croak(message)
+       elseif (s < 0) then
+          if (t) then
+             call croak("FETCHENV_BUF: buffer too small for environment &
+                  &variable `" // trim(name) // "'")
+          else
+             call croak("FETCHENV_BUF: buffer too small for environment &
+                  &variable `" // name // "'")
+          end if
+       else
+          if (t) then
+             call croak("FETCHENV_BUF: failed to get environment &
+                  &variable `" // trim(name) //"': " // trim(string(s)))
+          else
+             call croak("FETCHENV_BUF: failed to get environment &
+                  &variable `" // name // "': " // trim(string(s)))
+          end if
+       end if
+    end if
+  end subroutine fetchenv_buf
+#endif
+
+  subroutine fetchenv_str(name, str, message, status, trim_name)
+    character(len=*), intent(in)            :: name
+    character(len=*), intent(out)           :: str
+    character(len=*), intent(in),  optional :: message
+    integer,          intent(out), optional :: status
+    logical,          intent(in),  optional :: trim_name
+
+    integer :: s
+    logical :: t
+
+    t = .true.
+    if (present(trim_name)) t=trim_name
+
+    !! here, a zero-length argument is okay
+    !! (probably because len(str) /= 0)
+    call get_environment_variable(name, value=str, status=s, trim_name=t)
+    if (present(status)) then
+       status = s
+    elseif (s < 0 .or. s > 1) then
+       if (present(message)) then
+          call croak(message)
+       elseif (s < 0) then
+          if (t) then
+             call croak("FETCHENV_STR: buffer too small for environment &
+                  &variable `" // trim(name) // "'")
+          else
+             call croak("FETCHENV_STR: buffer too small for environment &
+                  &variable `" // name // "'")
+          end if
+       else
+          if (t) then
+             call croak("FETCHENV_STR: failed to get environment variable `" &
+                  // trim(name) // "': " // trim(string(s)))
+          else
+             call croak("FETCHENV_STR: failed to get environment variable `" &
+                  // name // "': " // trim(string(s)))
+          end if
+       end if
+    end if
+  end subroutine fetchenv_str
+
+  subroutine fetchenv_int(name, n, message, status, trim_name)
+    character(len=*), intent(in)            :: name
+    integer,          intent(out)           :: n
+    character(len=*), intent(in),  optional :: message
+    integer,          intent(out), optional :: status
+    logical,          intent(in),  optional :: trim_name
+
+    integer      :: s
+    type(argstr) :: str
+    logical      :: t
+
+    t = .true.
+    if (present(trim_name)) t=trim_name
+
+    call fetchenv(name, str, STATUS=s, TRIM_NAME=t)
+
+    if (s < 0 .or. s > 1) then
+       if (present(status)) then
+          status = s
+          return
+       else
+          if (present(message)) then
+             call croak(message)
+          elseif (s < 0) then
+             if (t) then
+                call croak("FETCHENV_INT: buffer too small &
+                     & for environment variable `" // trim(name) // "'")
+             else
+                call croak("FETCHENV_INT: buffer too small &
+                     & for environment variable `" // name // "'")
+             end if
+          else
+             if (t) then
+                call croak("FETCHENV_INT: failed to get environment &
+                     &variable `" // trim(name) // "': " // trim(string(s)))
+             else
+                call croak("FETCHENV_INT: failed to get environment &
+                     &variable `" // name // "': " // trim(string(s)))
+             end if
+          end if
+       end if
+    end if
+
+    read(str%s, *, IOSTAT=s) n
+
+    if (present(status)) then
+       status = s
+    else if (s /= 0) then
+       if (present(message)) then
+          call croak(message)
+       else if (t) then
+          call croak("FETCHENV_INT: failed to read environment variable `" &
+               //trim(name)// "' (`"//trim(str%s)//"') as an integer")
+       else
+          call croak("FETCHENV_INT: failed to read environment variable `" &
+               //name// "' (`"//trim(str%s)//"') as an integer")
+       end if
+    end if
+  end subroutine fetchenv_int
+
+  subroutine fetchenv_real(name, x, message, status, trim_name)
+    character(len=*), intent(in)            :: name
+    real(DPk),        intent(out)           :: x
+    character(len=*), intent(in),  optional :: message
+    integer,          intent(out), optional :: status
+    logical,          intent(in),  optional :: trim_name
+
+    integer      :: s
+    type(argstr) :: str
+    logical      :: t
+
+    t = .true.
+    if (present(trim_name)) t=trim_name
+
+    call fetchenv(name, str, STATUS=s, TRIM_NAME=t)
+
+    if (s < 0 .or. s > 1) then
+       if (present(status)) then
+          status = s
+          return
+       else
+          if (present(message)) then
+             call croak(message)
+          elseif (s < 0) then
+             if (t) then
+                call croak("FETCHENV_INT: buffer too small &
+                     & for environment variable `" // trim(name) // "'")
+             else
+                call croak("FETCHENV_INT: buffer too small &
+                     & for environment variable `" // name // "'")
+             end if
+          else
+             if (t) then
+                call croak("FETCHENV_INT: failed to get environment &
+                     &variable `" // & trim(name) // "': " // trim(string(s)))
+             else
+                call croak("FETCHENV_INT: failed to get environment &
+                     &variable `" // & trim(name) // "': " // trim(string(s)))
+             end if
+          end if
+       end if
+    end if
+
+    read(str%s, *, IOSTAT=s) x
+
+    if (present(status)) then
+       status = s
+    else if (s /= 0) then
+       if (present(message)) then
+          call croak(message)
+       else if (t) then
+          call croak("FETCHENV_REAL: failed to read environment variable `" &
+               & // trim(name) // "' (`"//trim(str%s)//"') as a real")
+       else
+          call croak("FETCHENV_REAL: failed to read environment variable `" &
+               & // name // "' (`"//trim(str%s)//"') as a real")
+       end if
+    end if
+  end subroutine fetchenv_real
 end module clio
 
 
@@ -2088,4 +2372,4 @@ END MODULE wien2k
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-02-03 15:58:39 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-02-12 16:50:30 assman@faepop36.tu-graz.ac.at>
