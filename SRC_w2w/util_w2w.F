@@ -804,6 +804,8 @@ contains
     write(OUTPUT_UNIT, '(A, ": ", A)') trim(progname%s), message
   end subroutine cluck
 
+
+!!!                               fetcharg ()                              !!!
 #ifdef HAVE_VARLEN_STR
   !! This elegant variable-length version of `fetcharg´ does not work
   !! on pre-4.8 gfortran
@@ -825,7 +827,7 @@ contains
           call croak(message)
        else
           call croak("FETCHARG: failed to get command argument #" // &
-               &     trim(string(i)) // " length: " // trim(string(s)))
+               &     trim(string(i)) // "'s length: " // trim(string(s)))
        end if
     end if
 
@@ -906,7 +908,7 @@ contains
     character(len=*), intent(in), optional     :: message
     integer,          intent(out), optional    :: status
 
-    integer :: s
+    integer      :: s
     type(argstr) :: str
 
     call fetcharg(i, str, STATUS=s)
@@ -928,7 +930,18 @@ contains
        end if
     end if
 
-    read(str%s, *) n
+    read(str%s, *, IOSTAT=s) n
+
+    if (present(status)) then
+       status = s
+    else if (s /= 0) then
+       if (present(message)) then
+          call croak(message)
+       else
+          call croak("FETCHARG_INT: failed to read command argument #" // &
+               &  trim(string(i)) // " (`"//trim(str%s)//"') as an integer")
+       end if
+    end if
   end subroutine fetcharg_int
 
   subroutine fetcharg_real(i, x, message, status)
@@ -950,16 +963,27 @@ contains
           if (present(message)) then
              call croak(message)
           elseif (s < 0) then
-             call croak("FETCHARG_INT: buffer too small &
+             call croak("FETCHARG_REAL: buffer too small &
                   & for command argument #" // trim(string(i)))
           else
-             call croak("FETCHARG_INT: failed to get command argument #" // &
+             call croak("FETCHARG_REAL: failed to get command argument #"// &
                   &     trim(string(i)) // ": " // trim(string(s)))
           end if
        end if
     end if
 
-    read(str%s, *) x
+    read(str%s, *, IOSTAT=s) x
+
+    if (present(status)) then
+       status = s
+    else if (s /= 0) then
+       if (present(message)) then
+          call croak(message)
+       else
+          call croak("FETCHARG_REAL: failed to read command argument #" // &
+               &  trim(string(i)) // " (`"//trim(str%s)//"') as a real")
+       end if
+    end if
   end subroutine fetcharg_real
 end module clio
 
