@@ -737,7 +737,7 @@ module clio
   implicit none
   private
 
-  public :: croak, carp, cluck, argstr, fetcharg, fetchenv
+  public :: croak, carp, cluck, argstr, argstr_set, fetcharg, fetchenv
 
   type argstr
 #ifdef HAVE_VARLEN_STR
@@ -814,6 +814,17 @@ contains
     write(OUTPUT_UNIT, '(A, ": ", A)') trim(progname%s), message
   end subroutine cluck
 
+  subroutine argstr_set(a, c)
+    type(argstr),     intent(out) :: a
+    character(len=*), intent(in)  :: c
+
+#ifdef HAVE_VARLEN_STR
+    if (allocated(a%s)) deallocate(a%s)
+    allocate(character(len=len_trim(c)) :: a%s)
+#endif !HAVE_VARLEN_STR
+
+    a%s = c
+  end subroutine argstr_set
 
 !!!                               fetcharg ()                              !!!
 #ifdef HAVE_VARLEN_STR
