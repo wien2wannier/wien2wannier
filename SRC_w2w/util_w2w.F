@@ -267,7 +267,7 @@ contains
     deallocate(tf)
     tf=>hilfsfeld
   end subroutine realloc_i_p3
-#endif
+#endif /* HAVE_POINTER_ALLOCATABLE_GENERICS */
 
 !!! Procedures for ‘allocatable’ variables, which use move_alloc()
   subroutine realloc_r_d1(tf, nd)
@@ -422,7 +422,7 @@ MODULE util
 
   private
   public :: string, inverse3x3, ptime, ptimer, ptick, ptock, ptot, &
-       &    uppercase, lowercase, line_count, paropen, newunit
+       &    uppercase, lowercase, basename, line_count, paropen, newunit
 
   interface string
      module procedure int2str, ints2str, real2str, reals2str
@@ -641,6 +641,13 @@ contains
     end do
   end function lowercase
 
+  pure elemental function basename(str)
+    character(*), intent(in) :: str
+    character(len(str))      :: basename
+
+    basename = str(scan(str, '/', BACK=.true.)+1 : )
+  end function basename
+
 
   integer function line_count(fid)
     !>Returns the number of lines in a file.
@@ -821,7 +828,7 @@ contains
 #ifdef HAVE_VARLEN_STR
     if (allocated(a%s)) deallocate(a%s)
     allocate(character(len=len_trim(c)) :: a%s)
-#endif !HAVE_VARLEN_STR
+#endif
 
     a%s = c
   end subroutine argstr_set
@@ -895,7 +902,7 @@ contains
        end if
     end if
   end subroutine fetcharg_buf
-#endif
+#endif /* HAVE_VARLEN_STR */
 
   subroutine fetcharg_str(i, str, message, status)
     integer,          intent(in)               :: i
@@ -1118,7 +1125,7 @@ contains
        end if
     end if
   end subroutine fetchenv_buf
-#endif
+#endif /* HAVE_VARLEN_STR */
 
   subroutine fetchenv_str(name, str, message, status, trim_name)
     character(len=*), intent(in)            :: name
@@ -1151,10 +1158,10 @@ contains
           end if
        else
           if (t) then
-             call croak("FETCHENV_STR: failed to get environment variable `" &
+             call croak("FETCHENV_STR: failed to get environment variable `"&
                   // trim(name) // "': " // trim(string(s)))
           else
-             call croak("FETCHENV_STR: failed to get environment variable `" &
+             call croak("FETCHENV_STR: failed to get environment variable `"&
                   // name // "': " // trim(string(s)))
           end if
        end if
@@ -1255,10 +1262,10 @@ contains
           else
              if (t) then
                 call croak("FETCHENV_INT: failed to get environment &
-                     &variable `" // & trim(name) // "': " // trim(string(s)))
+                     &variable `" // trim(name) // "': " // trim(string(s)))
              else
                 call croak("FETCHENV_INT: failed to get environment &
-                     &variable `" // & trim(name) // "': " // trim(string(s)))
+                     &variable `" // trim(name) // "': " // trim(string(s)))
              end if
           end if
        end if
