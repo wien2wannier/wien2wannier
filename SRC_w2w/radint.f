@@ -4,7 +4,7 @@
       USE param
       USE struct
       USE bessel
-      use lolog, only: nlo,nlov,nlon,loor,ilo,lapw,n_rad
+      use lolog, only: n_rad
       IMPLICIT REAL(R8) (A-H,O-Z)
       INTEGER L_index,R_index
       COMMON /RADFU/   RF1(NRAD,0:LMAX2,nrf),RF2(NRAD,0:LMAX2,nrf)
@@ -53,4 +53,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-28 15:14:09 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-02-29 15:16:21 assman@faepop36.tu-graz.ac.at>

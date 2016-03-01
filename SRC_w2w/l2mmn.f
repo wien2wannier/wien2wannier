@@ -8,7 +8,7 @@ SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
   USE bessel
   USE amn_mmn
   USE pairs
-  use lolog, only: nlo,nlov,nlon,loor,ilo,lapw,n_rad
+  use lolog, only: n_rad
   IMPLICIT REAL(R8) (A-H,O-Z)
   INTEGER          pair_index, r_index
   REAL(R8)           KX1,KY1,KZ1                       ! k-points in u.c. coordinates k and k+b
@@ -208,4 +208,4 @@ END SUBROUTINE l2MMN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-02-03 14:46:29 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-02-29 15:11:56 assman@faepop36.tu-graz.ac.at>

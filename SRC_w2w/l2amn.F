@@ -7,7 +7,7 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
   USE xa3
   USE amn_mmn
   USE pairs
-  use lolog, only: nlo,nlov,nlon,loor,ilo,lapw,n_rad
+  use lolog, only: nlo,nlov,nlon,loor,ilo,lapw
   IMPLICIT REAL(R8) (A-H,O-Z)
   COMPLEX(C16)       YL((LMAX2+1)*(LMAX2+1))        ! list of spherical harmics
   COMPLEX(C16)       projection(NB,NPROJ,NUM_KPTS)
@@ -264,4 +264,4 @@ END SUBROUTINE l2AMN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-28 15:13:05 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-02-29 15:17:02 assman@faepop36.tu-graz.ac.at>

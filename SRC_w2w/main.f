@@ -21,7 +21,7 @@
 
 program wf
   use param
-  use const,    only: R8, C16, BUFSZ
+  use const,    only: R8, BUFSZ
   use struct,   only: aa,bb,cc, irel, alpha, Nat, lattic, title, init_struct
   use xa,       only: init_xa
   use xa3,      only: init_xa3
@@ -301,4 +301,4 @@ END program wf
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-08-10 12:39:14 assman@faepop23.tu-graz.ac.at>
+!! Time-stamp: <2016-02-29 15:11:38 assman@faepop36.tu-graz.ac.at>

@@ -5,7 +5,7 @@
      USE struct
      USE xa3
      use xa
-     use lolog, only: nlo,nlov,nlon,loor,ilo,lapw,n_rad
+     use lolog, only: nlo,nlov,nlon,ilo,lapw,n_rad
      IMPLICIT REAL(R8) (A-H,O-Z)
 
      real(r8)     h_al(iblock),h_bl(iblock)
@@ -161,4 +161,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-28 16:42:34 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-02-29 15:17:03 assman@faepop36.tu-graz.ac.at>

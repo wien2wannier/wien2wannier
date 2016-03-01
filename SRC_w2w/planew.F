@@ -7,7 +7,7 @@
   USE xa3
   USE amn_mmn
   USE pairs
-  use lolog, only: nlo,nlov,nlon,loor,ilo,lapw,n_rad
+  use lolog, only: nlo,nlov,nlon
       IMPLICIT REAL(R8) (A-H,O-Z)
       logical, allocatable, dimension(:,:) :: a_null,a_null_fin
       INTEGER          pair_index
@@ -191,4 +191,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-28 15:13:58 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-02-29 15:17:17 assman@faepop36.tu-graz.ac.at>
