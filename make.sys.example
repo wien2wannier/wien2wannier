@@ -22,7 +22,7 @@ FOPT ?= -O3
 ### These options enable some code that uses semi-recent Fortran
 ### features.  Remove if you use an old compiler that does not support
 ### them.
-FOPT += -DHAVE_POINTER_ALLOCATABLE_GENERICS -DHAVE_VARLEN_STR
+FOPT += -DHAVE_PTR_ALLOC_GENERICS -DHAVE_VARLEN_STR
 
 
 ### Wien2k library options

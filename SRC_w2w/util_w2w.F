@@ -2073,7 +2073,7 @@ module reallocate
      module procedure realloc_c_d1, realloc_c_d2, realloc_c_d3
      module procedure realloc_i_d1, realloc_i_d2, realloc_i_d3
      module procedure realloc_a_d1, realloc_a_d2, realloc_a_d3
-#ifdef HAVE_POINTER_ALLOCATABLE_GENERICS
+#ifdef HAVE_PTR_ALLOC_GENERICS
      ! In Fortran 2008, generic procedures can distinguish between
      ! ‘pointer’ and ‘allocatable’ variables, but older compilers do
      ! not support this yet, so we only support ‘allocatable’ there.
@@ -2153,7 +2153,7 @@ contains
   subroutine realloc_a_d3 MK_REALLOC_MV(3, character(BUFSZ))
   end subroutine
 
-#ifdef HAVE_POINTER_ALLOCATABLE_GENERICS
+#ifdef HAVE_PTR_ALLOC_GENERICS
 !!! Procedures for ‘pointer’ variables, which use pointer assignment
 
   ! pointer INTENT refers to association staus
@@ -2191,7 +2191,7 @@ contains
   subroutine realloc_a_p3 MK_REALLOC_PTR(3, character(BUFSZ))
   end subroutine
 
-#endif /* HAVE_POINTER_ALLOCATABLE_GENERICS */
+#endif /* HAVE_PTR_ALLOC_GENERICS */
 end module reallocate
 
 
@@ -2201,4 +2201,4 @@ end module reallocate
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-03-01 17:23:14 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-03-01 17:34:27 assman@faepop36.tu-graz.ac.at>
