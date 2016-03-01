@@ -14,11 +14,6 @@
 !!    PI, ORTHO_TEST, SQ3, Ryd_eV, Ang_Bohr
 !!
 !!
-!! reallocate: Reallocation of arrays of various types
-!!
-!!    realloc()
-!!
-!!
 !! util: Assorted miscellanea
 !!
 !!    string(), uppercase(), lowercase(), inverse3x3()
@@ -56,6 +51,11 @@
 !!
 !!    errflg(), errclr(), gtfnam()
 !!
+!!
+!! reallocate: Reallocation of arrays of various types
+!!
+!!    realloc()
+!!
 !!\===============================================
 
 
@@ -84,335 +84,6 @@ module const
   real(DPk), parameter :: Ryd_eV     = 13.605698_DPk ! value for WIEN compat.
   real(DPk), parameter :: Ang_Bohr   = 1.8897261246_DPk
 end module const
-
-
-!----------------  Reallocation of various arrays           -----------------
-module reallocate
-  use const
-
-  implicit none
-
-  private
-  public :: realloc
-
-  interface realloc
-     ! Fortran makes this pretty cumbersome.  We need to provide one
-     ! specific subroutine for each type and rank
-     module procedure realloc_r_d1, realloc_r_d2, realloc_r_d3
-     module procedure realloc_c_d1, realloc_c_d2, realloc_c_d3
-     module procedure realloc_i_d1, realloc_i_d2, realloc_i_d3
-#ifdef HAVE_POINTER_ALLOCATABLE_GENERICS
-     ! In Fortran 2008, generic procedures can distinguish between
-     ! ‘pointer’ and ‘allocatable’ variables, but older compilers do
-     ! not support this yet, so we only support ‘allocatable’ there.
-     module procedure realloc_r_p1, realloc_r_p2, realloc_r_p3
-     module procedure realloc_c_p1, realloc_c_p2, realloc_c_p3
-     module procedure realloc_i_p1, realloc_i_p2, realloc_i_p3
-#endif
-  end interface realloc
-contains
-#ifdef HAVE_POINTER_ALLOCATABLE_GENERICS
-!!! Procedures for ‘pointer’ variables, which use pointer assignment
-  subroutine realloc_r_p1(tf, nd)
-    integer,           intent(in)  :: nd
-    ! pointer INTENT refers to association staus
-    real(r8), pointer, intent(out) :: tf(:)
-
-    real(r8), pointer :: hilfsfeld(:)
-    integer           :: min1
-
-    allocate(hilfsfeld(nd))
-    !     nur 1 mal kopieren reicht
-    !     auch fuer mehrdimensionale Felder schaut die Zuweisung gleich aus
-    min1=min(nd,size(tf,1))
-    hilfsfeld(1:min1)=tf(1:min1)
-    deallocate(tf)
-    !     der Zeiger wird nur auf das neue Feld umgebogen, nicht neu alloziert
-    tf=>hilfsfeld
-  end subroutine realloc_r_p1
-
-  subroutine realloc_r_p2(tf, nd1, nd2)
-    integer,           intent(in)  :: nd1, nd2
-    real(r8), pointer, intent(out) :: tf(:,:)
-
-    real(r8), pointer :: hilfsfeld(:,:)
-    integer           :: min1, min2
-
-    allocate(hilfsfeld(nd1,nd2))
-
-    min1=min(nd1,size(tf,1))
-    min2=min(nd2,size(tf,2))
-    hilfsfeld(1:min1,1:min2)=tf(1:min1,1:min2)
-
-    deallocate(tf)
-    tf=>hilfsfeld
-  end subroutine realloc_r_p2
-
-  subroutine realloc_r_p3(tf, nd1, nd2, nd3)
-    integer,           intent(in)  :: nd1, nd2, nd3
-    real(r8), pointer, intent(out) :: tf(:,:,:)
-
-    real(r8), pointer :: hilfsfeld(:,:,:)
-    integer           :: min1, min2, min3
-
-    allocate(hilfsfeld(nd1,nd2,nd3))
-
-    min1=min(nd1,size(tf,1))
-    min2=min(nd2,size(tf,2))
-    min3=min(nd3,size(tf,3))
-    hilfsfeld(1:min1,1:min2,1:min3)=tf(1:min1,1:min2,1:min3)
-
-    deallocate(tf)
-    tf=>hilfsfeld
-  end subroutine realloc_r_p3
-
-  subroutine realloc_c_p1(tf, nd)
-    integer,               intent(in)  :: nd
-    complex(c16), pointer, intent(out) :: tf(:)
-
-    complex(c16), pointer :: hilfsfeld(:)
-    integer               :: min1
-
-    allocate(hilfsfeld(nd))
-
-    min1=min(nd,size(tf,1))
-    hilfsfeld(1:min1)=tf(1:min1)
-
-    deallocate(tf)
-    tf=>hilfsfeld
-  end subroutine realloc_c_p1
-
-  subroutine realloc_c_p2(tf, nd1, nd2)
-    integer,               intent(in)  :: nd1, nd2
-    complex(c16), pointer, intent(out) :: tf(:,:)
-
-    complex(c16), pointer :: hilfsfeld(:,:)
-    integer             :: min1, min2
-
-    allocate(hilfsfeld(nd1,nd2))
-
-    min1=min(nd1,size(tf,1))
-    min2=min(nd2,size(tf,2))
-    hilfsfeld(1:min1,1:min2)=tf(1:min1,1:min2)
-
-    deallocate(tf)
-    tf=>hilfsfeld
-  end subroutine realloc_c_p2
-
-  subroutine realloc_c_p3(tf, nd1, nd2, nd3)
-    integer,               intent(in)  :: nd1, nd2, nd3
-    complex(c16), pointer, intent(out) :: tf(:,:,:)
-
-    complex(c16), pointer :: hilfsfeld(:,:,:)
-    integer               :: min1, min2, min3
-
-    allocate(hilfsfeld(nd1,nd2,nd3))
-
-    min1=min(nd1,size(tf,1))
-    min2=min(nd2,size(tf,2))
-    min3=min(nd3,size(tf,3))
-    hilfsfeld(1:min1,1:min2,1:min3)=tf(1:min1,1:min2,1:min3)
-
-    deallocate(tf)
-    tf=>hilfsfeld
-  end subroutine realloc_c_p3
-
-  subroutine realloc_i_p1(tf, nd)
-    integer,          intent(in)  :: nd
-    integer, pointer, intent(out) :: tf(:)
-
-    integer, pointer :: hilfsfeld(:)
-    integer          :: min1
-
-    allocate(hilfsfeld(nd))
-
-    min1=min(nd,size(tf,1))
-    hilfsfeld(1:min1)=tf(1:min1)
-
-    deallocate(tf)
-    tf=>hilfsfeld
-  end subroutine realloc_i_p1
-
-  subroutine realloc_i_p2(tf, nd1, nd2)
-    integer,          intent(in)  :: nd1, nd2
-    integer, pointer, intent(out) :: tf(:,:)
-
-    integer, pointer :: hilfsfeld(:,:)
-    integer          :: min1, min2
-
-    allocate(hilfsfeld(nd1,nd2))
-
-    min1=min(nd1,size(tf,1))
-    min2=min(nd2,size(tf,2))
-    hilfsfeld(1:min1,1:min2)=tf(1:min1,1:min2)
-
-    deallocate(tf)
-    tf=>hilfsfeld
-  end subroutine realloc_i_p2
-
-  subroutine realloc_i_p3(tf, nd1, nd2, nd3)
-    integer,          intent(in)  :: nd1, nd2, nd3
-    integer, pointer, intent(out) :: tf(:,:,:)
-
-    integer, pointer :: hilfsfeld(:,:,:)
-    integer          :: min1, min2, min3
-
-    allocate(hilfsfeld(nd1,nd2,nd3))
-
-    min1=min(nd1,size(tf,1))
-    min2=min(nd2,size(tf,2))
-    min3=min(nd3,size(tf,3))
-    hilfsfeld(1:min1,1:min2,1:min3)=tf(1:min1,1:min2,1:min3)
-
-    deallocate(tf)
-    tf=>hilfsfeld
-  end subroutine realloc_i_p3
-#endif /* HAVE_POINTER_ALLOCATABLE_GENERICS */
-
-!!! Procedures for ‘allocatable’ variables, which use move_alloc()
-  subroutine realloc_r_d1(tf, nd)
-    integer,               intent(in)    :: nd
-    real(r8), allocatable, intent(inout) :: tf(:)
-
-    real(r8), allocatable :: hilfsfeld(:)
-    integer               :: min1
-
-    allocate(hilfsfeld(nd))
-    min1=min(nd,size(tf,1))
-    hilfsfeld(1:min1)=tf(1:min1)
-
-    call move_alloc(hilfsfeld, tf) ! hilfsfeld is automatically deallocated
-  end subroutine realloc_r_d1
-
-  subroutine realloc_r_d2(tf, nd1, nd2)
-    integer,               intent(in)    :: nd1, nd2
-    real(r8), allocatable, intent(inout) :: tf(:,:)
-
-    real(r8), allocatable :: hilfsfeld(:,:)
-    integer               :: min1, min2
-
-    allocate(hilfsfeld(nd1,nd2))
-
-    min1=min(nd1,size(tf,1))
-    min2=min(nd2,size(tf,2))
-    hilfsfeld(1:min1,1:min2)=tf(1:min1,1:min2)
-
-    call move_alloc(hilfsfeld, tf)
-  end subroutine realloc_r_d2
-
-  subroutine realloc_r_d3(tf, nd1, nd2, nd3)
-    integer,               intent(in)    :: nd1, nd2, nd3
-    real(r8), allocatable, intent(inout) :: tf(:,:,:)
-
-    real(r8), allocatable :: hilfsfeld(:,:,:)
-    integer               :: min1, min2, min3
-
-    allocate(hilfsfeld(nd1,nd2,nd3))
-
-    min1=min(nd1,size(tf,1))
-    min2=min(nd2,size(tf,2))
-    min3=min(nd3,size(tf,3))
-    hilfsfeld(1:min1,1:min2,1:min3)=tf(1:min1,1:min2,1:min3)
-
-    call move_alloc(hilfsfeld, tf)
-  end subroutine realloc_r_d3
-
-  subroutine realloc_c_d1(tf, nd)
-    integer,                   intent(in)    :: nd
-    complex(c16), allocatable, intent(inout) :: tf(:)
-
-    complex(c16), allocatable :: hilfsfeld(:)
-    integer                   :: min1
-
-    allocate(hilfsfeld(nd))
-
-    min1=min(nd,size(tf,1))
-    hilfsfeld(1:min1)=tf(1:min1)
-
-    call move_alloc(hilfsfeld, tf)
-  end subroutine realloc_c_d1
-
-  subroutine realloc_c_d2(tf, nd1, nd2)
-    integer,                   intent(in)    :: nd1, nd2
-    complex(c16), allocatable, intent(inout) :: tf(:,:)
-
-    complex(c16), allocatable :: hilfsfeld(:,:)
-    integer                  :: min1, min2
-
-    allocate(hilfsfeld(nd1,nd2))
-
-    min1=min(nd1,size(tf,1))
-    min2=min(nd2,size(tf,2))
-    hilfsfeld(1:min1,1:min2)=tf(1:min1,1:min2)
-
-    call move_alloc(hilfsfeld, tf)
-  end subroutine realloc_c_d2
-
-  subroutine realloc_c_d3(tf, nd1, nd2, nd3)
-    integer,                   intent(in)    :: nd1, nd2, nd3
-    complex(c16), allocatable, intent(inout) :: tf(:,:,:)
-
-    complex(c16), allocatable :: hilfsfeld(:,:,:)
-    integer                   :: min1, min2, min3
-
-    allocate(hilfsfeld(nd1,nd2,nd3))
-
-    min1=min(nd1,size(tf,1))
-    min2=min(nd2,size(tf,2))
-    min3=min(nd3,size(tf,3))
-    hilfsfeld(1:min1,1:min2,1:min3)=tf(1:min1,1:min2,1:min3)
-
-    call move_alloc(hilfsfeld, tf)
-  end subroutine realloc_c_d3
-
-  subroutine realloc_i_d1(tf, nd)
-    integer,              intent(in)    :: nd
-    integer, allocatable, intent(inout) :: tf(:)
-
-    integer, allocatable :: hilfsfeld(:)
-    integer              :: min1
-
-    allocate(hilfsfeld(nd))
-
-    min1=min(nd,size(tf,1))
-    hilfsfeld(1:min1)=tf(1:min1)
-
-    call move_alloc(hilfsfeld, tf)
-  end subroutine realloc_i_d1
-
-  subroutine realloc_i_d2(tf, nd1, nd2)
-    integer,              intent(in)    :: nd1, nd2
-    integer, allocatable, intent(inout) :: tf(:,:)
-
-    integer, allocatable  :: hilfsfeld(:,:)
-    integer               :: min1, min2
-
-    allocate(hilfsfeld(nd1,nd2))
-
-    min1=min(nd1,size(tf,1))
-    min2=min(nd2,size(tf,2))
-    hilfsfeld(1:min1,1:min2)=tf(1:min1,1:min2)
-
-    call move_alloc(hilfsfeld, tf)
-  end subroutine realloc_i_d2
-
-  subroutine realloc_i_d3(tf, nd1, nd2, nd3)
-    integer,              intent(in)    :: nd1, nd2, nd3
-    integer, allocatable, intent(inout) :: tf(:,:,:)
-
-    integer, allocatable :: hilfsfeld(:,:,:)
-    integer              :: min1, min2, min3
-
-    allocate(hilfsfeld(nd1,nd2,nd3))
-
-    min1=min(nd1,size(tf,1))
-    min2=min(nd2,size(tf,2))
-    min3=min(nd3,size(tf,3))
-    hilfsfeld(1:min1,1:min2,1:min3)=tf(1:min1,1:min2,1:min3)
-
-    call move_alloc(hilfsfeld, tf)
-  end subroutine realloc_i_d3
-end module reallocate
 
 
 !---------------  Assorted miscellanea                        ---------------
@@ -2385,10 +2056,149 @@ module wien2k
 END MODULE wien2k
 
 
+!----------------  Reallocation of various arrays           -----------------
+module reallocate
+  use const, only: DPk, BUFSZ
+  use clio,  only: croak
+
+  implicit none
+
+  private
+  public :: realloc
+
+  interface realloc
+     ! Fortran makes this pretty cumbersome.  We need to provide one
+     ! specific subroutine for each type and rank.
+     module procedure realloc_r_d1, realloc_r_d2, realloc_r_d3
+     module procedure realloc_c_d1, realloc_c_d2, realloc_c_d3
+     module procedure realloc_i_d1, realloc_i_d2, realloc_i_d3
+     module procedure realloc_a_d1, realloc_a_d2, realloc_a_d3
+#ifdef HAVE_POINTER_ALLOCATABLE_GENERICS
+     ! In Fortran 2008, generic procedures can distinguish between
+     ! ‘pointer’ and ‘allocatable’ variables, but older compilers do
+     ! not support this yet, so we only support ‘allocatable’ there.
+     module procedure realloc_r_p1, realloc_r_p2, realloc_r_p3
+     module procedure realloc_c_p1, realloc_c_p2, realloc_c_p3
+     module procedure realloc_i_p1, realloc_i_p2, realloc_i_p3
+     module procedure realloc_a_p1, realloc_a_p2, realloc_a_p3
+#endif
+  end interface realloc
+
+contains
+
+!!! Procedures for ‘allocatable’ variables, which use move_alloc()
+#define EXPDIM1(NAME) \
+    (1:NAME(1))
+#define EXPDIM2(NAME) \
+    (1:NAME(1), 1:NAME(2))
+#define EXPDIM3(NAME) \
+    (1:NAME(1), 1:NAME(2), 1:NAME(3))
+
+#define DIMS1 (:)
+#define DIMS2 (:,:)
+#define DIMS3 (:,:,:)
+
+#ifdef __GFORTRAN__
+#define EXPDIM(NDIM, NAME) EXPDIM/**/NDIM (NAME)
+#define DIMS(NDIM) DIMS/**/NDIM
+#else
+#define EXPDIM(NDIM, NAME) EXPDIM##NDIM (NAME)
+#define DIMS(NDIM) DIMS##NDIM
+#endif
+
+    !     nur 1 mal kopieren reicht
+    !     auch fuer mehrdimensionale Felder schaut die Zuweisung gleich aus
+#define MK_REALLOC(NDIM, T, TFATTR, TFINT) (tf, nd)               ;\
+    implicit none                                                 ;\
+                                                                   \
+    integer,          intent(in)    :: nd(NDIM)                   ;\
+    T,        TFATTR, intent(TFINT) :: tf DIMS(NDIM)              ;\
+                                                                   \
+    T,        TFATTR :: hilfsfeld DIMS(NDIM)                      ;\
+    integer          :: mins(NDIM)                                ;\
+                                                                   \
+    allocate( hilfsfeld EXPDIM(NDIM, nd) )                        ;\
+    mins = min(nd, shape(tf))                                     ;\
+    hilfsfeld EXPDIM(NDIM, mins) = tf EXPDIM(NDIM, mins)
+
+#define MK_REALLOC_MV(NDIM, T)               \
+    MK_REALLOC(NDIM, T, allocatable, inout) ;\
+    call move_alloc(hilfsfeld, tf)
+
+  subroutine realloc_r_d1 MK_REALLOC_MV(1, real(DPk))
+  end subroutine
+  subroutine realloc_r_d2 MK_REALLOC_MV(2, real(DPk))
+  end subroutine
+  subroutine realloc_r_d3 MK_REALLOC_MV(3, real(DPk))
+  end subroutine
+
+  subroutine realloc_c_d1 MK_REALLOC_MV(1, complex(DPk))
+  end subroutine
+  subroutine realloc_c_d2 MK_REALLOC_MV(2, complex(DPk))
+  end subroutine
+  subroutine realloc_c_d3 MK_REALLOC_MV(3, complex(DPk))
+  end subroutine
+
+  subroutine realloc_i_d1 MK_REALLOC_MV(1, integer)
+  end subroutine
+  subroutine realloc_i_d2 MK_REALLOC_MV(2, integer)
+  end subroutine
+  subroutine realloc_i_d3 MK_REALLOC_MV(3, integer)
+  end subroutine
+
+  subroutine realloc_a_d1 MK_REALLOC_MV(1, character(BUFSZ))
+  end subroutine
+  subroutine realloc_a_d2 MK_REALLOC_MV(2, character(BUFSZ))
+  end subroutine
+  subroutine realloc_a_d3 MK_REALLOC_MV(3, character(BUFSZ))
+  end subroutine
+
+#ifdef HAVE_POINTER_ALLOCATABLE_GENERICS
+!!! Procedures for ‘pointer’ variables, which use pointer assignment
+
+  ! pointer INTENT refers to association staus
+#define MK_REALLOC_PTR(NDIM, T)          \
+    MK_REALLOC(NDIM, T, pointer, out)   ;\
+    deallocate(tf)                      ;\
+    tf=>hilfsfeld ! der Zeiger wird nur auf das neue Feld umgebogen,
+                  ! nicht neu alloziert
+
+  subroutine realloc_r_p1 MK_REALLOC_PTR(1, real(DPk))
+  end subroutine realloc_r_p1
+  subroutine realloc_r_p2 MK_REALLOC_PTR(2, real(DPk))
+  end subroutine
+  subroutine realloc_r_p3 MK_REALLOC_PTR(3, real(DPk))
+  end subroutine
+
+  subroutine realloc_c_p1 MK_REALLOC_PTR(1, complex(DPk))
+  end subroutine
+  subroutine realloc_c_p2 MK_REALLOC_PTR(2, complex(DPk))
+  end subroutine
+  subroutine realloc_c_p3 MK_REALLOC_PTR(3, complex(DPk))
+  end subroutine
+
+  subroutine realloc_i_p1 MK_REALLOC_PTR(1, integer)
+  end subroutine
+  subroutine realloc_i_p2 MK_REALLOC_PTR(2, integer)
+  end subroutine
+  subroutine realloc_i_p3 MK_REALLOC_PTR(3, integer)
+  end subroutine
+
+  subroutine realloc_a_p1 MK_REALLOC_PTR(1, character(BUFSZ))
+  end subroutine
+  subroutine realloc_a_p2 MK_REALLOC_PTR(2, character(BUFSZ))
+  end subroutine
+  subroutine realloc_a_p3 MK_REALLOC_PTR(3, character(BUFSZ))
+  end subroutine
+
+#endif /* HAVE_POINTER_ALLOCATABLE_GENERICS */
+end module reallocate
+
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-02-29 15:02:58 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-03-01 17:23:14 assman@faepop36.tu-graz.ac.at>

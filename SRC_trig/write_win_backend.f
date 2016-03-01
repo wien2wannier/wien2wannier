@@ -12,6 +12,7 @@ program write_win
   use util,      only: lowercase, newunit
   use clio,      only: fetcharg, argstr
   use kpoints,   only: get_kmesh_band, get_kmesh_klist
+  use reallocate,only: realloc
 
   implicit none
 
@@ -468,15 +469,9 @@ contains
 
   subroutine realloc_keyval(inc)
     integer, intent(in) :: inc
-    character(len=BUFSZ), allocatable :: tmp(:)
 
-    allocate(tmp(size(keys)+inc))
-    tmp(1:size(keys)) = keys(:)
-    call move_alloc(tmp, keys)
-
-    allocate(tmp(size(vals)+inc))
-    tmp(1:size(vals)) = vals(:)
-    call move_alloc(tmp, vals)
+    call realloc(keys, shape(keys)+inc)
+    call realloc(vals, shape(vals)+inc)
   end subroutine realloc_keyval
 end program write_win
 
@@ -487,4 +482,4 @@ end program write_win
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-07-07 09:54:42 assman@faepop23.tu-graz.ac.at>
+!! Time-stamp: <2016-03-01 17:12:18 assman@faepop36.tu-graz.ac.at>

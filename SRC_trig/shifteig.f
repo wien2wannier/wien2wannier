@@ -44,7 +44,7 @@ PROGRAM shift_energy
   readeig: do
      read(unit_eig, *, END=120) kpt, band, energies(iline)
      if (iline >= nbuf) then
-        call realloc(energies, nbuf+Ninc)
+        call realloc(energies, (/ nbuf+Ninc /))
         nbuf = nbuf+Ninc
      end if
      iline = iline+1
@@ -78,4 +78,4 @@ END PROGRAM shift_energy
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2016-03-01 17:09:12 assman@faepop36.tu-graz.ac.at>
