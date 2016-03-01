@@ -6,6 +6,10 @@ MODULE param
 
   public
 
+  character(*), parameter, private :: rev_str = "$version: v1.0.0-96-g0bf18d3$"
+  character(*), parameter, public  :: &
+       wien2wannier_version = rev_str(11 : len (rev_str)-1)
+
   integer, parameter :: unit_in=5, unit_out=6, unit_amn=7, unit_mmn=8
   integer, parameter :: unit_vector=9, unit_nnkp=10, unit_eig=12, unit_vsp=18
   integer, parameter :: unit_struct=20, unit_ene=50, unit_def=1, unit_fermi=51
@@ -273,4 +277,4 @@ end module lolog
 !!\---
 !!
 
-!! Time-stamp: <2015-12-29 14:09:22 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-03-01 09:42:12 assman@faepop36.tu-graz.ac.at>
