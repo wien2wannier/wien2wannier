@@ -1059,6 +1059,7 @@ contains
           else
              call croak("FETCHENV: failed to get environment variable `" // &
                   &     name // "'s length: " // trim(string(s)))
+          end if
        end if
     end if
 
@@ -2390,4 +2391,4 @@ END MODULE wien2k
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-02-12 16:50:30 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-02-29 15:02:58 assman@faepop36.tu-graz.ac.at>
