@@ -71,6 +71,8 @@ program wf
   end do def
 20 close(unit_def)
 
+  write(unit_out, '("W2W ", A /)'), wien2wannier_version
+
 !!!.....READ STRUCT
   CALL init_struct
 !!!....Find nmat and Nk
@@ -301,4 +303,4 @@ END program wf
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-02-29 15:11:38 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-03-01 11:55:08 assman@faepop36.tu-graz.ac.at>

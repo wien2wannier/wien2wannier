@@ -143,6 +143,8 @@ subroutine main()
   call wfopen(unit_psiarg, psiargfn, iseig, STATUS='unknown')
   call wfopen(unit_out,    outfn,    iseig, STATUS='unknown')
 
+  write(unit_out, '("W2W ", A /)'), wplot_version
+
   write(unit_out,"( ' selected ',A7,' :',I5)") 'Wannier function   ', iseig
 
 !!! Read chk file for num_wann, u_matrix, and friends
@@ -732,4 +734,4 @@ end subroutine main
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-02-10 17:25:08 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-03-01 11:56:08 assman@faepop36.tu-graz.ac.at>

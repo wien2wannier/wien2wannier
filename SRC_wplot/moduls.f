@@ -7,9 +7,9 @@ module param
 
   public
 
-  character(*), parameter, private :: rev_str="$version: v1.0.0-101-g854cbe1$"
+  character(*), parameter, private :: rev_str="$version: v1.0.0-102-g398a55c$"
   character(*), parameter, public  :: &
-       wien2wannier_version = rev_str(11 : len (rev_str)-1)
+       wplot_version = rev_str(11 : len (rev_str)-1)
 
 !!!/=== The following is from the old ‘param.inc_{r,c}’ ===================
 !     >> Standard WIEN97 Parameters <<
@@ -186,4 +186,4 @@ end module work1
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-03-01 11:35:12 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-03-01 11:56:22 assman@faepop36.tu-graz.ac.at>
