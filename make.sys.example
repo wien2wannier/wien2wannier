@@ -42,7 +42,7 @@ R_LIBS ?= -llapack -lf77blas -lcblas -latlas
 ifneq "$(findstring gfortran,$(FC))" ""
 FFLAGS += -ffree-form -g -pedantic -Wcharacter-truncation # -Wall -fcheck=all
 # suppress gfortran's stupid warnings about uninitialized array bounds
-FFLAGS += -Wno-maybe-uninitialized
+FFLAGS += -Wno-maybe-uninitialized -ffree-line-length-0
 MODOPT ?= -J
 
 else ifneq "$(findstring ifort,$(FC))" ""

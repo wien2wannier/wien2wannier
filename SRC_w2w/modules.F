@@ -6,7 +6,7 @@ MODULE param
 
   public
 
-  character(*), parameter, private :: rev_str="$version: v1.0.0-102-g398a55c$"
+  character(*), parameter, private :: rev_str="$version: v1.0.0-104-g51e8957$"
   character(*), parameter, public  :: &
        wien2wannier_version = rev_str(11 : len (rev_str)-1)
 
@@ -130,7 +130,7 @@ MODULE struct
        READ(unit_struct,1051) ((rotloc(i,j,jatom),i=1,3),j=1,3)
     ENDDO
     ndif=index
-    CALL realloc(pos, 3, ndif)
+    call realloc(pos, 3, ndif)
     ALLOCATE(rotij(3,3,ndif),tauij(3,ndif))
     READ(unit_struct,1151)iord
     ALLOCATE(iz(3,3,iord),tau(3,iord))
@@ -277,4 +277,4 @@ end module lolog
 !!\---
 !!
 
-!! Time-stamp: <2016-03-01 11:35:04 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-03-01 17:31:32 assman@faepop36.tu-graz.ac.at>
