@@ -7,7 +7,7 @@ module param
 
   public
 
-  character(*), parameter, private :: rev_str="$version: v1.0.0-106-g727c032$"
+  character(*), parameter, private :: rev_str="$version: v1.0.0-107-g4e08cd0$"
   character(*), parameter, public  :: &
        wplot_version = rev_str(11 : len (rev_str)-1)
 
