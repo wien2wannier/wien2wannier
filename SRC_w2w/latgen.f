@@ -13,6 +13,7 @@
 !                 TO CARTESIAN SYSTEM
         USE param
         USE struct
+        use gener, only: br1, br2
 !
 
         use const, only: R8, PI
@@ -22,7 +23,6 @@
       LOGICAL          ORTHO
 !
       COMMON /ORTH/   ORTHO
-      COMMON /GENER/  BR1(3,3),BR2(3,3)
 
 !---------------------------------------------------------------------
 !
@@ -329,4 +329,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2016-04-08 17:13:26 assman@faepop36.tu-graz.ac.at>

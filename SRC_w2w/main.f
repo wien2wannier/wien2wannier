@@ -31,6 +31,7 @@ program wf
   use pairs,    only: kp, kpb, bqx,bqy,bqz, bqx1,bqy1,bqz1, init_pairs
   use util,     only: paropen
   use wien2k,   only: errflg, errclr, gtfnam
+  use gener,    only: br1, br2
 
   implicit none
 
@@ -47,9 +48,7 @@ program wf
   integer :: nemin, nemax, Nb, Nk, nntot, bx,by,bz, kkk
 
   real(r8) :: t1, t2, t3, x1, x2
-  real(r8) :: br1(3,3), br2(3,3)
   real(r8) :: efermi
-  common /GENER/ br1, br2
 
 !-----------------------------------------------------------------------
 
@@ -303,4 +302,4 @@ END program wf
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-03-01 11:55:08 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-04-08 17:27:49 assman@faepop36.tu-graz.ac.at>

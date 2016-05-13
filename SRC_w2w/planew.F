@@ -1,14 +1,17 @@
 !!! wien2wannier/SRC_w2w/planew.F
 
       SUBROUTINE PLANEW(NB,num_kpts,NNTOT,maxx,maxy,maxz)
-  USE param
-  USE struct
-  USE xa
-  USE xa3
-  USE amn_mmn
-  USE pairs
-  use lolog, only: nlo,nlov,nlon
-      IMPLICIT REAL(R8) (A-H,O-Z)
+      use param
+      use struct
+      use xa
+      use xa3
+      use amn_mmn
+      use pairs
+      use lolog, only: nlo,nlov,nlon
+      use gener, only: br1, br2
+
+      implicit real(R8) (A-H,O-Z)
+
       logical, allocatable, dimension(:,:) :: a_null,a_null_fin
       INTEGER          pair_index
       COMPLEX(C16)       SUM(NB),SUMA(NB,NB),FF
@@ -16,8 +19,6 @@
       COMPLEX(C16)       PHSHEL
       COMPLEX(C16), allocatable, dimension(:,:,:) :: A_
       COMPLEX(C16), allocatable, dimension(:,:) :: B_
-
-      COMMON /GENER/  BR1(3,3),BR2(3,3)
 
       !allocate memory to arrays
       allocate(FAC(-(2*maxx+1):(2*maxx+1),-(2*maxy+1):(2*maxy+1),-(2*maxz+1):(2*maxz+1)) )
@@ -191,4 +192,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-02-29 15:17:17 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-05-13 14:52:52 assman@faepop71.tu-graz.ac.at>

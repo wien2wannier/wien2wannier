@@ -1,20 +1,27 @@
 !!! wien2wannier/SRC_w2w/l2mmn.f
 
-SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
+subroutine l2MMN(NB,num_kpts,NNTOT,LJMAX)
+  use const, only: R8, C16
   USE param
   USE struct
   USE xa
-  USE xa3
+  use xa3, only: xk, yk, zk
   USE bessel
   USE amn_mmn
-  USE pairs
+  use pairs
+  use gener, only: br1, br2
   use lolog, only: n_rad
-  IMPLICIT REAL(R8) (A-H,O-Z)
-  INTEGER          pair_index, r_index
-  REAL(R8)           KX1,KY1,KZ1                       ! k-points in u.c. coordinates k and k+b
+
+  implicit real(R8) (A-H,O-Z)
+
+  integer, intent(in) :: Nb, num_kpts, NNtot, LJmax
+
+  integer  :: pair_index, r_index, iscf, jatom, lfirst, itap, itape, jtape
+  integer  :: k1, k2, kkk
+  real(R8) :: tALM, tMeas1, tMeas2, t1, tt0, tt1, fac, bx, by, bz
+  real(R8) :: KX1,KY1,KZ1     ! k-points in u.c. coordinates k and k+b
   COMPLEX(C16)       YLB((LMAX2+1)*(LMAX2+1))       ! spherical harmonics expansion of b
   COMPLEX(C16)       PHSHEL,tmp,tmp1
-  COMMON /GENER/   BR1(3,3),BR2(3,3)              ! transformation between u.c. and cartesian coordinates
   COMMON /ATSPDT/  P(0:LMAX2,nrf),DP(0:LMAX2,nrf) ! radial function and its slope at RMT
   COMMON /RADFU/   RF1(NRAD,0:LMAX2,nrf),RF2(NRAD,0:LMAX2,nrf)  ! radial functions large and small component
   common /loabc/   alo(0:lomax,nloat,nrf)         ! use for local orbitals
@@ -27,9 +34,6 @@ SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
   k1_prog_itvl = min(max(num_kpts/10, 1), 100)
 
   !------------------------------------------------------------------
-
-  TWOPI=2*PI
-  FOURPI=4*PI
 
   OVERLAP = 0
 
@@ -94,10 +98,10 @@ SUBROUTINE l2MMN(NB,num_kpts,NNTOT,LJMAX)
            call cputim(tt2)
            muloop: DO mu=1,MULT(JATOM)
               latom=lfirst-1+mu
-              ARG1=BX*POS(1,LATOM)*TWOPI
-              ARG2=BY*POS(2,LATOM)*TWOPI
-              ARG3=BZ*POS(3,LATOM)*TWOPI
-              PHSHEL=EXP((0,1)*(ARG1+ARG2+ARG3))*FOURPI
+              ARG1=BX*POS(1,LATOM)*2*PI
+              ARG2=BY*POS(2,LATOM)*2*PI
+              ARG3=BZ*POS(3,LATOM)*2*PI
+              PHSHEL=exp((0,1)*(ARG1+ARG2+ARG3))*4*PI
 
               ! overlap=conjg(alm(2))*alm(1)*gaunt(2,j,1)*rad_int(2,j,1)
               L_index=0

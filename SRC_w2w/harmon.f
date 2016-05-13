@@ -2,10 +2,11 @@
 
       SUBROUTINE HARMON(N,X,Y,Z,LMAX2,F,DF,RI)
       use const
+      use gener, only: br1, br2
       IMPLICIT REAL(R8) (A-H,O-Z)
       DIMENSION X(N),Y(N),Z(N),F(LMAX2+1,N),DF(LMAX2+1,N)
       DIMENSION A(3)
-      COMMON /GENER/  BR1(3,3)
+
       LMX=LMAX2+1
       DO 1 I=1,N
       A(1)=X(I)*BR1(1,1)+Y(I)*BR1(1,2)+Z(I)*BR1(1,3)
@@ -29,4 +30,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2016-04-08 17:48:41 assman@faepop36.tu-graz.ac.at>

@@ -6,6 +6,8 @@
      USE xa3
      use xa
      use lolog, only: nlo,nlov,nlon,ilo,lapw,n_rad
+     use gener, only: br1, br2
+
      IMPLICIT REAL(R8) (A-H,O-Z)
 
      real(r8)     h_al(iblock),h_bl(iblock)
@@ -18,7 +20,6 @@
      complex(c16) ALMt((LMAX2+1)*(LMAX2+1),NB,NRF,MULT(JATOM))
      complex(c16) ALM(NB,NRF,(LMAX2+1)*(LMAX2+1),MULT(JATOM))
 
-     COMMON /GENER/   BR1(3,3),BR2(3,3)
      COMMON /ATSPDT/  P(0:LMAX2,nrf),DP(0:LMAX2,nrf)
      COMMON /loabc/   alo(0:lomax,nloat,nrf)
 
@@ -161,4 +162,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-02-29 15:17:03 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-04-08 17:11:36 assman@faepop36.tu-graz.ac.at>
