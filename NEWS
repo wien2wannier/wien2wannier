@@ -89,9 +89,9 @@ Changes in 1.0.1 (update to Wien2k_14.2) include:
 
 
 Many thanks to Marc Höppner, Hong Jiang, Okan Köksal, Gernot
-Kraberger, Oleg Rubel, Liang Si, Yundi Quan, Ulrich Wedig, Jiaxu Yan,
-Jianxin Zhu, and Manuel Zingl for their valuable comments on past
-versions.
+Kraberger, Laurence Marks, Oleg Rubel, Liang Si, Yundi Quan, Ulrich
+Wedig, Jiaxu Yan, Jianxin Zhu, and Manuel Zingl for their valuable
+comments on past versions.
 
 
 Changes in 1.0 (included in Wien2k_14.2) include:
@@ -257,5 +257,5 @@ new:       id=-(BQZ(pair_index)*m2y+BQY(pair_index))*m2x-BQX(pair_index)-1
 ## comment-start: "#"
 ## End:
 ##
-## Time-stamp: <2016-02-29 10:41:44 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-05-13 15:48:02 assman@faepop71.tu-graz.ac.at>
 ##\---

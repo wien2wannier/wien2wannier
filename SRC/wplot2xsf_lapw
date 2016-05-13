@@ -24,7 +24,7 @@ import math
 import glob
 import numpy as np
 
-__version__ = "$version: v1.0.0-111-ge1d1d79$"
+__version__ = "$version: v1.0.0-112-g4db599e$"
 
 try:
     __version__ = re.search(":\s*(.*?)\s*\$", __version__).group(1)
