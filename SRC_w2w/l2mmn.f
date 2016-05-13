@@ -123,15 +123,7 @@ subroutine l2MMN(NB,num_kpts,NNTOT,LJMAX)
                                 do irf2=1,n_rad(L2)
                                    R_index=R_index+1
                                    tmp1=ri_mat(R_index,L_index)*tmp
-                                   do num1=1,NB
-                                      do num2=1,NB
-                                         overlap(num2,num1,pair_index) = &
-                                              overlap(num2,num1,pair_index) + &
-                                              BLM(num2,irf2,INDEX2,mu) * &
-                                              ALM(num1,irf1,INDEX1,mu) * &
-                                              tmp1
-                                      end do
-                                   end do
+                                   call zgeru(NB,NB,tmp1,BLM(1,irf2,index2,mu),1,ALM(1,irf1,index1,mu),1,overlap(1,1,pair_index),size(overlap,1))
                                 ENDDO
                              ENDDO
                           ENDDO mjloop
@@ -212,4 +204,4 @@ END SUBROUTINE l2MMN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-02-29 15:11:56 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-04-08 17:56:01 assman@faepop36.tu-graz.ac.at>
