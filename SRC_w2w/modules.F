@@ -6,7 +6,7 @@ MODULE param
 
   public
 
-  character(*), parameter, private :: rev_str="$version: v1.0.0-108-g05d8e80$"
+  character(*), parameter, private :: rev_str="$version: v1.0.0-109-g1dcda8d$"
   character(*), parameter, public  :: &
        wien2wannier_version = rev_str(11 : len (rev_str)-1)
 
@@ -270,6 +270,13 @@ module lolog
   logical :: loor(0:lomax), lapw(0:lmax2)
 end module lolog
 
+module gener
+  use const, only: R8
+
+  ! transformation between u.c. and cartesian coordinates
+  real(R8) :: BR1(3,3), BR2(3,3)
+end module gener
+
 !!/---
 !! Local Variables:
 !! mode: f90
@@ -277,4 +284,4 @@ end module lolog
 !!\---
 !!
 
-!! Time-stamp: <2016-03-01 17:32:17 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-04-08 17:10:31 assman@faepop36.tu-graz.ac.at>
