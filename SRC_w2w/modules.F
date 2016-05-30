@@ -6,7 +6,7 @@ MODULE param
 
   public
 
-  character(*), parameter, private :: rev_str="$version: v1.0.0-112-g4db599e$"
+  character(*), parameter, private :: rev_str="$version: v1.0.0-113-g88a52a4$"
   character(*), parameter, public  :: &
        wien2wannier_version = rev_str(11 : len (rev_str)-1)
 
