@@ -20,7 +20,7 @@ subroutine main()
   use param,     only: Nrad, Nsym, NRF, NLOAt, LOmax, Lmax7, idx_wann,      &
        unit_in, unit_out, unit_struct, unit_vector, unit_chk, unit_rot,     &
        unit_inwf, unit_psink, unit_psiarg, outfn, vecfn, psinkfn, psiargfn, &
-       iproc
+       iproc, wplot_version
 
   implicit none
 
@@ -734,4 +734,4 @@ end subroutine main
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-03-01 11:56:08 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-06-30 16:44:21 assman@faepop71.tu-graz.ac.at>
