@@ -20,7 +20,9 @@
 !!\---
 
 program wf
-  use param
+  use param,    only: unit_def, unit_vector, unit_fermi, unit_in, unit_ene,&
+       &              unit_struct, unit_nnkp, unit_amn, unit_mmn, unit_out,&
+       &              wien2wannier_version
   use const,    only: R8, BUFSZ
   use struct,   only: aa,bb,cc, irel, alpha, Nat, lattic, title, init_struct
   use xa,       only: init_xa
