@@ -1,16 +1,25 @@
 !!! wien2wannier/SRC_w2w/abc.f
 
 subroutine abc(l,jatom,pei,pi12lo,pe12lo,jlo,lapw)
-  USE param
-  USE struct
+  use param,  only: unit_out, nloat, lomax, nrf, lmax2
+  use struct, only: RMT
 
   use const, only: R8
 
+  implicit none
+
+  integer,  intent(in) :: l, jatom, jlo
+  real(R8), intent(in) :: pei, pi12lo, pe12lo
+  logical,  intent(in) :: lapw
+
   !     abc calculates the cofficients a,b,c of the lo
-  IMPLICIT REAL(R8) (A-H,O-Z)
   common /loabc/   alo(0:lomax,nloat,nrf)
   COMMON /ATSPDT/  P(0:LMAX2,nrf),DP(0:LMAX2,nrf)
-  logical lapw
+
+  real(R8) :: alo, P, DP
+
+  integer  :: irf, jrf
+  real(R8) :: xac, xbc, clo, alonorm
   !---------------------------------------------------------------------
   !
   do irf=1,nrf
@@ -55,4 +64,4 @@ end subroutine abc
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2016-07-04 18:55:20 assman@faepop71.tu-graz.ac.at>
