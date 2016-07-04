@@ -989,7 +989,7 @@ module structmod
 
      character(len=80) :: title
      character(len= 4) :: lattic       ! lattice type
-     integer           :: nneq, nat    ! number of noneq. and total atoms
+     integer           :: Nneq, Nat    ! number of noneq. and total atoms
      character(len= 4) :: mode         ! ‘RELA’ or ‘NREL’
      real(DPk)         :: a(3)         ! lattice constants
      real(DPk)         :: alpha(3)     ! angles
@@ -1007,7 +1007,7 @@ module structmod
           &            :: rtrans       ! translational part of symmetries
                                        ! (3×N)
 
-     ! positions (3 × nat); local rotation matrices (3 × 3 × nneq)
+     ! positions (3 × Nat); local rotation matrices (3 × 3 × Nneq)
      real(DPk),         allocatable :: pos(:,:), locrot(:,:,:)
      ! neq2at(ineq) is the atom numer corresponding to ineq
      integer,           allocatable :: mult(:), isplit(:), npt(:), neq2at(:)
@@ -1035,18 +1035,18 @@ contains
     real(DPk) :: rvfac, wurzel
 
     read(lun, '(A)')          stru%title
-    read(lun, '(A, 23X, I3)') stru%lattic, stru%nneq
+    read(lun, '(A, 23X, I3)') stru%lattic, stru%Nneq
     read(lun, '(13X, A)')     stru%mode
     read(lun, '(6F10.6)')     stru%a, stru%alpha
 
     where (abs(stru%alpha) < 1e-5) stru%alpha = 90
 
-    N = stru%nneq
+    N = stru%Nneq
     allocate(stru%mult(N), stru%isplit(N), stru%aname (N), &
          &   stru%npt (N), stru%at2neq(N), stru%Z     (N), &
          &   stru%r0  (N), stru%rmt   (N), stru%locrot(3,3,N))
 
-    countat: do iat = 1, stru%nneq
+    countat: do iat = 1, stru%Nneq
        read(lun,*) ! first position
        read(lun, '(15X, I2, 17X, I2)') stru%mult(iat), stru%isplit(iat)
        ! rest of positions
@@ -1061,12 +1061,12 @@ contains
        read(lun,'(20X, 3F10.7)') stru%locrot(3, :, iat)
     end do countat
 
-    stru%nat = sum(stru%mult)
-    N = stru%nat
+    stru%Nat = sum(stru%mult)
+    N = stru%Nat
     allocate(stru%pos(3, N), stru%neq2at(N))
 
     N=0
-    do iat = 1, stru%nneq
+    do iat = 1, stru%Nneq
        stru%neq2at(N+1:N+stru%mult(iat)) = iat
 
        allocate(stru%at2neq(iat)%p(stru%mult(iat)))
@@ -1081,7 +1081,7 @@ contains
     read(lun,*) ! mode
     read(lun,*) ! uc
     N=0
-    readpos: do iat = 1, stru%nneq
+    readpos: do iat = 1, stru%Nneq
        N=N+1
        read(lun, '(9X, 3(3X, F10.8))') stru%pos(:, N)
        read(lun,*) ! mult
@@ -2201,4 +2201,4 @@ end module reallocate
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-03-01 17:34:27 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-04 18:24:48 assman@faepop71.tu-graz.ac.at>
