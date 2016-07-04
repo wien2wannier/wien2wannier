@@ -20,20 +20,20 @@
 !!\---
 
 program wf
-  use param,    only: unit_def, unit_vector, unit_fermi, unit_in, unit_ene,&
-       &              unit_struct, unit_nnkp, unit_amn, unit_mmn, unit_out,&
-       &              wien2wannier_version
-  use const,    only: R8, BUFSZ
-  use struct,   only: aa,bb,cc, irel, alpha, Nat, lattic, title, init_struct
-  use xa,       only: init_xa
-  use xa3,      only: init_xa3
-  use bessel,   only: init_bessel
-  use Amn_Mmn,  only: c, lmax2, Nmat, Nrad, Nrf, init_Mmn
-  use ams,      only: init_ams
-  use pairs,    only: kp, kpb, bqx,bqy,bqz, bqx1,bqy1,bqz1, init_pairs
-  use util,     only: paropen
-  use wien2k,   only: errflg, errclr, gtfnam
-  use gener,    only: br1, br2
+  use param,     only: unit_def, unit_vector, unit_fermi, unit_in, unit_ene,&
+       &               unit_struct, unit_nnkp, unit_amn, unit_mmn, unit_out,&
+       &               wien2wannier_version
+  use const,     only: R8, BUFSZ
+  use xa,        only: init_xa
+  use xa3,       only: init_xa3
+  use bessel,    only: init_bessel
+  use Amn_Mmn,   only: c, lmax2, Nmat, Nrad, Nrf, init_Mmn
+  use ams,       only: init_ams
+  use pairs,     only: kp, kpb, bqx,bqy,bqz, bqx1,bqy1,bqz1, init_pairs
+  use util,      only: paropen
+  use wien2k,    only: errflg, errclr, gtfnam
+  use gener,     only: br1, br2
+  use structmod, only: struct_t, struct_read
 
   implicit none
 
@@ -51,6 +51,8 @@ program wf
 
   real(r8) :: t1, t2, t3, x1, x2
   real(r8) :: efermi
+
+  type(struct_t) :: stru
 
 !-----------------------------------------------------------------------
 
@@ -75,7 +77,8 @@ program wf
   write(unit_out, '("W2W ", A /)'), wien2wannier_version
 
 !!!.....READ STRUCT
-  CALL init_struct
+  call struct_read(unit_struct, stru)
+
 !!!....Find nmat and Nk
 !!! Nk could be gotten easier from ‘klist’ -- can we get nmat
 !!! somewhere else?  (‘vector’?)
@@ -84,7 +87,7 @@ program wf
   enefile: do iloop=1,max(iproc,1)
      call paropen(unit_ene, ENEFN, iproc, iloop, STATUS='old')
 
-     header: DO I=1,NAT
+     header: DO I=1,stru%Nneq
         READ(unit_ene,*)
         READ(unit_ene,*)
      END DO header
@@ -187,20 +190,20 @@ program wf
   call init_bessel(LMAX2,LJMAX,NRAD,NRF)
   call gaunt2
   WRITE(unit_out,800)
-  WRITE(unit_out,805)  TITLE
+  WRITE(unit_out,805)  stru%title
   if (amn) then
-     write(unit_amn,806) TITLE
+     write(unit_amn,806) stru%title
      write(unit_amn,807) NEMAX-NEMIN+1,Nk,NPROJ
   endif
   if (mmn) then
-     write(unit_mmn,806) TITLE
+     write(unit_mmn,806) stru%title
      write(unit_mmn,807) NEMAX-NEMIN+1,Nk,NNTOT
   endif
 
-  WRITE(unit_out,810)  LATTIC
-  WRITE(unit_out,820)  AA,BB,CC
-  WRITE(unit_out,840)  NAT
-  WRITE(unit_out,850)  IREL
+  WRITE(unit_out,810)  stru%lattic
+  WRITE(unit_out,820)  stru%a
+  WRITE(unit_out,840)  stru%Nneq
+  WRITE(unit_out,850)  stru%mode
 
   CALL LATGEN
   !     rotate boundary vectors
@@ -210,7 +213,7 @@ program wf
      bqy(i) = int(bx*br2(2,1) + by*br2(2,2) + bz*br2(2,3))
      bqz(i) = int(bx*br2(3,1) + by*br2(3,2) + bz*br2(3,3))
   enddo
-  write(unit_out,*)' alpha test',(alpha(i),i=1,3)
+  write(unit_out,*)' alpha test',(stru%alpha(i),i=1,3)
   !.....CALCULATE CHARGE DENSITY CLM(R) IN SPHERES,  PARTIAL CHARGES
 
   ! l2mmn, l2amn need vector file to be open
@@ -304,4 +307,4 @@ END program wf
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-04-08 17:27:49 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-04 18:39:17 assman@faepop71.tu-graz.ac.at>
