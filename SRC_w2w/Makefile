@@ -86,8 +86,8 @@ distclean: clean
 #  Object files common to both REAL and COMPLEX version
 #  (i.e., these are the same for REAL and COMPLEX)
 #
-OBJS = util_w2w.o dvbes1.o inverss.o outerr.o ph.o inth.o rotate.o	\
-       sphbes.o ylm.o mknam.o cputim.o
+OBJS = util_w2w.o dvbes1.o outerr.o rotate.o mknam.o cputim.o ylm.o	\
+       sphbes.o
 
 # Comment about ‘cputim.o’: ‘siteconfig’ will copy one of the
 # ‘cputim_*.[fc]’ to ‘cputim.[fc]; the pattern rules below will then
@@ -116,13 +116,13 @@ RC_OBJS = $(filter-out $(R_OBJS), $(mod_users))
 #  Dependency information for object files
 #
 mod_users = abc.o almgen.o atpar.o diracout.o dergl.o gaunt1.o		\
-	    gaunt2.o harmon.o main.o latgen.o l2amn.o l2mmn.o		\
-	    outwin.o rint13.o inouh.o planew.o read_vec.o radint.o	\
+	    gaunt2.o harmon.o inouh.o inth.o main.o latgen.o l2amn.o	\
+	    l2mmn.o outwin.o rint13.o planew.o read_vec.o radint.o	\
 	    rout.o rotdef.o
 
 util_users = abc.o atpar.o dergl.o dvbes1.o harmon.o inouh.o inth.o	\
-	     inverss.o latgen.o main.o modules.o outwin.o ph.o		\
-	     read_vec.o rint13.o rotate.o rotdef.o rout.o sphbes.o ylm.o
+	     latgen.o main.o modules.o outwin.o read_vec.o rint13.o	\
+	     rotate.o rotdef.o rout.o sphbes.o ylm.o
 
 #........................................................................
 #
@@ -170,10 +170,10 @@ $(C_DIR)/%.o: %.[fF] Makefile
 $(foreach o, $(mod_users), $(R_DIR)/$o): $(R_DIR)/modules.o
 $(foreach o, $(mod_users), $(C_DIR)/$o): $(C_DIR)/modules.o
 
-# Dependencies on ‘w2w_util.o’; these files might have real/complex
+# Dependencies on ‘util_w2w.o’; these files might have real/complex
 # versions, or not
 $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
 	$(foreach o, $(util_users), $d/$o)): $(O_DIR)/util_w2w.o
 
 
-## Time-stamp: <2016-04-08 17:50:08 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-07-05 17:39:45 assman@faepop71.tu-graz.ac.at>
