@@ -118,11 +118,11 @@ RC_OBJS = $(filter-out $(R_OBJS), $(mod_users))
 mod_users = abc.o almgen.o atpar.o diracout.o dergl.o gaunt1.o		\
 	    gaunt2.o harmon.o inouh.o inth.o main.o latgen.o l2amn.o	\
 	    l2mmn.o outwin.o rint13.o planew.o read_vec.o radint.o	\
-	    rout.o rotdef.o
+	    rotdef.o
 
 util_users = abc.o atpar.o dergl.o dvbes1.o harmon.o inouh.o inth.o	\
 	     latgen.o main.o modules.o outwin.o read_vec.o rint13.o	\
-	     rotate.o rotdef.o rout.o sphbes.o ylm.o
+	     rotate.o rotdef.o sphbes.o ylm.o
 
 #........................................................................
 #
@@ -176,4 +176,4 @@ $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
 	$(foreach o, $(util_users), $d/$o)): $(O_DIR)/util_w2w.o
 
 
-## Time-stamp: <2016-07-05 17:39:45 assman@faepop71.tu-graz.ac.at>
+## Time-stamp: <2016-07-06 11:26:32 assman@faepop71.tu-graz.ac.at>
