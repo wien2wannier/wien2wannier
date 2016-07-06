@@ -6,7 +6,7 @@ SUBROUTINE YLM(V,LMAX,Y)
 ! version of ylm.f which was found to be numerically unstable for
 ! arguments close to but not on the z-axis (P. Balah, priv. comm.)
 ! -----------------------------------------------------------------
-  use param, only: DPk, PI
+  use param, only: DPk, TAU
 
   implicit none
 
@@ -165,8 +165,8 @@ SUBROUTINE YLM(V,LMAX,Y)
 
 !        Y(0,0)
 !
-  YLLR = 1.0D+0/SQRT(4.0D+0*PI)
-  YLLI = 0.0D+0
+  YLLR = 1/SQRT(2*TAU)
+  YLLI = 0
   Y(1) = cmplx(YLLR, YLLI, DPk)
 
 !        continue only if spherical harmonics for (L .GT. 0) are desired
@@ -275,4 +275,4 @@ END SUBROUTINE YLM
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 20:03:26 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 16:00:35 assman@faepop71.tu-graz.ac.at>

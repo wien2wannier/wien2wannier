@@ -4,7 +4,7 @@ subroutine trans(stru)
   use param,     only: DPk
   use latt,      only: br1, br2, br3, br4
   use param,     only: Nsym
-  use sym2,      only: tau, imat
+  use sym2,      only: rtrans=>trans, imat
   use structmod, only: struct_t
 
   implicit none
@@ -31,8 +31,8 @@ subroutine trans(stru)
 ! POS(:,n)    -- the n-th real space vector x
 !                x = Sum(i=1,3) x_i a_i  with  x_i = POS(i,n)
 ! IMAT(:,:,n) -- the n-th symmetry operation {Q,t} :
-! TAU(:,n)       y_i = Sum(j) Q_ij x_i + t_i  with  Q_ij = IMAT(j,i,n)
-!                                             and   t_i  = TAUK(  i,n)
+! RTRANS(:,n)       y_i = Sum(j) Q_ij x_i + t_i  with  Q_ij = IMAT(j,i,n)
+!                                             and   t_i  = RTRANSK(  i,n)
 !
 ! Algorithm:
 ! real space vectors from conventional to primitive:
@@ -70,15 +70,15 @@ subroutine trans(stru)
 !     << transform the symmetry operations >>
   DO N=1,NSYM
      DO K=1,3
-        F(K) = T(K,1)*TAU(1,N) + T(K,2)*TAU(2,N) &
-             + T(K,3)*TAU(3,N)
+        F(K) = T(K,1)*RTRANS(1,N) + T(K,2)*RTRANS(2,N) &
+             + T(K,3)*RTRANS(3,N)
         DO I=1,3
            Q(K,I) = T(K,1)*IMAT(I,1,N) + T(K,2)*IMAT(I,2,N) &
                 & + T(K,3)*IMAT(I,3,N)
         END DO
      END DO
      DO K=1,3
-        TAU(K,N) = F(K)
+        RTRANS(K,N) = F(K)
         DO I=1,3
            IMAT(I,K,N) = NINT( Q(K,1)*S(1,I) + Q(K,2)*S(2,I) + &
                 &              Q(K,3)*S(3,I) )
@@ -95,4 +95,4 @@ END SUBROUTINE TRANS
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-02-10 16:59:04 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 16:07:36 assman@faepop71.tu-graz.ac.at>

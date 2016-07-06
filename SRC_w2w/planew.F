@@ -28,7 +28,6 @@
       allocate(a_null(0:(2*maxx+1)*(2*maxy+1)*(2*maxz+1)-1,NUM_KPTS) )
       allocate(a_null_fin(0:(2*maxx+1)*(2*maxy+1)*(2*maxz+1)-1,NUM_KPTS) )
 
-      TWOPI=2.D0*PI
       m2x=2*maxx+1
       m2y=2*maxy+1
       m2z=2*maxz+1
@@ -72,7 +71,7 @@
       LFIRST=1
       DO JATOM=1,NAT
        IF (JATOM.GT.1) LFIRST=LFIRST+MULT(JATOM-1)
-       VV=4*PI*RMT(JATOM)**3/3
+       VV=2*TAU*RMT(JATOM)**3/3
        DO K=-m2z,m2z
         DO J=-m2y,m2y
          DO I=-m2x,m2x
@@ -86,7 +85,7 @@
            ARG=I*POS(1,LATOM)  &
               +J*POS(2,LATOM)  &
               +K*POS(3,LATOM)
-           PHSHEL=PHSHEL+exp(-(0,1)*ARG*TWOPI)
+           PHSHEL=PHSHEL+exp(-(0,1)*ARG*TAU)
           ENDDO
           IF ((I*I+J*J+K*K).eq.0) THEN
            FAC(I,J,K)=FAC(I,J,K)-MULT(JATOM)*VV/VOL
@@ -193,4 +192,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-05 14:25:23 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 15:36:08 assman@faepop71.tu-graz.ac.at>

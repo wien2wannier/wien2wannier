@@ -1,7 +1,7 @@
 !!! wien2wannier/SRC_wplot/gbass.f
 
 SUBROUTINE GBASS(RBAS,GBAS,TWOPI)
-  use param, only: DPk, PI
+  use param, only: DPk, TAU
 
   implicit none
 
@@ -43,7 +43,7 @@ SUBROUTINE GBASS(RBAS,GBAS,TWOPI)
   END DO
 
   IF(TWOPI)THEN
-     FAC = PI / VUC
+     FAC = TAU/2 / VUC
   ELSE
      FAC = 1  / VUC
   ENDIF
@@ -59,4 +59,4 @@ END SUBROUTINE GBASS
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-28 13:53:14 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 15:58:23 assman@faepop71.tu-graz.ac.at>

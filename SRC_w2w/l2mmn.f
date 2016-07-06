@@ -1,7 +1,7 @@
 !!! wien2wannier/SRC_w2w/l2mmn.f
 
 subroutine l2MMN(NB,num_kpts,NNTOT,LJMAX)
-  use const, only: R8, C16
+  use const, only: R8, C16, TAU
   USE param
   USE struct
   USE xa
@@ -56,7 +56,7 @@ subroutine l2MMN(NB,num_kpts,NNTOT,LJMAX)
      jtape=unit_vsp
      rewind(itape)
      CALL ATPAR(JATOM, itape, jtape)
-     FAC=4.0D0*PI*RMT(JATOM)**2/SQRT(VOL)
+     FAC=2*TAU*RMT(JATOM)**2/sqrt(VOL)
      rewind(itape)
 
      !................................
@@ -96,10 +96,10 @@ subroutine l2MMN(NB,num_kpts,NNTOT,LJMAX)
            call cputim(tt2)
            muloop: DO mu=1,MULT(JATOM)
               latom=lfirst-1+mu
-              ARG1=BX*POS(1,LATOM)*2*PI
-              ARG2=BY*POS(2,LATOM)*2*PI
-              ARG3=BZ*POS(3,LATOM)*2*PI
-              PHSHEL=exp((0,1)*(ARG1+ARG2+ARG3))*4*PI
+              ARG1=BX*POS(1,LATOM)*TAU
+              ARG2=BY*POS(2,LATOM)*TAU
+              ARG3=BZ*POS(3,LATOM)*TAU
+              PHSHEL=exp((0,1)*(ARG1+ARG2+ARG3))*2*TAU
 
               ! overlap=conjg(alm(2))*alm(1)*gaunt(2,j,1)*rad_int(2,j,1)
               L_index=0
@@ -202,4 +202,4 @@ END SUBROUTINE l2MMN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-05 15:23:42 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 15:34:51 assman@faepop71.tu-graz.ac.at>

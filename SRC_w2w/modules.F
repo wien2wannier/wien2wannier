@@ -7,7 +7,7 @@ module param
 
   public
 
-  character(*), parameter, private :: rev_str="$version: v1.0.0-123-g48fe8e0$"
+  character(*), parameter, private :: rev_str="$version: v1.0.0-124-g2671697$"
   character(*), parameter, public  :: &
        wien2wannier_version = rev_str(11 : len (rev_str)-1)
 
@@ -55,9 +55,9 @@ MODULE struct
   logical                    :: rel
   real(R8)                   :: AA,BB,CC,VOL,pia(3),alpha(3)
   real(R8),allocatable       :: R0(:),DX(:),RMT(:),zz(:),rotloc(:,:,:),v(:)
-  real(R8),allocatable       :: tau(:,:)
+  real(R8),allocatable       :: trans(:,:)
   real(R8),allocatable       :: pos(:,:)
-  real(R8),allocatable       :: rotij(:,:,:),tauij(:,:)
+  real(R8),allocatable       :: rotij(:,:,:),transij(:,:)
   character(4)               :: lattic,irel,cform
   character(80)              :: title
   character(10), allocatable :: aname(:)
@@ -117,11 +117,11 @@ MODULE struct
     ENDDO
     ndif=index
     call realloc(pos, (/ 3, ndif /))
-    ALLOCATE(rotij(3,3,ndif),tauij(3,ndif))
+    ALLOCATE(rotij(3,3,ndif),transij(3,ndif))
     READ(unit_struct,1151)iord
-    ALLOCATE(iz(3,3,iord),tau(3,iord))
+    ALLOCATE(iz(3,3,iord),trans(3,iord))
     DO j=1,iord
-       READ(unit_struct,1101)((iz(j1,j2,j),j1=1,3),tau(j2,j),j2=1,3),inum
+       READ(unit_struct,1101)((iz(j1,j2,j),j1=1,3),trans(j2,j),j2=1,3),inum
     ENDDO
 
 1000 FORMAT(A80)
@@ -339,5 +339,4 @@ end module PS1
 !! End:
 !!\---
 !!
-
-!! Time-stamp: <2016-07-06 12:49:19 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 15:35:49 assman@faepop71.tu-graz.ac.at>

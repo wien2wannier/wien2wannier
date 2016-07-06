@@ -14,9 +14,7 @@
         USE param
         USE struct
         use gener, only: br1, br2
-!
-
-        use const, only: R8, PI
+        use const, only: R8, TAU
 
       IMPLICIT REAL(R8) (A-H,O-Z)
 !
@@ -25,12 +23,12 @@
 !---------------------------------------------------------------------
 !
       SQRT3=SQRT(3.D0)
-      ALPHA(1)=ALPHA(1)*PI/180.0D0
-      ALPHA(2)=ALPHA(2)*PI/180.0D0
-      ALPHA(3)=ALPHA(3)*PI/180.0D0
-      PIA(1)=2.D0*PI/AA
-      PIA(2)=2.D0*PI/BB
-      PIA(3)=2.D0*PI/CC
+      ALPHA(1)=ALPHA(1)*TAU/360
+      ALPHA(2)=ALPHA(2)*TAU/360
+      ALPHA(3)=ALPHA(3)*TAU/360
+      PIA(1)=TAU/AA
+      PIA(2)=TAU/BB
+      PIA(3)=TAU/CC
       IF(LATTIC(1:1).EQ.'H') GOTO 10
       IF(LATTIC(1:1).EQ.'S') GOTO 20
       IF(LATTIC(1:1).EQ.'P') GOTO 20
@@ -125,9 +123,9 @@
 !
       RVFAC= 1.d0/WURZEL
       ORTHO=.TRUE.
-      if(abs(alpha(1)-pi/2.d0).gt.0.0001) ortho=.false.
-      if(abs(alpha(2)-pi/2.d0).gt.0.0001) ortho=.false.
-      if(abs(alpha(3)-pi/2.d0).gt.0.0001) ortho=.false.
+      if(abs(alpha(1)-TAU/4).gt.0.0001) ortho=.false.
+      if(abs(alpha(2)-TAU/4).gt.0.0001) ortho=.false.
+      if(abs(alpha(3)-TAU/4).gt.0.0001) ortho=.false.
 !
       GOTO 100
 !
@@ -216,7 +214,7 @@
 !.....CXZ CASE (CXZ LATTICE BUILD UP)
  51   CONTINUE
 !.....CXZ ORTHOROMBIC CASE
-      IF(ABS(ALPHA(3)-PI/2.0D0).LT.0.0001) then
+      if(abs(ALPHA(3)-TAU/4).lt.0.0001) then
          BR1(1,1)=PIA(1)
          BR1(1,2)=0.0D0
          BR1(1,3)=0.0D0
@@ -327,4 +325,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-06 11:16:34 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 15:35:00 assman@faepop71.tu-graz.ac.at>

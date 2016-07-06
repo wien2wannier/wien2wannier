@@ -6,7 +6,7 @@ subroutine rotdef(stru, IOP)
   use param,     only: unit_out, mvatom, DPk
   use latt,      only: br2
   use struct,    only: pos
-  use sym2,      only: imat, tau, iord
+  use sym2,      only: imat, trans, iord
 
   implicit none
 
@@ -22,10 +22,10 @@ subroutine rotdef(stru, IOP)
 ! stru     -- struct
 !
 ! from MODULE SYM2 -- symmetry operations
-! IMAT,TAU -- symmetry operations (in primitive fractional coordinates)
+! IMAT,TRANS -- symmetry operations (in primitive fractional coordinates)
 ! IORD     -- number of symmetry operations
 ! ----------------------------------------------------------------------------
-! {Q|t} : y_i = Sum(j) Q_ij x_j + t_i  with  Q_ij = IMAT(j,i) and t_i = TAU(i)
+! {Q|t} : y_i = Sum(j) Q_ij x_j + t_i  with  Q_ij = IMAT(j,i) and t_i = TRANS(i)
 ! ----------------------------------------------------------------------------
 !
 ! << Output >>
@@ -55,7 +55,7 @@ subroutine rotdef(stru, IOP)
             DO 40 I=1,3
               R(I) = IMAT(1,I,JOP)*POS0(1) &
                    + IMAT(2,I,JOP)*POS0(2) &
-                   + IMAT(3,I,JOP)*POS0(3) + TAU(I,JOP)
+                   + IMAT(3,I,JOP)*POS0(3) + TRANS(I,JOP)
    40       CONTINUE
 !
 !           << check the difference modulo lattice translations >>
@@ -117,4 +117,4 @@ subroutine rotdef(stru, IOP)
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 19:48:03 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 16:02:00 assman@faepop71.tu-graz.ac.at>

@@ -1,13 +1,13 @@
 !!! wien2wannier/SRC_wplot/moduls.f
 
 module param
-  use const, only: BUFSZ, DPk, R8, C16, PI
+  use const, only: BUFSZ, DPk, R8, C16, TAU
 
   implicit none
 
   public
 
-  character(*), parameter, private :: rev_str="$version: v1.0.0-123-g48fe8e0$"
+  character(*), parameter, private :: rev_str="$version: v1.0.0-124-g2671697$"
   character(*), parameter, public  :: &
        wplot_version = rev_str(11 : len (rev_str)-1)
 
@@ -161,7 +161,7 @@ module sym2
   private :: NSYM
   public
 
-  real(DPk) :: TAU (3,NSYM)
+  real(DPk) :: TRANS(3,NSYM)
   integer   :: IMAT(3,3,NSYM), IORD
 end module sym2
 
@@ -186,4 +186,4 @@ end module work1
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-03-01 11:56:22 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 16:01:37 assman@faepop71.tu-graz.ac.at>

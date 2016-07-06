@@ -3,8 +3,8 @@
 SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
   use param,   only: Lmax2, iblock, Ndif, NRF, Nmat, lomax, &
        unit_vsp, unit_out, unit_amn
-  use const,   only: R8, C16, PI
-  use struct,  only: Nat, mult, rotloc, RMT, vol, rotij, tauij, pos
+  use const,   only: R8, C16, TAU
+  use struct,  only: Nat, mult, rotloc, RMT, vol, rotij, transij, pos
   use xa,      only: BK, FJ, DFJ, PHS, BKrot, BKRloc
   use xa3,     only: A, XK,YK,ZK, GX,GY,GZ, BKX,BKY,BKZ, vecsz
   use amn_mmn, only: C
@@ -70,15 +70,17 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
            BKZ(I)=ZK(kkk)+GZ(I,kkk)
         ENDDO
         CALL HARMON(N,BKX,BKY,BKZ,LMAX2,FJ,DFJ,RMT(JATOM))    ! calculate Bessel functions j_l(|Q+k|*RMT)
-        FAC=4.0D0*PI*RMT(JATOM)**2/SQRT(VOL)
+
+        FAC=2*TAU*RMT(JATOM)**2/sqrt(VOL)
         ALM=0
+
         equiv1: DO MU=1,MULT(JATOM)    !  loop over equivalent atoms
            !  write(*,*)"debugatom",jatom,mu
            latom=lfirst-1+mu
            if (kkk.eq.1) then
               do i=1,3
                  write(unit_out, '(3f12.6,4x,f12.4)') &
-                      (rotij(i,j,latom),j=1,3),tauij(i,latom)
+                      (rotij(i,j,latom),j=1,3),transij(i,latom)
               enddo
               write(unit_out,*)
            endif
@@ -99,8 +101,8 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
                  arg=bkrot(1)*pos(1,lfirst)+  &
                       bkrot(2)*pos(2,lfirst)+  &
                       bkrot(3)*pos(3,lfirst)+  &
-                      bkx(i)*tauij(1,latom)+bky(i)*tauij(2,latom)+bkz(i)*tauij(3,latom)
-                 phshel=EXP((0,1)*(arg*2*PI))
+                      bkx(i)*transij(1,latom)+bky(i)*transij(2,latom)+bkz(i)*transij(3,latom)
+                 phshel=exp((0,1)*(arg*TAU))
                  INDEX=0
                  DO L=0,LMAX2
                     MAX=2*L+1
@@ -178,8 +180,8 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
                           arg=bkrot(1)*pos(1,lfirst)+  &
                                bkrot(2)*pos(2,lfirst)+  &
                                bkrot(3)*pos(3,lfirst)+  &
-                               bkx(i)*tauij(1,latom)+bky(i)*tauij(2,latom)+bkz(i)*tauij(3,latom)
-                          phshel=EXP((0,1)*(arg*2*PI))
+                               bkx(i)*transij(1,latom)+bky(i)*transij(2,latom)+bkz(i)*transij(3,latom)
+                          phshel=exp((0,1)*(arg*TAU))
                           DO NUM=1,NB
                              PHS(NUM)=PHSHEL*A(I,NUM,kkk)
                           ENDDO
@@ -266,4 +268,4 @@ END SUBROUTINE l2AMN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-05 15:41:20 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 15:55:55 assman@faepop71.tu-graz.ac.at>

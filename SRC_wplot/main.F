@@ -4,7 +4,7 @@ subroutine main()
   use struct,    only: pos, RMT
   use radgrd,    only: rm, dx
   use latt,      only: br1, br2, br3, br4
-  use sym2,      only: tau, imat, iord
+  use sym2,      only: rtrans=>trans, imat, iord
   use lolog,     only: lapw, ilo, Nlo
   use loabc,     only: Alo
   use atspdt,    only: p, dp
@@ -12,7 +12,7 @@ subroutine main()
   use bessfu,    only: fj, dfj, rad, irad
   use work,      only: aug
   use grid,      only: rgrid, ireg, ilat, iri, npg
-  use const,     only: DPk, BUFSZ, PI, error_unit
+  use const,     only: DPk, BUFSZ, TAU, error_unit
   use util,      only: paropen, uppercase
   use clio,      only: croak, carp
   use Wannier90, only: chk_t, chk_read
@@ -258,11 +258,11 @@ subroutine main()
   iord = size(stru%rsym, 3)
   IF(IORD.GT.NSYM) call croak('NSYM too small')
 
-  imat = stru%rsym
-  tau  = stru%rtrans
+  imat   = stru%rsym
+  rtrans = stru%rtrans
   DO K=1,IORD
      write(unit_out,"(I5,3I8,F13.5/2(5X,3I8,F13.5/))") &
-          K,((IMAT(J,I,K),J=1,3),TAU(I,K),I=1,3)
+          K,((IMAT(J,I,K),J=1,3),RTRANS(I,K),I=1,3)
   end DO
 
   write(unit_out, &
@@ -282,7 +282,7 @@ subroutine main()
           stru%Neq2at(INDEX),(stru%pos(I,INDEX),I=1,3),(R(J),J=1,3)
   end do
 
-  ! trans() updates stru%pos, IMAT, TAU
+  ! trans() updates stru%pos, IMAT, RTRANS
   if (.not. stru%prim) call trans(stru)
 
   ! rotdef() updates POS, sets IOP
@@ -443,8 +443,8 @@ subroutine main()
   PREFAC = PREFAC / SQRT(STRU%VOL)
 !
 !     << scale reciprocal basis vectors with 2pi >>
-  BR3 = 2*PI*BR3
-  BR4 = 2*PI*BR4
+  BR3 = TAU*BR3
+  BR4 = TAU*BR4
 
 !     ---------
 !     MAIN LOOP
@@ -549,7 +549,7 @@ subroutine main()
               FK(I) = BR2(I,1)*R(1) + BR2(I,2)*R(2) + BR2(I,3)*R(3)
            end DO
         ELSE
-           FK(:) = 2*PI * FK(:)
+           FK(:) = TAU * FK(:)
         ENDIF
 
 !       << load spherical Bessel functions and their derivatives >>
@@ -611,7 +611,7 @@ subroutine main()
 !                                 B_l,m,a * d/dE u_l,a(r,E _l,a) +
 !                                 C_l,m,a *      u_l,a(r,E'_l,a) ]
 ! ----------------------------------------------------------------------------
-              PHS = 4*PI * RMT(JNEQ)*RMT(JNEQ)
+              PHS = 2*TAU * RMT(JNEQ)*RMT(JNEQ)
               LM = 0
               DO L=0,LMAX7
                  DO M=-L,L
@@ -662,7 +662,7 @@ subroutine main()
      do IG=1,NPG
         if(abs(tot(IG)) > 1e-18_DPk) &
              PHSAV =  &
-             PHSAV + mod(atan2(aimag(tot(ig)), real(tot(ig)))+PI, PI)
+             PHSAV + mod(atan2(aimag(tot(ig)), real(tot(ig)))+TAU/2, TAU/2)
      end do
      PHSAV = PHSAV/real(NPG, DPk)
      PHS   = cmplx(cos(PHSAV), -sin(PHSAV), DPk)
@@ -734,4 +734,4 @@ end subroutine main
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-06-30 16:44:21 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 16:04:32 assman@faepop71.tu-graz.ac.at>

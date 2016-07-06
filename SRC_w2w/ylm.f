@@ -165,9 +165,9 @@
 
 !        Y(0,0)
 !
-      YLLR = 1.0D+0/SQRT(4.0D+0*PI)
-      YLLI = 0.0D+0
-      Y(1) = DCMPLX(YLLR,YLLI)
+      YLLR = 1/sqrt(2*TAU)
+      YLLI = 0
+      Y(1) = cmplx(YLLR,YLLI, R8)
 !
 !        continue only if spherical harmonics for (L .GT. 0) are desired
 !
@@ -277,4 +277,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-06-30 22:52:49 assman@faepop23.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 14:19:21 assman@faepop71.tu-graz.ac.at>

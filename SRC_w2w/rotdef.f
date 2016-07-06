@@ -23,13 +23,13 @@ SUBROUTINE ROTDEF
         DO I=1,IORD
            x(1:3)=0.d0
            x=MATMUL(TRANSPOSE(iz(1:3,1:3,i)),pos(1:3,index1))
-           x(1:3)=x(1:3)+tau(1:3,i)
+           x(1:3)=x(1:3)+trans(1:3,i)
            x1(1:3)=MOD(ABS(X(1:3)-POS(1:3,INDEX))+toler,one)-toler
 !           WRITE(*,*) 'JATOM,INDEX,I',JATOM,INDEX,I
 !           WRITE(*,*) ABS(X1(1:3)),toler
            IF(MAXVAL(ABS(X1)).LT.TOLER2) THEN
               NCOUNT=NCOUNT+1
-              TAUIJ(1:3,INDEX)=TAU(1:3,I)
+              TRANSIJ(1:3,INDEX)=TRANS(1:3,I)
               ROTIJ(1:3,1:3,INDEX)=IZ(1:3,1:3,I)
               GOTO 30
            END IF
@@ -38,7 +38,7 @@ SUBROUTINE ROTDEF
               x1(1:3)=mod(x1(1:3)+0.5d0+toler,one)-toler
               IF(MAXVAL(ABS(X1)).LT.TOLER2) THEN
                  NCOUNT=NCOUNT+1
-                 TAUIJ(1:3,INDEX)=TAU(1:3,I)
+                 TRANSIJ(1:3,INDEX)=TRANS(1:3,I)
                  ROTIJ(1:3,1:3,INDEX)=IZ(1:3,1:3,I)
                  GOTO 30
               END IF
@@ -47,7 +47,7 @@ SUBROUTINE ROTDEF
               x1(1:2)=mod(x1(1:2)+0.5d0+toler,one)-toler
               IF(MAXVAL(ABS(X1)).LT.TOLER2) THEN
                  NCOUNT=NCOUNT+1
-                 TAUIJ(1:3,INDEX)=TAU(1:3,I)
+                 TRANSIJ(1:3,INDEX)=TRANS(1:3,I)
                  ROTIJ(1:3,1:3,INDEX)=IZ(1:3,1:3,I)
                  GOTO 30
               END IF
@@ -58,7 +58,7 @@ SUBROUTINE ROTDEF
               x1(3)=mod(x1(3)+0.5d0+toler,one)-toler
               IF(MAXVAL(ABS(X1)).LT.TOLER2) THEN
                  NCOUNT=NCOUNT+1
-                 TAUIJ(1:3,INDEX)=TAU(1:3,I)
+                 TRANSIJ(1:3,INDEX)=TRANS(1:3,I)
                  ROTIJ(1:3,1:3,INDEX)=IZ(1:3,1:3,I)
                  GOTO 30
               END IF
@@ -69,7 +69,7 @@ SUBROUTINE ROTDEF
               x1(2:3)=mod(x1(2:3)+0.5d0+toler,one)-toler
               IF(MAXVAL(ABS(X1)).LT.TOLER2) THEN
                  NCOUNT=NCOUNT+1
-                 TAUIJ(1:3,INDEX)=TAU(1:3,I)
+                 TRANSIJ(1:3,INDEX)=TRANS(1:3,I)
                  ROTIJ(1:3,1:3,INDEX)=IZ(1:3,1:3,I)
                  GOTO 30
               END IF
@@ -113,4 +113,4 @@ END SUBROUTINE ROTDEF
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2016-07-06 14:32:30 assman@faepop71.tu-graz.ac.at>

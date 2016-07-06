@@ -1,7 +1,7 @@
 !!! wien2wannier/SRC_wplot/latgen.f
 
 subroutine LATGEN(stru)
-  use const,     only: DPk, PI, SQ3
+  use const,     only: DPk, TAU, SQ3
   use latt,      only: br1, br2, br3, br4
   use param,     only: unit_out
   use structmod, only: struct_t
@@ -25,9 +25,9 @@ subroutine LATGEN(stru)
 ! Caution: The lattice vectors setup here must precisely co-incide with
 !          those used within LAPW2 !
 !
-      ALPHA = stru%alpha(1) * PI / 180
-      BETA  = stru%alpha(2) * PI / 180
-      GAMMA = stru%alpha(3) * PI / 180
+      ALPHA = stru%alpha(1) * TAU/360
+      BETA  = stru%alpha(2) * TAU/360
+      GAMMA = stru%alpha(3) * TAU/360
 
       BR1=0; BR2=0
 
@@ -287,4 +287,4 @@ subroutine LATGEN(stru)
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-23 15:41:01 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 15:58:41 assman@faepop71.tu-graz.ac.at>

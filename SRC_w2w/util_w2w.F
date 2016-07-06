@@ -11,7 +11,7 @@
 !! const: Constants mathematical and configurational
 !!
 !!    BUFSZ, DPk, IPk, R4, R8, C16
-!!    PI, ORTHO_TEST, SQ3, Ryd_eV, Ang_Bohr
+!!    TAU, ORTHO_TEST, SQ3, Ryd_eV, Ang_Bohr
 !!
 !!
 !! util: Assorted miscellanea
@@ -78,7 +78,9 @@ module const
   integer, parameter   :: R8 = kind(eight_real)
   integer, parameter   :: C16= kind(sixteen_complex)
 
-  real(DPk), parameter :: PI         = acos(-1._DPk)
+  ! The circle constant -- taken from http://tauday.com/tau-digits
+  real(DPk), parameter :: TAU        = &
+       6.28318530717958647692528676655900576839433879875021_DPk
   real(DPk), parameter :: ORTHO_TEST = 1.e-12_DPk
   real(DPk), parameter :: SQ3        = sqrt(3._DPk)
   real(DPk), parameter :: Ryd_eV     = 13.605698_DPk ! value for WIEN compat.
@@ -1018,7 +1020,7 @@ module structmod
   end type struct_t
 contains
   subroutine struct_read_unit(lun, stru)
-    use const, only: PI, SQ3, ORTHO_TEST
+    use const, only: TAU, SQ3, ORTHO_TEST
     use clio,  only: croak
     use util,  only: inverse3x3
 
@@ -1097,8 +1099,8 @@ contains
 
     !! Now compute lattice vectors.  This is copied from
     !! SRC_structeditor/module.f (subroutine latgen_struct)
-    pia = 2*PI/stru%a
-    alpha = stru%alpha*PI/180
+    pia = TAU/stru%a
+    alpha = stru%alpha*TAU/360
 
     cosab = cos(alpha(3)); sinab = sin(alpha(3))
     cosac = cos(alpha(2))
@@ -1134,7 +1136,7 @@ contains
 
        rvfac = 1/wurzel
 
-       stru%ortho = all(abs(alpha - PI/2) <= ortho_test)
+       stru%ortho = all(abs(alpha - TAU/4) <= ortho_test)
        stru%prim  = .true.
 
     case ('F')
@@ -1198,7 +1200,7 @@ contains
           br2_rec(3,:) = pia(3) * (/ 0,-1, 1 /)
 
        case ('XZ')
-          ortho: if (abs(alpha(3) - PI/2) <= 0.0001) then
+          ortho: if (abs(alpha(3) - TAU/4) <= 0.0001) then
              br2_rec(1,:) = pia(1) * (/ 1, 0, 1 /)
              br2_rec(2,:) = pia(2) * (/ 0, 1, 0 /)
              br2_rec(3,:) = pia(3) * (/-1, 0, 1 /)
@@ -1227,8 +1229,8 @@ contains
 
     stru%vol = product(stru%a) / rvfac
     stru%gbas      = br2_rec
-    stru%lat2car   = br1_dir*2*PI
-    stru%brlat     = br2_dir*2*PI
+    stru%lat2car   = br1_dir*TAU
+    stru%brlat     = br2_dir*TAU
     stru%stru2frac = matmul(br1_dir, br2_rec)
 
     ! make_ksym() needs gbas and friends
@@ -1291,7 +1293,7 @@ contains
          ! FIXME: why the check for CXZ??  sdefl.f has it …
          do i=1,Nksym
             a = matmul(matmul(stru%brlat, stru%ksym(:,:,i)), &
-                 &     stru%gbas)/2/PI
+                 &     stru%gbas)/TAU
             stru%ksym(:,:,i) = nint(a)
          end do
       end if
@@ -2156,7 +2158,7 @@ contains
 #ifdef HAVE_PTR_ALLOC_GENERICS
 !!! Procedures for ‘pointer’ variables, which use pointer assignment
 
-  ! pointer INTENT refers to association staus
+  ! pointer INTENT refers to association status
 #define MK_REALLOC_PTR(NDIM, T)          \
     MK_REALLOC(NDIM, T, pointer, out)   ;\
     deallocate(tf)                      ;\
@@ -2201,4 +2203,4 @@ end module reallocate
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-04 18:24:48 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 15:51:44 assman@faepop71.tu-graz.ac.at>

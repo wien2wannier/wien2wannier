@@ -9,9 +9,9 @@
      use gener,  only: br1, br2
      use atspdt, only: P, DP
      use loabc,  only: alo
-     use const,  only: R8, C16, PI
+     use const,  only: R8, C16, TAU
 
-     implicit none ! real(R8) (A-H,O-Z)
+     implicit none
 
      complex(C16), intent(out) :: Alm(NB,NRF,(LMAX2+1)*(LMAX2+1),MULT(JATOM))
      integer,      intent(in)  :: jatom, lfirst, NB, kkk
@@ -28,7 +28,7 @@
      real(R8) :: fac, arg, arg1, arg2, arg3
      integer  :: N, num, i,ii,i3, latom, mu, index, l, max, m,m1, irf,mirf, ibb, lda,ldb,ldc, jlo,jneq
 
-     FAC=4*PI*RMT(JATOM)**2/SQRT(VOL)
+     FAC=2*TAU*RMT(JATOM)**2/sqrt(VOL)
 
      N=vecsz(kkk)
      ALMt=0
@@ -48,9 +48,11 @@
         BK(2)=BKX(I)*BR1(2,1)+BKY(I)*BR1(2,2)+BKZ(I)*BR1(2,3)
         BK(3)=BKX(I)*BR1(3,1)+BKY(I)*BR1(3,2)+BKZ(I)*BR1(3,3)
         CALL YLM (BK,LMAX2,YL)                                  ! calculate Y_lm(Q+k)
-        ARG1=BKX(I)*POS(1,LATOM)*2*PI
-        ARG2=BKY(I)*POS(2,LATOM)*2*PI
-        ARG3=BKZ(I)*POS(3,LATOM)*2*PI
+
+        ARG1=BKX(I)*POS(1,LATOM)*TAU
+        ARG2=BKY(I)*POS(2,LATOM)*TAU
+        ARG3=BKZ(I)*POS(3,LATOM)*TAU
+
         PHSHEL=EXP((0,1)*(ARG1+ARG2+ARG3))                       ! exp(i(Q+k)R_j)
         INDEX=0
         DO  L=0,LMAX2
@@ -122,7 +124,7 @@
            BK(3)=BKX(I)*BR1(3,1)+BKY(I)*BR1(3,2)+BKZ(I)*BR1(3,3)
            CALL YLM (BK,LOMAX,YL)
            ARG=BKX(I)*POS(1,LATOM)+BKY(I)*POS(2,LATOM)+BKZ(I)*POS(3,LATOM)
-           PHSHEL=EXP((0,1)*(ARG*2*PI))
+           PHSHEL=EXP((0,1)*(ARG*TAU))
            DO NUM=1,NB
             PHS(NUM)=PHSHEL*A(I,NUM,kkk)
            ENDDO
@@ -166,4 +168,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-05 14:22:14 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 15:54:42 assman@faepop71.tu-graz.ac.at>
