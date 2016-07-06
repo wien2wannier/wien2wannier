@@ -81,7 +81,7 @@ module const
   ! The circle constant -- taken from http://tauday.com/tau-digits
   real(DPk), parameter :: TAU        = &
        6.28318530717958647692528676655900576839433879875021_DPk
-  real(DPk), parameter :: ORTHO_TEST = 1.e-12_DPk
+  real(DPk), parameter :: ORTHO_TEST = 0.0001_DPk ! seems to be WIEN standard
   real(DPk), parameter :: SQ3        = sqrt(3._DPk)
   real(DPk), parameter :: Ryd_eV     = 13.605698_DPk ! value for WIEN compat.
   real(DPk), parameter :: Ang_Bohr   = 1.8897261246_DPk
@@ -1200,7 +1200,7 @@ contains
           br2_rec(3,:) = pia(3) * (/ 0,-1, 1 /)
 
        case ('XZ')
-          ortho: if (abs(alpha(3) - TAU/4) <= 0.0001) then
+          ortho: if (abs(alpha(3) - TAU/4) <= ORTHO_TEST) then
              br2_rec(1,:) = pia(1) * (/ 1, 0, 1 /)
              br2_rec(2,:) = pia(2) * (/ 0, 1, 0 /)
              br2_rec(3,:) = pia(3) * (/-1, 0, 1 /)
@@ -2203,4 +2203,4 @@ end module reallocate
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-06 15:51:44 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 16:20:57 assman@faepop71.tu-graz.ac.at>
