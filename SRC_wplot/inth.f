@@ -11,8 +11,8 @@
 
       implicit none
 
-      real(DPk), intent(out) :: dp, dq
-      real(DPk), intent(in)  :: dv, dr
+      real(DPk), intent(inout) :: dp, dq
+      real(DPk), intent(in)    :: dv, dr
 
 ! DEP,DEQ DERIVEES DE DP ET DQ   DB=ENERGIE/DVC    DVC VITESSE DE LA
 ! LUMIERE EN U.A.   DSAL=2.*DVC   DK NOMBRE QUANTIQUE KAPPA
@@ -56,4 +56,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 16:19:36 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-05 17:18:13 assman@faepop71.tu-graz.ac.at>
