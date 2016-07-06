@@ -9,6 +9,7 @@
       use pairs
       use lolog, only: nlo,nlov,nlon
       use gener, only: br1, br2
+      use const, only: R8, C16
 
       implicit real(R8) (A-H,O-Z)
 
@@ -44,7 +45,7 @@
       DO k1=1,num_kpts
        pair_index=pair_index+1
         kkk=KP(pair_index)
-        DO I=1,size(kkk)-(nlo+nlon+nlov)
+        DO I=1,vecsz(kkk)-(nlo+nlon+nlov)
         I_X=GX(I,kkk)+maxx
         I_Y=GY(I,kkk)+maxy
         I_Z=GZ(I,kkk)+maxz
@@ -57,7 +58,7 @@
        DO k2=1,NNTOT
         if (k2.gt.1) pair_index=pair_index+1
         kk=KPB(pair_index)
-        DO I=1,size(kkk)
+        DO I=1,vecsz(kkk)
          I_X=GX(I,kk)+maxx-BQX(pair_index)
          I_Y=GY(I,kk)+maxy-BQY(pair_index)
          I_Z=GZ(I,kk)+maxz-BQZ(pair_index)
@@ -192,4 +193,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-05-13 14:52:52 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-05 14:25:23 assman@faepop71.tu-graz.ac.at>

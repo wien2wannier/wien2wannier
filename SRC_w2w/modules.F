@@ -7,7 +7,7 @@ module param
 
   public
 
-  character(*), parameter, private :: rev_str="$version: v1.0.0-121-g0ca0306$"
+  character(*), parameter, private :: rev_str="$version: v1.0.0-122-gb2e6a61$"
   character(*), parameter, public  :: &
        wien2wannier_version = rev_str(11 : len (rev_str)-1)
 
@@ -221,17 +221,17 @@ CONTAINS
   END SUBROUTINE init_xa3
 END MODULE xa3
 
-module amn_mmn
+module Amn_Mmn
   use const, only: C16
 
   implicit none
   private
-  public :: overlap, init_mmn, c
+  public :: overlap, init_Amn_Mmn, c
 
   complex(C16), allocatable :: overlap(:,:,:), c(:,:,:)
 
 contains
-  subroutine init_mmn(nbands,npair,nproj)
+  subroutine init_Amn_Mmn(nbands,npair,nproj)
     use param, only: Lmax2, Ndif
 
     integer, intent(in) :: nbands,npair,nproj
@@ -239,8 +239,8 @@ contains
     allocate(overlap(nbands,nbands,npair), c(nproj,(LMAX2+1)*(LMAX2+1),ndif))
 
     overlap = 0; c = 0
-  end subroutine init_mmn
-end module amn_mmn
+  end subroutine init_Amn_Mmn
+end module Amn_Mmn
 
 module pairs
   implicit none
@@ -263,17 +263,17 @@ module ams
   use const, only: R8
 
   real(R8), parameter :: atom_mass(103) = (/ &
-       &   1.0,   4.0,   6.9,   9.0,  10.8,  12.0,  14.0,  16.0,  19.0,  20.2,&
-       &  23.0,  24.3,  27.0,  28.1,  31.0,  32.0,  35.4,  40.0,  39.1,  40.0,&
-       &  45.0,  47.9,  50.9,  52.0,  54.9,  55.8,  58.9,  58.7,  63.5,  65.4,&
-       &  69.7,  72.6,  74.9,  79.0,  79.9,  83.8,  85.5,  87.6,  88.9,  91.2,&
-       &  92.9,  95.9,  98.0, 101.1, 102.9, 106.4, 107.9, 112.4, 114.8, 118.7,&
-       & 121.8, 127.6, 126.9, 131.3, 132.9, 137.3, 138.9, 140.1, 140.9, 144.2,&
-       & 145.0, 150.4, 152.0, 157.3, 158.9, 162.5, 164.9, 167.3, 168.9, 173.0,&
-       & 175.0, 178.5, 180.9, 183.8, 186.2, 190.2, 192.2, 195.1, 197.0, 200.6,&
-       & 204.4, 207.2, 209.0, 209.0, 210.0, 222.0, 223.0, 226.0, 227.0, 232.0,&
-       & 231.0, 238.0, 237.0, 244.0, 243.0, 247.0, 247.0, 251.0, 252.0, 257.0,&
-       & 258.0, 259.0, 262.0 /)
+         1.0,   4.0,   6.9,   9.0,  10.8,  12.0,  14.0,  16.0,  19.0,  20.2,&
+        23.0,  24.3,  27.0,  28.1,  31.0,  32.0,  35.4,  40.0,  39.1,  40.0,&
+        45.0,  47.9,  50.9,  52.0,  54.9,  55.8,  58.9,  58.7,  63.5,  65.4,&
+        69.7,  72.6,  74.9,  79.0,  79.9,  83.8,  85.5,  87.6,  88.9,  91.2,&
+        92.9,  95.9,  98.0, 101.1, 102.9, 106.4, 107.9, 112.4, 114.8, 118.7,&
+       121.8, 127.6, 126.9, 131.3, 132.9, 137.3, 138.9, 140.1, 140.9, 144.2,&
+       145.0, 150.4, 152.0, 157.3, 158.9, 162.5, 164.9, 167.3, 168.9, 173.0,&
+       175.0, 178.5, 180.9, 183.8, 186.2, 190.2, 192.2, 195.1, 197.0, 200.6,&
+       204.4, 207.2, 209.0, 209.0, 210.0, 222.0, 223.0, 226.0, 227.0, 232.0,&
+       231.0, 238.0, 237.0, 244.0, 243.0, 247.0, 247.0, 251.0, 252.0, 257.0,&
+       258.0, 259.0, 262.0 /)
 end module ams
 
 module lolog
@@ -367,4 +367,4 @@ end module PS1
 !!\---
 !!
 
-!! Time-stamp: <2016-07-05 16:07:38 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 12:29:24 assman@faepop71.tu-graz.ac.at>

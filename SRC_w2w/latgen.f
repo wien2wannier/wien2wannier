@@ -21,8 +21,6 @@
       IMPLICIT REAL(R8) (A-H,O-Z)
 !
       LOGICAL          ORTHO
-!
-      COMMON /ORTH/   ORTHO
 
 !---------------------------------------------------------------------
 !
@@ -329,4 +327,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-04-08 17:13:26 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 11:16:34 assman@faepop71.tu-graz.ac.at>

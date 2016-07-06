@@ -1,27 +1,33 @@
 !!! wien2wannier/SRC_w2w/dvbes1.f
 
-      SUBROUTINE DVBES1(FJ,DJ,SM,RI,NT)
+      SUBROUTINE DVBES1(FJ,DJ,SM,NT)
 !-----X----X----X----X----X----X----X----X----X----X----X----X----X----X
 !-----X CALCULATE THE DERIVATIVES OF THE BESSEL FUNCTIONS.   X----X----X
 !-----X   DJ=DFJ/DX WHERE X=SM*RI                                 X----X
 !-----X                    D.D.KOELLING                      X----X----X
 !-----X----X----X----X----X----X----X----X----X----X----X----X----X----X
-      use const
-      IMPLICIT REAL(R8) (A-H,O-Z)
-      DIMENSION DJ(*),FJ(*)
-      DATA ZUP/1.0D-5/,ZERO/0.0D0/,THIRD/0.3333333333333D0/,ONE/1.0D0/
+      use const, only: R8
+      implicit none
 
-      dummy = ri                ! silence warning
+      real(R8) :: FJ(NT), DJ(NT), SM
+      integer  :: NT
 
-      X=SM
-      IF(X.GT.ZUP) GOTO 20
-      DJ(1)=ZERO
-      DJ(2)=THIRD
+      intent(in)  :: FJ, SM, NT
+      intent(out) :: DJ
+
+      real(R8), parameter :: ZUP = 1.0e-5_R8
+
+      integer  :: l, lm
+      real(R8) :: q2, q3
+
+      IF(SM.GT.ZUP) GOTO 20
+      DJ(1)=0
+      DJ(2)=1/3._R8
       DO 10 L=3,NT
-         DJ(L)=ZERO
+         DJ(L)=0
  10   CONTINUE
       RETURN
-   20 Q2=-ONE/X
+   20 Q2=-1/SM
       Q3=Q2
       DJ(1)=-FJ(2)
       LM=1
@@ -40,4 +46,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2016-07-05 16:15:19 assman@faepop71.tu-graz.ac.at>

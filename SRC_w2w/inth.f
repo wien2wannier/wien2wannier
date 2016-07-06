@@ -1,23 +1,31 @@
 !!! wien2wannier/SRC_w2w/inth.f
 
-      SUBROUTINE INTH (DP,DQ,DV,DR)
+subroutine INTH (DP,DQ,DV,DR)
 !
 ! INTEGRATION PAR LA METHODE DE ADAMS A 5 POINTS DE LA GRANDE COMPOSANTE
 ! DP ET DE LA PETITE COMPOSANTE DQ AU POINT DR,DV ETANT LE POTENTIEL EN
 ! CE POINT
 ! **********************************************************************
-      use const
-      IMPLICIT REAL(R8) (A-H,O-Z)
-!     IMPLICIT REAL (D)
-      COMMON/PS1/DEP(5),DEQ(5),DB,DVC,DSAL,DK,DM
-      save  /PS1/
-!
+  use const, only: R8
+  use PS1,   only: DEP, DEQ, DB, DVC, DSAL, DK, DM
+
+  implicit none
+
+  real(R8), intent(inout) :: dp, dq
+  real(R8), intent(in)    :: dv, dr
+
 ! DEP,DEQ DERIVEES DE DP ET DQ   DB=ENERGIE/DVC    DVC VITESSE DE LA
 ! LUMIERE EN U.A.   DSAL=2.*DVC   DK NOMBRE QUANTIQUE KAPPA
 ! DM=PAS EXPONENTIEL/720.
 ! DKOEF1=405./502., DKOEF2=27./502.
 ! *********************************************************************
-      DATA DKOEF1/.9462151394422310D0/,DKOEF2/.5378486055776890D-1/
+
+      ! dkoef1 is inferred from old numerical literal
+      real(R8), parameter :: dkoef1 = 475 / 502._R8
+      real(R8), parameter :: dkoef2 =  27 / 502._R8
+
+      real(R8) :: DPR, DQR, dsum
+      integer  :: i
 
       DPR=DP+DM*((251.*DEP(1)+2616.*DEP(3)+1901.*DEP(5))-(1274.*DEP(2)+2774.*DEP(4)))
       DQR=DQ+DM*((251.*DEQ(1)+2616.*DEQ(3)+1901.*DEQ(5))-(1274.*DEQ(2)+2774.*DEQ(4)))
@@ -48,4 +56,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2016-07-05 17:22:05 assman@faepop71.tu-graz.ac.at>

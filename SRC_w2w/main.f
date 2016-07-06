@@ -22,14 +22,13 @@
 program wf
   use param,    only: unit_def, unit_vector, unit_fermi, unit_in, unit_ene,&
        &              unit_struct, unit_nnkp, unit_amn, unit_mmn, unit_out,&
-       &              wien2wannier_version
+       &              wien2wannier_version, Lmax2, Nmat, Nrad, Nrf
   use const,    only: R8, BUFSZ
   use struct,   only: aa,bb,cc, irel, alpha, Nat, lattic, title, init_struct
   use xa,       only: init_xa
   use xa3,      only: init_xa3
   use bessel,   only: init_bessel
-  use Amn_Mmn,  only: c, lmax2, Nmat, Nrad, Nrf, init_Mmn
-  use ams,      only: init_ams
+  use Amn_Mmn,  only: c, init_Mmn
   use pairs,    only: kp, kpb, bqx,bqy,bqz, bqx1,bqy1,bqz1, init_pairs
   use util,     only: paropen
   use wien2k,   only: errflg, errclr, gtfnam
@@ -54,7 +53,6 @@ program wf
 
 !-----------------------------------------------------------------------
 
-  call init_ams
   call gtfnam(deffn,errfn,iproc)
   call errflg(errfn,'Error in W2W')
   open(unit_def, FILE=deffn, STATUS='old', ERR=910)
@@ -157,8 +155,6 @@ program wf
   end do vectorfiles
 
   if(kkk /= Nk) goto 942
-
-  C(:,:,:) = dcmplx(0d0,0d0)
 
   read_proj: IF (AMN) THEN
      DO I=1,NPROJ
@@ -304,4 +300,4 @@ END program wf
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-04-08 17:27:49 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-05 15:01:47 assman@faepop71.tu-graz.ac.at>

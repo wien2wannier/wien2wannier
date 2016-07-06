@@ -1,13 +1,15 @@
 !!! wien2wannier/SRC_w2w/gaunt1.f
 
-      DOUBLE PRECISION FUNCTION GAUNT1(LP,L,LS,MP,M,MS)
+real(R8) pure function GAUNT1(LP,L,LS,MP,M,MS)
 !
-      use assleg, only: YR, N
-      IMPLICIT NONE
+  use assleg, only: YR, N
+  use const,  only: R8
+
+  implicit none
 !
 !        Arguments
 !
-      INTEGER            L, LP, LS, M, MP, MS
+  integer, intent(in) :: L, LP, LS, M, MP, MS
 !
 !     ..................................................................
 !
@@ -27,35 +29,26 @@
 !
 !      INTEGER            MAXDIM, N
 !      PARAMETER          (MAXDIM = 81, N = 6)
-      DOUBLE PRECISION   ZERO
-      PARAMETER          (ZERO = 0.0D+0)
 !
 !        Local Scalars
 !
-      INTEGER            I, IL, ILP, ILS
-      DOUBLE PRECISION   S
-      DOUBLE PRECISION   W(N)
-!
-!        Data statements
-!
-      DATA W /0.24914704581340D+0, 0.23349253653836D+0, &
-              0.20316742672307D+0, 0.16007832854335D+0, &
-              0.10693932599532D+0, 0.04717533638651D+0/
-!
+      integer  :: I, IL, ILP, ILS
+      real(R8) :: S
+      real(R8), parameter :: W(N) = (/ &
+           0.24914704581340D+0, 0.23349253653836D+0, &
+           0.20316742672307D+0, 0.16007832854335D+0, &
+           0.10693932599532D+0, 0.04717533638651D+0 /)
+
       IL = L*(L+1) + M + 1
       ILP = LP*(LP+1) + MP + 1
       ILS = LS*(LS+1) + MS + 1
-      S = ZERO
-      DO 10 I = 1, N
+      S = 0
+      do I = 1, N
          S = S + W(I)*YR(I,ILP)*YR(I,IL)*YR(I,ILS)
-   10 CONTINUE
+      end do
       GAUNT1 = S
 !
-      RETURN
-!
-!        End of 'GAUNT1'
-!
-      END
+    end function GAUNT1
 
 
 !!/---
@@ -64,4 +57,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2016-07-06 11:34:59 assman@faepop71.tu-graz.ac.at>

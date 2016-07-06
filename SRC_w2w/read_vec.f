@@ -9,7 +9,7 @@ SUBROUTINE read_vec(NEMIN,NEMAX,kkk,maxx,maxy,maxz,efermi)
   use param
   use const,  only: R8, Ryd_eV
   USE struct, only: nat
-  USE xa3,    only: XK,YK,ZK, GX,GY,GZ, size, A
+  USE xa3,    only: XK,YK,ZK, GX,GY,GZ, vecsz, A
 
   IMPLICIT none
 
@@ -33,7 +33,7 @@ SUBROUTINE read_vec(NEMIN,NEMAX,kkk,maxx,maxy,maxz,efermi)
   kpoint: do
      READ(unit_vector,END=998) XK(kkk+1),YK(kkk+1),ZK(kkk+1),BNAME,N,NE
      KKK=KKK+1
-     size(kkk)=N
+     vecsz(kkk)=N
      READ(unit_vector) (GX(I,kkk),GY(I,kkk),GZ(I,kkk), I=1,N)
      DO I=1,N
         IF (abs(GX(I,kkk)).gt.maxx) maxx=abs(GX(I,kkk))
@@ -66,4 +66,4 @@ END SUBROUTINE read_vec
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-06-30 22:52:57 assman@faepop23.tu-graz.ac.at>
+!! Time-stamp: <2016-07-05 14:20:37 assman@faepop71.tu-graz.ac.at>

@@ -1,11 +1,17 @@
 !!! wien2wannier/SRC_w2w/harmon.f
 
       SUBROUTINE HARMON(N,X,Y,Z,LMAX2,F,DF,RI)
-      use const
-      use gener, only: br1, br2
-      IMPLICIT REAL(R8) (A-H,O-Z)
-      DIMENSION X(N),Y(N),Z(N),F(LMAX2+1,N),DF(LMAX2+1,N)
-      DIMENSION A(3)
+      use const, only: R8
+      use gener, only: br1
+
+      implicit none
+
+      integer,  intent(in)  :: N, Lmax2
+      real(R8), intent(in)  :: X(N),Y(N),Z(N), RI
+      real(R8), intent(out) :: F(LMAX2+1,N), DF(LMAX2+1,N)
+
+      real(R8) :: A(3), xm, xa
+      integer  :: LMX, i, j
 
       LMX=LMAX2+1
       DO 1 I=1,N
@@ -15,7 +21,7 @@
       XM=SQRT(A(1)**2+A(2)**2+A(3)**2)
       XA=RI*XM
       CALL SPHBES(LMAX2,XA,F(1,I))
-      CALL DVBES1(F(1,I),DF(1,I),XA,RI,LMX)
+      CALL DVBES1(F(1,I),DF(1,I),XA,LMX)
       DO 2 J=1,LMX
          DF(J,I)=XM*DF(J,I)
 2     CONTINUE
@@ -30,4 +36,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-04-08 17:48:41 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-05 16:21:25 assman@faepop71.tu-graz.ac.at>
