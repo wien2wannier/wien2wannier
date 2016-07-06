@@ -9,13 +9,10 @@ subroutine l2MMN(NB,num_kpts,NNTOT,LJMAX)
   USE bessel
   USE amn_mmn
   use pairs
-  use gener, only: br1, br2
+  use gener, only: br1
   use lolog, only: n_rad
-  use atspdt, only: P, DP
-  use loabc,  only: alo
-  use radfu,  only: RF1, RF2
 
-  implicit real(R8) (A-H,O-Z)
+  implicit none
 
   integer, intent(in) :: Nb, num_kpts, NNtot, LJmax
 
@@ -23,12 +20,23 @@ subroutine l2MMN(NB,num_kpts,NNTOT,LJMAX)
   integer  :: k1, k2, kkk
   real(R8) :: tALM, tMeas1, tMeas2, t1, tt0, tt1, fac, bx, by, bz
   real(R8) :: KX1,KY1,KZ1     ! k-points in u.c. coordinates k and k+b
+
   COMPLEX(C16)       YLB((LMAX2+1)*(LMAX2+1))       ! spherical harmonics expansion of b
   COMPLEX(C16)       PHSHEL,tmp,tmp1
 
   !...............................
   complex(C16), allocatable :: alm(:,:,:,:),blm(:,:,:,:)
   !...............................
+
+  real(R8) :: BM, tt2,tt3, t2, arg1, arg2, arg3
+  integer  :: index1,index2,indexj, irf1,irf2, lj, m1,m2,mj, mu, latom, l_index, l1, l2
+
+  interface
+     real(R8) pure function GAUNT1(LP,L,LS,MP,M,MS)
+       use const, only: R8
+       integer, intent(in) :: L, LP, LS, M, MP, MS
+     end function GAUNT1
+  end interface
 
   integer :: k1_prog_itvl
   k1_prog_itvl = min(max(num_kpts/10, 1), 100)
@@ -202,4 +210,4 @@ END SUBROUTINE l2MMN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-06 15:34:51 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 16:39:42 assman@faepop71.tu-graz.ac.at>
