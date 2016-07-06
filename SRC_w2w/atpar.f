@@ -1,33 +1,33 @@
 !!! wien2wannier/SRC_w2w/atpar.f
 
-SUBROUTINE ATPAR (JATOM,LATOM,itape,jtape)
-  USE param
-  USE struct
-  use lolog, only: nlo,nlov,nlon,loor,ilo,lapw,n_rad
+subroutine ATPAR (JATOM, itape, jtape)
+  ! calculate radial functions for atoms JATOM
+  use param,  only: unit_out, clight, Nrad, Nloat, lomax, Lmax2
+  use struct, only: JRJ, mult, Nat, aname, R0, dx, zz, rel
+  use lolog,  only: nlo,nlov,nlon,loor,ilo,lapw,n_rad
+  use atspdt, only: P, DP
+  use const,  only: R8
+  use uhelp,  only: A, B
+  use radfu,  only: RF1, RF2
 
-  use const, only: R8
+  implicit none
 
-  IMPLICIT REAL(R8) (A-H,O-Z)
-  real(r8)           :: VR(NRAD)
-  LOGICAL            :: rlo(1:nloat, 0:lomax)
-  DIMENSION     emist(0:lomax,nloat),E(0:LMAX2),elo(0:LOMAX,nloat), &
-       pei(0:lmax2)
+  integer, intent(in) :: jatom, itape, jtape
 
-  COMMON /UHELP/   A(NRAD),B(NRAD),AE(NRAD),BE(NRAD)
-  COMMON /ATSPDT/  P(0:LMAX2,nrf),DP(0:LMAX2,nrf)
-  COMMON /RADFU/   RF1(NRAD,0:LMAX2,nrf),RF2(NRAD,0:LMAX2,nrf)
-  COMMON /RINTEG/  RI_MAT(0:lmax2,nrf,nrf)
-  common /loabc/   alo(0:lomax,2,nloat,nrf)
+  real(R8) :: VR(Nrad), AE(Nrad), BE(Nrad)
+  logical  :: rlo(1:nloat, 0:lomax)
+  real(r8) :: emist(0:lomax,nloat),E(0:LMAX2),elo(0:LOMAX,nloat),pei(0:lmax2)
+  integer  :: imax,irf, jlo, kappa, i,j,k,l, node,nodes,nodel, m
+  real(R8) :: dele,delei, fl, ei,e1, uvb,duvb,uv,duv,uve,duve, ovlp, trx
+  real(R8) :: try, r_m, pi12lo, pe12lo, cross
 
 2022 FORMAT(3X,4E19.12)
-
-  dummy=latom                   ! silence unused variable warning
 
   !.....READ TOTAL SPHERICAL POTENTIAL V(0,0) OF TAPEjtape=VSP
   !     NORM OF V(0,0)=V00(R)*R/SQRT(4.D0*PI)
 
   READ(jtape,1980)
-  READ(jtape,2000)IDUMMY
+  READ(jtape,2000)
   READ(jtape,2031)
   READ(jtape,2022)(VR(J),J=1,JRJ(JATOM))
   READ(jtape,2031)
@@ -236,4 +236,4 @@ END SUBROUTINE ATPAR
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-28 16:16:54 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 12:42:54 assman@faepop71.tu-graz.ac.at>

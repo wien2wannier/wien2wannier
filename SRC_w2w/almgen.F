@@ -1,32 +1,36 @@
 !!! wien2wannier/SRC_w2w/almgen.F
 
-     SUBROUTINE almgen(alm,jatom,lfirst,NB,kkk)
+     SUBROUTINE almgen(Alm,jatom,lfirst,NB,kkk)
      USE param
      USE struct
-     USE xa3
+     use xa3,    only: vecsz, XK,YK,ZK, BKX,BKY,BKZ, GX,GY,GZ, A
      use xa
-     use lolog, only: nlo,nlov,nlon,ilo,lapw,n_rad
-     use gener, only: br1, br2
+     use lolog,  only: nlo,nlov,nlon,ilo,lapw,n_rad
+     use gener,  only: br1, br2
+     use atspdt, only: P, DP
+     use loabc,  only: alo
+     use const,  only: R8, C16, PI
 
-     IMPLICIT REAL(R8) (A-H,O-Z)
+     implicit none ! real(R8) (A-H,O-Z)
 
-     real(r8)     h_al(iblock),h_bl(iblock)
+     complex(C16), intent(out) :: Alm(NB,NRF,(LMAX2+1)*(LMAX2+1),MULT(JATOM))
+     integer,      intent(in)  :: jatom, lfirst, NB, kkk
 
-     COMPLEX(C16)       YL((LMAX2+1)*(LMAX2+1))
-     COMPLEX(C16)       PHSHEL,CFAC
-     complex(c16) h_yl((LMAX2+1)*(LMAX2+1),iblock)
-     complex(c16) h_alyl((LMAX2+1)*(LMAX2+1),iblock)
-     complex(c16) h_blyl((LMAX2+1)*(LMAX2+1),iblock)
-     complex(c16) ALMt((LMAX2+1)*(LMAX2+1),NB,NRF,MULT(JATOM))
-     complex(c16) ALM(NB,NRF,(LMAX2+1)*(LMAX2+1),MULT(JATOM))
+     real(R8) :: h_al(iblock), h_bl(iblock)
 
-     COMMON /ATSPDT/  P(0:LMAX2,nrf),DP(0:LMAX2,nrf)
-     COMMON /loabc/   alo(0:lomax,nloat,nrf)
+     complex(C16) :: YL((LMAX2+1)*(LMAX2+1))
+     complex(C16) :: PHSHEL,CFAC
+     complex(C16) :: h_yl((LMAX2+1)*(LMAX2+1),iblock)
+     complex(C16) :: h_alyl((LMAX2+1)*(LMAX2+1),iblock)
+     complex(C16) :: h_blyl((LMAX2+1)*(LMAX2+1),iblock)
+     complex(C16) :: ALMt((LMAX2+1)*(LMAX2+1),NB,NRF,MULT(JATOM))
 
-     TWOPI=2.D0*PI
-     FAC=4.0D0*PI*RMT(JATOM)**2/SQRT(VOL)
+     real(R8) :: fac, arg, arg1, arg2, arg3
+     integer  :: N, num, i,ii,i3, latom, mu, index, l, max, m,m1, irf,mirf, ibb, lda,ldb,ldc, jlo,jneq
 
-     N=size(kkk)
+     FAC=4*PI*RMT(JATOM)**2/SQRT(VOL)
+
+     N=vecsz(kkk)
      ALMt=0
      DO I=1,N
       BKX(I)=XK(kkk)+GX(I,kkk)                    ! plane wave Q+k
@@ -44,9 +48,9 @@
         BK(2)=BKX(I)*BR1(2,1)+BKY(I)*BR1(2,2)+BKZ(I)*BR1(2,3)
         BK(3)=BKX(I)*BR1(3,1)+BKY(I)*BR1(3,2)+BKZ(I)*BR1(3,3)
         CALL YLM (BK,LMAX2,YL)                                  ! calculate Y_lm(Q+k)
-        ARG1=BKX(I)*POS(1,LATOM)*TWOPI
-        ARG2=BKY(I)*POS(2,LATOM)*TWOPI
-        ARG3=BKZ(I)*POS(3,LATOM)*TWOPI
+        ARG1=BKX(I)*POS(1,LATOM)*2*PI
+        ARG2=BKY(I)*POS(2,LATOM)*2*PI
+        ARG3=BKZ(I)*POS(3,LATOM)*2*PI
         PHSHEL=EXP((0,1)*(ARG1+ARG2+ARG3))                       ! exp(i(Q+k)R_j)
         INDEX=0
         DO  L=0,LMAX2
@@ -118,7 +122,7 @@
            BK(3)=BKX(I)*BR1(3,1)+BKY(I)*BR1(3,2)+BKZ(I)*BR1(3,3)
            CALL YLM (BK,LOMAX,YL)
            ARG=BKX(I)*POS(1,LATOM)+BKY(I)*POS(2,LATOM)+BKZ(I)*POS(3,LATOM)
-           PHSHEL=EXP((0,1)*(ARG*TWOPI))
+           PHSHEL=EXP((0,1)*(ARG*2*PI))
            DO NUM=1,NB
             PHS(NUM)=PHSHEL*A(I,NUM,kkk)
            ENDDO
@@ -162,4 +166,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-04-08 17:11:36 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-05 14:22:14 assman@faepop71.tu-graz.ac.at>

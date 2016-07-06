@@ -1,8 +1,7 @@
 !!! wien2wannier/SRC_w2w/inouh.f
 
-      subroutine inouh (dp,dq,dr,dq1,dfl,dv,z,test,nuc,nstop)
+subroutine inouh (dp,dq,dr,dq1,dfl,dv,z,test,nuc,nstop)
 
-!
 ! valeurs initiales pour l integration vers l exrerieur
 ! dp grande composante    dq petite composante    dr bloc des points
 ! dq1 pente a l origine de dp ou dq    dfl puissance du premier terme
@@ -11,24 +10,26 @@
 ! noyau de dimensions finies si nuc non nul
 ! nstop controle la convergence du developpement limite
 ! **********************************************************************
-        USE param
+  use param
+  use const, only: R8
+  use PS1,   only: dep, deq, db, dvc, dsal, dk ! we define out own dm
 
-        use const, only: R8
+  implicit none
 
-      implicit real(r8) (a-h,o-z)
+  integer  :: nuc, nstop
+  real(R8) :: dp(nrad), dq(nrad), dr(nrad), dq1, dfl, dv, z, test
 
-      common /ps1/ dep(5),deq(5),dd,dvc,dsal,dk,dm1
-      save   /ps1/
+  intent(in)  :: nuc, dr, dq1, dfl, dv, z, test
+  intent(out) :: nstop, dp, dq
 
-!
-! dep,deq derivees de dp et dq   dd=energie/dvc    dvc vitesse de la
+  integer  :: i,j, m
+  real(R8) :: dval, dm, deva1,deva2,deva3, dbe, dsum, dpr,dqr
+
+! dep,deq derivees de dp et dq   db=energie/dvc    dvc vitesse de la
 ! lumiere en u.a.   dsal=2.*dvc   dk nombre quantique kappa
 ! dm=pas exponentiel/720.
 ! **********************************************************************
-      common/trois/ dpno(4,30),dqno(4,30)
-      dimension dp(nrad),dq(nrad),dr(nrad)
 
-!     nuc = 0
       do i=1,10
         dp(i)=0.
         dq(i)=0.
@@ -37,7 +38,7 @@
       if (nuc.le.0) then
         dval=z/dvc
         deva1=-dval
-        deva2=dv/dvc+dval/dr(1)-dd
+        deva2=dv/dvc+dval/dr(1)-db
         deva3=0.
         if (dk.le.0) then
           dbe=(dk-dfl)/dval
@@ -50,7 +51,7 @@
       else
         dval=dv+z*(3.-dr(1)*dr(1)/(dr(nuc)*dr(nuc)))/(dr(nuc)+dr(nuc))
         deva1=0.
-        deva2=(dval-3.*z/(dr(nuc)+dr(nuc)))/dvc-dd
+        deva2=(dval-3.*z/(dr(nuc)+dr(nuc)))/dvc-db
         deva3=z/(dr(nuc)*dr(nuc)*dr(nuc)*dsal)
         if (dk.le.0.d0) then
           dp(10)=dq1
@@ -104,4 +105,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2016-07-05 17:22:45 assman@faepop71.tu-graz.ac.at>

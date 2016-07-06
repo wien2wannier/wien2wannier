@@ -28,7 +28,7 @@ program wf
   use xa,       only: init_xa
   use xa3,      only: init_xa3
   use bessel,   only: init_bessel
-  use Amn_Mmn,  only: c, init_Mmn
+  use Amn_Mmn,  only: c, init_Amn_Mmn
   use pairs,    only: kp, kpb, bqx,bqy,bqz, bqx1,bqy1,bqz1, init_pairs
   use util,     only: paropen
   use wien2k,   only: errflg, errclr, gtfnam
@@ -139,7 +139,7 @@ program wf
   Nb=nemax-nemin+1
   CALL init_xa3(Nb,nmat,Nk+1)
   CALL init_xa(LMAX2,NMAT,NRAD,Nb)
-  CALL init_mmn(Nb,n_pair,nproj)
+  CALL init_Amn_Mmn(Nb,n_pair,nproj)
 
   read(unit_fermi, *) efermi
 
@@ -300,4 +300,4 @@ END program wf
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-05 15:01:47 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 12:30:08 assman@faepop71.tu-graz.ac.at>

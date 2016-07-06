@@ -1,68 +1,56 @@
 !!! wien2wannier/SRC_w2w/diracout.f
 
-      subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk, &
-                          val,slo,nodes,z)
+subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
 
-!rschmid
-!         Integration of Dirac equation.
-!
-!  Input:
-!
-!    rel    switch for relativ. - nonrelativ. calculation
-!    v      rad.sym. potential in Hartree
-!    rnot   first radial meshpoint
-!    dstep  log. step
-!    nmax    number of radial meshpoints
-!    eh     energy in hartree
-!    nqk    relativistic quantum number kappa
-!    z      charge of nucleus
-!
-!  Output:
-!
-!    val,slo:  Wellenfunktion und Steigung am Kugelrand
-!    nodes:    nomber of nodes
-!
-!rschmid
-!
-! ----------------------------------------------------------------
-      USE param
-      USE ams
-      implicit real(r8) (a-h,o-z)
-      logical rel
-!rschmid
-!     V     =   potential*r
-!rschmid
-      DIMENSION V(NRAD)
-
-!rschmid
-!      DR   =    radial mesh
-!rschmid
-      dimension dr(NRAD)
-
-!rschmid
+! Integration of Dirac equation
+! -----------------------------
+      use param, only: clight, unit_out, Nrad
+      use const, only: R8
 !     dp    =  large component of the solution of the dirac equation
 !     dq    =  small component of the solution
-!rschmid
-      real(r8)     dp(nrad),dq(nrad)
-      DIMENSION  AP(NRAD),BP(NRAD),AE(NRAD),BE(NRAD)
-      COMMON  /uhelp/     dp,dq,AP,BP,AE,BE
-      SAVE    /uhelp/
+      use uhelp, only: dp => A, dq => B
+      use PS1,   only: dep, deq, db, dvc, dsal, dk, dm
 
-      real(r8)     dv(nrad)
-!
-! DEP,DEQ DERIVEES DE DP ET DQ   DB=ENERGIE/DVC    DVC VITESSE DE LA
-! LUMIERE EN U.A.   DSAL=2.*DVC   DK NOMBRE QUANTIQUE KAPPA
-! DM=PAS EXPONENTIEL/720., DKOEF=1./720.
+      implicit none
 
-!rschmid
-!  The name of dm should be changed to avoid a name collision
-!  with dm in inouh
-!rschmid
+!  Input:
+!    rel    switch for relativ. - nonrelativ. calculation
+!    V      rad.sym. potential in Hartree, V = potential*r
+!    Rnot   first radial meshpoint
+!    dstep  log. step
+!    Nmax   number of radial meshpoints
+!    EH     energy in hartree
+!    Nqk    relativistic quantum number kappa
+!    Z      charge of nucleus
+      real(R8), intent(in)  :: V(Nrad), Rnot, dstep, EH, Z
+      logical,  intent(in)  :: rel
+      integer,  intent(in)  :: Nmax, Nqk
 
-      COMMON /PS1/ DEP(5),DEQ(5),DB,DVC,DSAL,DK,DM
-      save   /ps1/
+!  Output:
+!    val,slo:  Wellenfunktion und Steigung am Kugelrand
+!    nodes:    nomber of nodes
+      real(R8), intent(out) :: val
+      integer,  intent(out) :: nodes
 
-      DATA DKOEF/.1388888888888888D-2/
+      real(R8), parameter :: dkoef=1 / 720._R8, test=1.e-8_R8
+      real(R8), parameter :: atom_mass(103) = (/ &
+           &   1.0,   4.0,   6.9,   9.0,  10.8,  12.0,  14.0,  16.0,  19.0, &
+           &  20.2,  23.0,  24.3,  27.0,  28.1,  31.0,  32.0,  35.4,  40.0, &
+           &  39.1,  40.0,  45.0,  47.9,  50.9,  52.0,  54.9,  55.8,  58.9, &
+           &  58.7,  63.5,  65.4,  69.7,  72.6,  74.9,  79.0,  79.9,  83.8, &
+           &  85.5,  87.6,  88.9,  91.2,  92.9,  95.9,  98.0, 101.1, 102.9, &
+           & 106.4, 107.9, 112.4, 114.8, 118.7, 121.8, 127.6, 126.9, 131.3, &
+           & 132.9, 137.3, 138.9, 140.1, 140.9, 144.2, 145.0, 150.4, 152.0, &
+           & 157.3, 158.9, 162.5, 164.9, 167.3, 168.9, 173.0, 175.0, 178.5, &
+           & 180.9, 183.8, 186.2, 190.2, 192.2, 195.1, 197.0, 200.6, 204.4, &
+           & 207.2, 209.0, 209.0, 210.0, 222.0, 223.0, 226.0, 227.0, 232.0, &
+           & 231.0, 238.0, 237.0, 244.0, 243.0, 247.0, 247.0, 251.0, 252.0, &
+           & 257.0, 258.0, 259.0, 262.0 /)
+
+!      DR   =    radial mesh
+      real(R8) :: dv(nrad),  dr(NRAD)
+      real(R8) :: d1, dfl, dq1, Rnuc, dval, slo
+      integer  :: i, nuc, nstop
 
 !rschmid
 !   Set up radial mesh.
@@ -74,9 +62,9 @@
       if (rel) then
          dvc = clight
       else
-         dvc = 1.d+10
+         dvc = 1e10_R8
       endif
-      dsal = 2.d0*dvc
+      dsal = 2*dvc
       db = eh/dvc
       dk = nqk
       dm=dstep*dkoef
@@ -89,7 +77,7 @@
 !rschmid
 
 !jk   finite size of the nucleus
-      rnuc=2.2677D-05*(atom_mass(int(z))**(1/3.))
+      rnuc=2.2677e-05_R8*(atom_mass(int(z))**(1/3._R8))
       write(unit_out,*)'amass, r0:',atom_mass(int(z)),rnuc
       do 10 i=1,nmax
        d1=rnot*exp(DSTEP*(i-1.d0))
@@ -110,8 +98,6 @@
 !rschmid
 !  Determine expansion of the potential at the origin.
 !rschmid
-      test =1.e-8
-
       CALL INOUH (dp,dq,dr,dq1,dfl,dv(1),Z,TEST,nuc,NSTOP)
 
 !rschmid
@@ -164,4 +150,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-28 16:11:50 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 13:02:26 assman@faepop71.tu-graz.ac.at>

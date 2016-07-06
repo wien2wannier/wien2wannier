@@ -20,6 +20,7 @@
         USE param
 
         use const, only: R8
+        use uhelp, only: A, B
 
 ! ----------------------------------------------------------------
       IMPLICIT REAL(R8) (A-H,O-Z)
@@ -27,8 +28,6 @@
 !
       logical rel
       DIMENSION D(2,3),V(NRAD),RNET(NRAD)
-      COMMON /UHELP/   A(NRAD),B(NRAD),AP(NRAD),BP(NRAD),AE(NRAD), &
-                       BE(NRAD)
 !C
 !     Hartree in Ryd
       E=EH*2.d0
@@ -120,4 +119,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2016-07-05 12:35:54 assman@faepop71.tu-graz.ac.at>

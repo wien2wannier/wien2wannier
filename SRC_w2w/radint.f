@@ -5,10 +5,13 @@
       USE struct
       USE bessel
       use lolog, only: n_rad
+      use const, only: R8
+      use radfu, only: RF1, RF2
+      use gener, only: br1
+
       IMPLICIT REAL(R8) (A-H,O-Z)
       INTEGER L_index,R_index
-      COMMON /RADFU/   RF1(NRAD,0:LMAX2,nrf),RF2(NRAD,0:LMAX2,nrf)
-      COMMON /GENER/  BR1(3,3)
+
       DIMENSION  A(nrad),B(nrad),X(nrad),Y(nrad)
 
 
@@ -53,4 +56,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-02-29 15:16:21 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-05 15:09:34 assman@faepop71.tu-graz.ac.at>

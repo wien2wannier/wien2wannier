@@ -11,6 +11,9 @@ subroutine l2MMN(NB,num_kpts,NNTOT,LJMAX)
   use pairs
   use gener, only: br1, br2
   use lolog, only: n_rad
+  use atspdt, only: P, DP
+  use loabc,  only: alo
+  use radfu,  only: RF1, RF2
 
   implicit real(R8) (A-H,O-Z)
 
@@ -22,9 +25,6 @@ subroutine l2MMN(NB,num_kpts,NNTOT,LJMAX)
   real(R8) :: KX1,KY1,KZ1     ! k-points in u.c. coordinates k and k+b
   COMPLEX(C16)       YLB((LMAX2+1)*(LMAX2+1))       ! spherical harmonics expansion of b
   COMPLEX(C16)       PHSHEL,tmp,tmp1
-  COMMON /ATSPDT/  P(0:LMAX2,nrf),DP(0:LMAX2,nrf) ! radial function and its slope at RMT
-  COMMON /RADFU/   RF1(NRAD,0:LMAX2,nrf),RF2(NRAD,0:LMAX2,nrf)  ! radial functions large and small component
-  common /loabc/   alo(0:lomax,nloat,nrf)         ! use for local orbitals
 
   !...............................
   complex(C16), allocatable :: alm(:,:,:,:),blm(:,:,:,:)
@@ -34,8 +34,6 @@ subroutine l2MMN(NB,num_kpts,NNTOT,LJMAX)
   k1_prog_itvl = min(max(num_kpts/10, 1), 100)
 
   !------------------------------------------------------------------
-
-  OVERLAP = 0
 
   !     ------------------
   !     LOOP FOR ALL ATOMS
@@ -57,7 +55,7 @@ subroutine l2MMN(NB,num_kpts,NNTOT,LJMAX)
      itape=unit_vector
      jtape=unit_vsp
      rewind(itape)
-     CALL ATPAR(JATOM,LFIRST,itape,jtape)      ! calculate radial functions for atoms JATOM
+     CALL ATPAR(JATOM, itape, jtape)
      FAC=4.0D0*PI*RMT(JATOM)**2/SQRT(VOL)
      rewind(itape)
 
@@ -204,4 +202,4 @@ END SUBROUTINE l2MMN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-04-08 17:56:01 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-05 15:23:42 assman@faepop71.tu-graz.ac.at>

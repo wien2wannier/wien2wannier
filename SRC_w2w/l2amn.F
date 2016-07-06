@@ -1,43 +1,43 @@
 !!! wien2wannier/SRC_w2w/l2amn.F
 
 SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
-  USE param
-  USE struct
-  USE xa
-  USE xa3
-  USE amn_mmn
-  USE pairs
-  use lolog, only: nlo,nlov,nlon,loor,ilo,lapw
-  use gener, only: br1, br2
+  use param,   only: Lmax2, iblock, Ndif, NRF, Nmat, lomax, &
+       unit_vsp, unit_out, unit_amn
+  use const,   only: R8, C16, PI
+  use struct,  only: Nat, mult, rotloc, RMT, vol, rotij, tauij, pos
+  use xa,      only: BK, FJ, DFJ, PHS, BKrot, BKRloc
+  use xa3,     only: A, XK,YK,ZK, GX,GY,GZ, BKX,BKY,BKZ, vecsz
+  use amn_mmn, only: C
+  use lolog,   only: nlo,nlov,nlon,loor,ilo,lapw
+  use gener,   only: br1, br2
+  use loabc,   only: alo
+  use atspdt,  only: P, DP
+  use const,   only: R8, C16
+  use radfu,   only: RF1, RF2
 
-  IMPLICIT REAL(R8) (A-H,O-Z)
+  implicit none
 
-  COMPLEX(C16)       YL((LMAX2+1)*(LMAX2+1))        ! list of spherical harmics
-  COMPLEX(C16)       projection(NB,NPROJ,NUM_KPTS)
-  COMPLEX(C16)       PHSHEL,CFAC,IMAG,CZERO
-  COMMON /ATSPDT/  P(0:LMAX2,nrf),DP(0:LMAX2,nrf) ! radial function and its slope at RMT
-  COMMON /RADFU/   RF1(NRAD,0:LMAX2,nrf),RF2(NRAD,0:LMAX2,nrf)  ! radial functions large and small component
-  common /loabc/   alo(0:lomax,nloat,nrf)         ! use for local orbitals
+  integer, intent(in) :: NB, Nproj, num_kpts
 
-  !...............................
-  real(r8)     h_al(iblock),h_bl(iblock)
-  complex(c16) h_yl((LMAX2+1)*(LMAX2+1),iblock)
-  complex(c16) h_alyl((LMAX2+1)*(LMAX2+1),iblock)
-  complex(c16) h_blyl((LMAX2+1)*(LMAX2+1),iblock)
-  complex(c16) alm((LMAX2+1)*(LMAX2+1),nb,ndif,nrf)
-  !...............................
+  COMPLEX(C16) :: YL((LMAX2+1)*(LMAX2+1))        ! list of spherical harmics
+  COMPLEX(C16) :: projection(NB,NPROJ,NUM_KPTS)
+  COMPLEX(C16) :: PHSHEL,CFAC
 
-  DATA CZERO/(0.0D0,0.0D0)/,IMAG/(0.0D0,1.0D0)/
+  real(R8)     :: h_al(iblock),h_bl(iblock)
+  complex(C16) :: h_yl((LMAX2+1)*(LMAX2+1),iblock)
+  complex(C16) :: h_alyl((LMAX2+1)*(LMAX2+1),iblock)
+  complex(C16) :: h_blyl((LMAX2+1)*(LMAX2+1),iblock)
+  complex(C16) :: alm((LMAX2+1)*(LMAX2+1),nb,ndif,nrf)
 
-  !------------------------------------------------------------------
-
-  TWOPI=2.D0*PI
-  FOURPI=4*PI
+  integer  :: i,ii,i3,j,k,l, m,mu,m1, num,num1,num2, n,n1,n2
+  integer  :: jatom,jlo,jneq, index, ibb,iscf,irf, lda,ldb,ldc, latom,lfirst
+  integer  :: kkk, max, itap,itape,jtape
+  real(R8) :: fac, arg, pi12lo
 
   do k=1,NUM_KPTS
      do n2=1,NPROJ
         do n1=1,NB
-           projection(n1,n2,k)=czero
+           projection(n1,n2,k)=0
         enddo
      enddo
   enddo
@@ -53,7 +53,7 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
      itape=9
      jtape=unit_vsp
      rewind(itape)
-     CALL ATPAR(JATOM,LFIRST,itape,jtape)      ! calculate radial functions for atoms JATOM
+     CALL ATPAR(JATOM, itape, jtape)
      rewind(itape)
      write(unit_out,*)'******************************************'
      do i=1,3
@@ -63,7 +63,7 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
 
 !................................
      kpoints: DO KKK=1,NUM_KPTS      !   loop over k
-        N=size(kkk)
+        N=vecsz(kkk)
         DO I=1,N
            BKX(I)=XK(kkk)+GX(I,kkk)                    ! plane wave Q+k
            BKY(I)=YK(kkk)+GY(I,kkk)
@@ -71,7 +71,7 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
         ENDDO
         CALL HARMON(N,BKX,BKY,BKZ,LMAX2,FJ,DFJ,RMT(JATOM))    ! calculate Bessel functions j_l(|Q+k|*RMT)
         FAC=4.0D0*PI*RMT(JATOM)**2/SQRT(VOL)
-        ALM=CZERO
+        ALM=0
         equiv1: DO MU=1,MULT(JATOM)    !  loop over equivalent atoms
            !  write(*,*)"debugatom",jatom,mu
            latom=lfirst-1+mu
@@ -100,7 +100,7 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
                       bkrot(2)*pos(2,lfirst)+  &
                       bkrot(3)*pos(3,lfirst)+  &
                       bkx(i)*tauij(1,latom)+bky(i)*tauij(2,latom)+bkz(i)*tauij(3,latom)
-                 phshel=EXP(imag*(arg*twopi))
+                 phshel=EXP((0,1)*(arg*2*PI))
                  INDEX=0
                  DO L=0,LMAX2
                     MAX=2*L+1
@@ -179,7 +179,7 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
                                bkrot(2)*pos(2,lfirst)+  &
                                bkrot(3)*pos(3,lfirst)+  &
                                bkx(i)*tauij(1,latom)+bky(i)*tauij(2,latom)+bkz(i)*tauij(3,latom)
-                          phshel=EXP(imag*(arg*twopi))
+                          phshel=EXP((0,1)*(arg*2*PI))
                           DO NUM=1,NB
                              PHS(NUM)=PHSHEL*A(I,NUM,kkk)
                           ENDDO
@@ -201,7 +201,7 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
            INDEX=0
            DO L=0,LMAX2
               MAX=2*L+1
-              CFAC=IMAG**L
+              CFAC=(0,1)**L
               DO M=1,MAX
                  INDEX=INDEX+1
                  DO NUM=1,NB
@@ -250,8 +250,8 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
      DO num2=1,NPROJ
         DO num1=1,NB
            write(unit_amn, '(2i4,1x,i5,1x,2e18.5)') &
-                num1,num2,kkk,real(projection(num1,num2,KKK)), &
-                dimag(projection(num1,num2,KKK))
+                num1,num2, kkk, projection(num1,num2,KKK) !real(projection(num1,num2,KKK), R8), &
+!                aimag(projection(num1,num2,KKK))
         ENDDO
      ENDDO
   ENDDO
@@ -266,4 +266,4 @@ END SUBROUTINE l2AMN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-04-08 17:12:47 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-05 15:41:20 assman@faepop71.tu-graz.ac.at>

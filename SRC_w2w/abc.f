@@ -3,20 +3,15 @@
 subroutine abc(l,jatom,pei,pi12lo,pe12lo,jlo,lapw)
   use param,  only: unit_out, nloat, lomax, nrf, lmax2
   use struct, only: RMT
-
-  use const, only: R8
+  use loabc,  only: alo
+  use atspdt, only: P, DP
+  use const,  only: R8
 
   implicit none
 
   integer,  intent(in) :: l, jatom, jlo
   real(R8), intent(in) :: pei, pi12lo, pe12lo
   logical,  intent(in) :: lapw
-
-  !     abc calculates the cofficients a,b,c of the lo
-  common /loabc/   alo(0:lomax,nloat,nrf)
-  COMMON /ATSPDT/  P(0:LMAX2,nrf),DP(0:LMAX2,nrf)
-
-  real(R8) :: alo, P, DP
 
   integer  :: irf, jrf
   real(R8) :: xac, xbc, clo, alonorm
@@ -64,4 +59,4 @@ end subroutine abc
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-04 18:55:20 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-06 11:12:53 assman@faepop71.tu-graz.ac.at>
