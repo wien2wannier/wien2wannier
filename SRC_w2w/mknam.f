@@ -1,34 +1,35 @@
 !!! wien2wannier/SRC_w2w/mknam.f
 
-      SUBROUTINE MKNAM(FNAME,OLDNAM,ILOOP)
-
+subroutine MKNAM(FNAME,OLDNAM,ILOOP)
 ! create a filename with running index ILOOP from
 ! a given 'parental' file name OLDNAM
 
-      CHARACTER(180) FNAME,OLDNAM
-      CHARACTER(4)   ALOOP
+  implicit none
 
-      WRITE(ALOOP,'(I4)')ILOOP
+  character(180) :: FNAME, OLDNAM
+  character(4)   :: ALOOP
 
-      FNAME=OLDNAM
+  integer :: iloop, ifrom, i, ito
 
-      IFROM=1
-      DO I=LEN(ALOOP),1,-1
-         IF(ALOOP(I:I).NE.' ') IFROM=I
-      ENDDO
+  WRITE(ALOOP,'(I4)')ILOOP
 
-      ITO=LEN(ALOOP)
+  FNAME=OLDNAM
 
-      DO 7777 I=LEN(FNAME),1,-1
-         IF(FNAME(I:I).NE.' ') THEN
-            FNAME(I+1:LEN(FNAME))='_' // ALOOP(IFROM:ITO)
-            GOTO 7778
-         ENDIF
- 7777 CONTINUE
- 7778 CONTINUE
+  IFROM=1
+  do I=len(ALOOP),1,-1
+     if(ALOOP(I:I) /= ' ') IFROM=I
+  enddo
 
-      RETURN
-      END
+  ITO=len(ALOOP)
+
+  do I=len(FNAME),1,-1
+     if(FNAME(I:I).ne.' ') then
+        FNAME(I+1:len(FNAME))='_' // ALOOP(IFROM:ITO)
+        goto 7778
+     endif
+  end do
+7778 continue
+end subroutine MKNAM
 
 
 !!/---
@@ -37,4 +38,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2016-07-07 12:26:26 assman@faepop71.tu-graz.ac.at>
