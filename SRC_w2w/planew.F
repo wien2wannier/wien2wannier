@@ -1,20 +1,25 @@
 !!! wien2wannier/SRC_w2w/planew.F
 
       SUBROUTINE PLANEW(NB,num_kpts,NNTOT,maxx,maxy,maxz)
-      use param
-      use struct
-      use xa
-      use xa3
-      use amn_mmn
-      use pairs
-      use lolog, only: nlo,nlov,nlon
-      use gener, only: br1, br2
-      use const, only: R8, C16
+      use param,   only: unit_out, unit_mmn
+      use struct,  only: Nat, mult, RMT, pos, vol
+      use xa3,     only: gx,gy,gz, a, vecsz
+      use amn_mmn, only: overlap
+      use pairs,   only: kp, kpb, bqx,bqy,bqz, bqx1,bqy1,bqz1
+      use lolog,   only: nlo,nlov,nlon
+      use gener,   only: br1
+      use const,   only: R8, C16, TAU
 
-      implicit real(R8) (A-H,O-Z)
+      implicit none
 
-      logical, allocatable, dimension(:,:) :: a_null,a_null_fin
-      INTEGER          pair_index
+      integer, intent(in) :: NB, num_kpts, NNTOT, maxx,maxy,maxz
+
+      integer  :: index, pair_index, m2x,m2y,m2z, max, i,j,k, ii,jj,kk
+      integer  :: i_x,i_y,i_z, k1,k2, kkk, lfirst, jatom, latom, mu
+      integer  :: num,num1,num2, id, ix1,ix2,iy1,iy2,iz1,iz2
+      real(R8) :: t1,t2, tt1,tt2,tt3, t_b, t_prod, vv, bx,by,bz, x, arg
+
+      logical, allocatable, dimension(:,:) :: a_null, a_null_fin
       COMPLEX(C16)       SUM(NB),SUMA(NB,NB),FF
       complex(c16), allocatable, dimension(:,:,:) :: FAC
       COMPLEX(C16)       PHSHEL
@@ -192,4 +197,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-06 15:36:08 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-07 10:27:47 assman@faepop71.tu-graz.ac.at>
