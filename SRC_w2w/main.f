@@ -32,7 +32,7 @@ program wf
   use pairs,    only: kp, kpb, bqx,bqy,bqz, bqx1,bqy1,bqz1, init_pairs
   use util,     only: paropen
   use wien2k,   only: errflg, errclr, gtfnam
-  use gener,    only: br1, br2
+  use gener,    only: br2
 
   implicit none
 
@@ -300,4 +300,4 @@ END program wf
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-06 12:30:08 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-07 10:32:03 assman@faepop71.tu-graz.ac.at>
