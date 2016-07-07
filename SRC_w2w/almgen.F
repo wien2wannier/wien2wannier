@@ -1,10 +1,10 @@
 !!! wien2wannier/SRC_w2w/almgen.F
 
      SUBROUTINE almgen(Alm,jatom,lfirst,NB,kkk)
-     USE param
-     USE struct
+     use param,  only: Nmat, lomax, NRF, iblock, Lmax2
+     use struct, only: RMT, vol, mult, pos
      use xa3,    only: vecsz, XK,YK,ZK, BKX,BKY,BKZ, GX,GY,GZ, A
-     use xa
+     use xa,     only: fj, dfj, bk, phs
      use lolog,  only: nlo,nlov,nlon,ilo,lapw,n_rad
      use gener,  only: br1
      use atspdt, only: P, DP
@@ -168,4 +168,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-07 10:44:06 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-07 13:08:13 assman@faepop71.tu-graz.ac.at>

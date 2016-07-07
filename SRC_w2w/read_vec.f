@@ -6,12 +6,12 @@
 !!!           2013-2015 Elias Assmann
 
 SUBROUTINE read_vec(NEMIN,NEMAX,kkk,maxx,maxy,maxz,efermi)
-  use param
+  use param,  only: unit_out, unit_eig, unit_vector
   use const,  only: R8, Ryd_eV
   USE struct, only: nat
   USE xa3,    only: XK,YK,ZK, GX,GY,GZ, vecsz, A
 
-  IMPLICIT none
+  implicit none
 
   integer, intent(in)    :: NEMIN, NEMAX
   integer, intent(inout) :: maxx, maxy, maxz
@@ -66,4 +66,4 @@ END SUBROUTINE read_vec
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-05 14:20:37 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-07 13:14:42 assman@faepop71.tu-graz.ac.at>

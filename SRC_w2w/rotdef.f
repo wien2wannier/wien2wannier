@@ -5,10 +5,11 @@ SUBROUTINE ROTDEF
   !     THE MATRICES  ROTIJ(3,3,INDEX)  TRANSFORM THE POSITION OF AN
   !     ATOM TO ITS CORRESPONDING POSITION OF AN EQUIVALENT ATOM.
   !
-  USE param
-  use const, only: R8
-  USE struct
-  IMPLICIT NONE
+  use const,  only: R8
+  use struct, only: Nat, mult, iord, iz, pos, trans, transij, rotij, lattic
+
+  implicit none
+
   CHARACTER(67)    ERRMSG
   REAL(R8)    x(3),x1(3),toler,toler2,one
   INTEGER   i,i1,m,index,index1,jatom,ncount
@@ -113,4 +114,4 @@ END SUBROUTINE ROTDEF
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-06 14:32:30 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-07 13:12:47 assman@faepop71.tu-graz.ac.at>

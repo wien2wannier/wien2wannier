@@ -1,16 +1,16 @@
 !!! wien2wannier/SRC_w2w/l2mmn.f
 
-subroutine l2MMN(NB,num_kpts,NNTOT,LJMAX)
-  use const, only: R8, C16, TAU
-  USE param
-  USE struct
-  USE xa
-  use xa3, only: xk, yk, zk
-  USE bessel
-  USE amn_mmn
-  use pairs
-  use gener, only: br1
-  use lolog, only: n_rad
+subroutine l2Mmn(NB,num_kpts,NNTOT,LJMAX)
+  use const,   only: R8, C16, TAU
+  use param,   only: unit_out, unit_vsp, unit_vector, NRF, Lmax2
+  use struct,  only: Nat, mult, RMT, vol, pos
+  use xa,      only: bk
+  use xa3,     only: xk, yk, zk
+  use bessel,  only: ri_mat
+  use Amn_Mmn, only: overlap
+  use pairs,   only: kp, kpb, bqx, bqy, bqz
+  use gener,   only: br1
+  use lolog,   only: n_rad
 
   implicit none
 
@@ -210,4 +210,4 @@ END SUBROUTINE l2MMN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-06 16:39:42 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-07 13:11:11 assman@faepop71.tu-graz.ac.at>
