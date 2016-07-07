@@ -9,7 +9,7 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
   use xa3,     only: A, XK,YK,ZK, GX,GY,GZ, BKX,BKY,BKZ, vecsz
   use amn_mmn, only: C
   use lolog,   only: nlo,nlov,nlon,loor,ilo,lapw
-  use gener,   only: br1, br2
+  use gener,   only: br1
   use loabc,   only: alo
   use atspdt,  only: P, DP
   use const,   only: R8, C16
@@ -268,4 +268,4 @@ END SUBROUTINE l2AMN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-06 15:55:55 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-07 10:44:16 assman@faepop71.tu-graz.ac.at>

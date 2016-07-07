@@ -6,7 +6,7 @@
      use xa3,    only: vecsz, XK,YK,ZK, BKX,BKY,BKZ, GX,GY,GZ, A
      use xa
      use lolog,  only: nlo,nlov,nlon,ilo,lapw,n_rad
-     use gener,  only: br1, br2
+     use gener,  only: br1
      use atspdt, only: P, DP
      use loabc,  only: alo
      use const,  only: R8, C16, TAU
@@ -168,4 +168,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-06 15:54:42 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-07 10:44:06 assman@faepop71.tu-graz.ac.at>
