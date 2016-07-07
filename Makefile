@@ -6,7 +6,7 @@
 
 VERSION := $(shell git describe)
 ifeq "$(VERSION)" ""
-VERSION = $(lastword '$version: v1.0.0-130-g52ad763$')
+VERSION = $(lastword '$version: v1.0.0-130-g53f27f7$')
 endif
 
 SIMPLE      := SRC_trig doc
@@ -66,4 +66,4 @@ wien-dist: distclean doc/wien2wannier_userguide.pdf $(Morig)
 	rm -rf $(dir) $(Morig)
 
 
-## Time-stamp: <2016-02-09 14:14:51 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-07-07 10:16:05 assman@faepop71.tu-graz.ac.at>
