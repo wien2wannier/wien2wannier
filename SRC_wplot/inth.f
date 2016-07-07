@@ -6,8 +6,8 @@
 ! DP ET DE LA PETITE COMPOSANTE DQ AU POINT DR,DV ETANT LE POTENTIEL EN
 ! CE POINT
 ! **********************************************************************
-      use param
-      use ps1, only: dep, deq, db=>dd, dvc, dsal, dk, dm=>dm1
+      use param, only: DPk
+      use ps1,   only: dep, deq, db=>dd, dvc, dsal, dk, dm=>dm1
 
       implicit none
 
@@ -56,4 +56,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 16:19:36 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-07 13:17:28 assman@faepop71.tu-graz.ac.at>
