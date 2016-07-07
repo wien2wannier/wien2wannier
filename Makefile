@@ -6,7 +6,7 @@
 
 VERSION := $(shell git describe)
 ifeq "$(VERSION)" ""
-VERSION = $(lastword '$version: v1.0.0-134-g299df8f$')
+VERSION = $(lastword '$version: v1.0.0-135-gdcb3c5a$')
 endif
 
 SIMPLE      := SRC_trig doc
