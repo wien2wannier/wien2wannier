@@ -1,8 +1,10 @@
 !!! wien2wannier/SRC_w2w/outerr.f
 
-      SUBROUTINE OUTERR(SRNAME,ERRMSG)
-      CHARACTER(len=*)     SRNAME
-      CHARACTER(len=*)     ERRMSG
+subroutine OUTERR(SRNAME,ERRMSG)
+  implicit none
+
+  character(len=*)     SRNAME
+  character(len=*)     ERRMSG
 !
 !     ..................................................................
 !
@@ -78,29 +80,24 @@
 !
 !     ..................................................................
 !
-      INTEGER            STDERR
-      PARAMETER          (STDERR = 99)
-!
-      IF ((LEN(ERRMSG) .GT. 67) .AND. (LEN(SRNAME) .GT. 6)) THEN
-         WRITE (STDERR,9010) SRNAME, ERRMSG
-      ELSEIF (LEN(ERRMSG) .GT. 67) THEN
-         WRITE (STDERR,9020) SRNAME, ERRMSG
-      ELSEIF (LEN(SRNAME) .GT. 6) THEN
-         WRITE (STDERR,9030) SRNAME, ERRMSG
-      ELSE
-         WRITE (STDERR,9040) SRNAME, ERRMSG
-      ENDIF
-!
-      RETURN
-!
- 9010 FORMAT (' ''', A6, ''' - ',A67)
- 9020 FORMAT (' ''', A,  ''' - ',A67)
- 9030 FORMAT (' ''', A6, ''' - ',A)
- 9040 FORMAT (' ''', A,  ''' - ',A)
-!
-!     End of 'OUTERR'
-!
-      END
+  integer, parameter :: STDERR = 99
+
+  if ((len(ERRMSG) > 67) .and. (len(SRNAME) > 6)) then
+     WRITE (STDERR,9010) SRNAME, ERRMSG
+  ELSEIF (LEN(ERRMSG) > 67) THEN
+     WRITE (STDERR,9020) SRNAME, ERRMSG
+  ELSEIF (LEN(SRNAME) > 6) THEN
+     WRITE (STDERR,9030) SRNAME, ERRMSG
+  ELSE
+     WRITE (STDERR,9040) SRNAME, ERRMSG
+  ENDIF
+
+9010 FORMAT (' ''', A6, ''' - ',A67)
+9020 FORMAT (' ''', A,  ''' - ',A67)
+9030 FORMAT (' ''', A6, ''' - ',A)
+9040 FORMAT (' ''', A,  ''' - ',A)
+
+end subroutine OUTERR
 
 
 !!/---
@@ -109,4 +106,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2016-07-07 12:42:40 assman@faepop71.tu-graz.ac.at>
