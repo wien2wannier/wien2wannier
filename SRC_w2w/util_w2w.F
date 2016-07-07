@@ -1918,7 +1918,9 @@ module wien2k
     END SUBROUTINE ERRCLR
 
       SUBROUTINE GTFNAM(DEFFN,ERRFN,IPROC)
-      implicit integer (a-n)
+
+        implicit none
+
       CHARACTER(*)      DEFFN, ERRFN
       INTEGER            IPROC
 !
@@ -2203,4 +2205,4 @@ end module reallocate
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-06 16:20:57 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-07 12:04:08 assman@faepop71.tu-graz.ac.at>
