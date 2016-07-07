@@ -10,7 +10,8 @@ subroutine RADINT(JATOM,LJMAX,BM)
 
   implicit none
 
-  integer, intent(in) :: jatom, LJmax, bm
+  integer,  intent(in) :: jatom, LJmax
+  real(R8), intent(in) :: bm
 
   real(R8) :: A(Nrad), B(Nrad), X(Nrad), Y(Nrad), RX
   integer  :: L_index,l1,l2,lj, R_index, i, if1,if2
@@ -56,4 +57,4 @@ end subroutine RADINT
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-07 10:04:21 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-07 10:18:18 assman@faepop71.tu-graz.ac.at>
