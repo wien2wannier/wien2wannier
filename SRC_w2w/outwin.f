@@ -52,7 +52,7 @@ subroutine OUTWIN(REL,V,RNOT,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
   Nodes = 0
   ZZ = Z + Z
 
-  C = merge(2*clight, 1e10._R8, rel)
+  C = merge(2*clight, 1e10_R8, rel)
 
   FLLP1 = FL*(FL + 1)
 
@@ -120,4 +120,4 @@ end subroutine OUTWIN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-11 12:03:07 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-11 18:58:56 assman@faepop71.tu-graz.ac.at>
