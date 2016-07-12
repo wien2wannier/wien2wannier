@@ -31,11 +31,11 @@ subroutine SPHBES(N,X,FJ)
   real(R8) :: hfxsq, xl, twm, ta, xlp, cufac, ffo, ffn, xi, fm, sdr, ffp, ser
   integer  :: ns, m, mm, j, jj
 
-  IF(N.GE.0) GOTO 7
+  IF(N >= 0) GOTO 7
   PRINT 2
 2 FORMAT (33H1 ERROR, N SHOULD NOT BE NEGATIVE  )
   GO TO 99
-7 if (X > 0)  GO TO 10
+7 if (X >= 0)  GO TO 10
   PRINT 9
 9 FORMAT (33H1 ERROR, X SHOULD NOT BE NEGATIVE  )
   GO TO 99
@@ -114,4 +114,4 @@ end subroutine SPHBES
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-07 12:00:34 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-12 12:24:31 assman@faepop71.tu-graz.ac.at>

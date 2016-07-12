@@ -17,25 +17,20 @@ subroutine ATPAR (JATOM, itape, jtape)
   real(R8) :: VR(Nrad), AE(Nrad), BE(Nrad)
   logical  :: rlo(1:nloat, 0:lomax)
   real(r8) :: emist(0:lomax,nloat),E(0:LMAX2),elo(0:LOMAX,nloat),pei(0:lmax2)
-  integer  :: imax,irf, jlo, kappa, i,j,k,l, node,nodes,nodel, m
+  integer  :: imax,irf, jlo, kappa, i,k,l, node,nodes,nodel, m
   real(R8) :: dele,delei, fl, ei,e1, uvb,duvb,uv,duv,uve,duve, ovlp, trx
   real(R8) :: try, r_m, pi12lo, pe12lo, cross
 
-2022 FORMAT(3X,4E19.12)
-
   !.....READ TOTAL SPHERICAL POTENTIAL V(0,0) OF TAPEjtape=VSP
   !     NORM OF V(0,0)=V00(R)*R/SQRT(4.D0*PI)
+  read(jtape, '(3X)')
+  read(jtape, '(15X,I3//)') i ! i is not used, but apparently necessary for
+  read(jtape, '(/)')          ! correct reading
+  read(jtape, '(3X,4E19.12)') VR(1 : JRJ(jatom))
+  read(jtape, '(/)')
+  read(jtape, '(///)')
 
-  READ(jtape,1980)
-  READ(jtape,2000)
-  READ(jtape,2031)
-  READ(jtape,2022)(VR(J),J=1,JRJ(JATOM))
-  READ(jtape,2031)
-  READ(jtape,2030)
-
-  do J=1,JRJ(JATOM)
-     VR(J)=VR(J)/2.0D0
-  end do
+  VR(1:JRJ(jatom)) = VR(1:JRJ(jatom)) / 2
 
   write(unit_out,*)'ATPAR'
   nlo=0
@@ -91,9 +86,9 @@ subroutine ATPAR (JATOM, itape, jtape)
      end do
   end if
 
-  WRITE(unit_out,7) ANAME(JATOM)
-  WRITE(unit_out,5) E
-  WRITE(unit_out,14)
+  WRITE(unit_out, "(/10X,'ATOMIC PARAMETERS FOR ',A10/)") ANAME(JATOM)
+  WRITE(unit_out, "(10X,' ENERGY PARAMETERS ARE',7F7.2)") E
+  write(unit_out, "(/11X,1HL,5X,4HU(R),10X, 5HU'(R),9X,5HDU/DE,8X,6HDU'/DE,6X,7HNORM-U')")
 
   lloop: DO l=0,LMAX2
      DELE=2.0D-3
@@ -161,7 +156,8 @@ subroutine ATPAR (JATOM, itape, jtape)
      P(l,2)=UVE+TRY*P(l,1)
      DP(l,2)=DUVE+TRY*DP(l,1)
      CALL RINT13(AE,BE,AE,BE,PEI(l),JATOM)
-     WRITE(unit_out,8) L,P(l,1),DP(l,1),P(l,2),DP(l,2)
+     write(unit_out, "(10X,I2,5E14.6,5X,3I2)") &
+          L,P(l,1),DP(l,1),P(l,2),DP(l,2)
   end DO lloop
 !
 ! nun fur lo
@@ -214,19 +210,8 @@ subroutine ATPAR (JATOM, itape, jtape)
      end do iloloop
   end DO loloop
 
-  write(unit_out,651)(n_rad(l),l=0,lmax2)
-651 format('number of rad. functions per L:',8I3)
-
-  RETURN
-
-5 FORMAT(10X,' ENERGY PARAMETERS ARE',7F7.2)
-7 FORMAT(/10X,'ATOMIC PARAMETERS FOR ',A10/)
-14 FORMAT(/11X,1HL,5X,4HU(R),10X, 5HU'(R),9X,5HDU/DE,8X,6HDU'/DE,6X,7HNORM-U')
-8 FORMAT(10X,I2,5E14.6,5X,3I2)
-1980 FORMAT(3X)
-2000 FORMAT(15X,I3//)
-2030 FORMAT(///)
-2031 FORMAT(/)
+  write(unit_out, "('number of rad. functions per L:',8I3)") &
+       n_rad(0 : lmax2)
 END SUBROUTINE ATPAR
 
 
@@ -236,4 +221,4 @@ END SUBROUTINE ATPAR
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-06 12:42:54 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-12 12:45:38 assman@faepop71.tu-graz.ac.at>
