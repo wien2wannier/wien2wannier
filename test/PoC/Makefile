@@ -21,7 +21,7 @@ SHELL=/bin/bash
 all: $(CASES)
 
 $(CASES):
-	cd $@
+	@cd $@
 	export WIENROOT=$(WIENROOT_TEST) PATH=$(WIENROOT_TEST):$$PATH
 	./$@.sh
 
@@ -30,4 +30,4 @@ clean:
 	   git clean -f $d
 	done
 
-## Time-stamp: <2016-07-13 17:09:31 assman@faepop71.tu-graz.ac.at>
+## Time-stamp: <2016-07-13 17:23:45 assman@faepop71.tu-graz.ac.at>

@@ -10,7 +10,7 @@ SHELL=/bin/bash
 
 Version := $(shell git describe)
 ifndef VERSION
-   VERSION = $(lastword '$version: v1.0.0-125-g8d4fa31$')
+   VERSION = $(lastword '$version: v1.0.0-126-g0320e17$')
 endif
 
 SIMPLE      := SRC_trig doc test
