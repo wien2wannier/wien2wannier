@@ -233,13 +233,6 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
                             conjg(ALM(INDEX,num,mu,1))*C(NUM2,INDEX,LATOM) + &
                             conjg(ALM(INDEX,num,mu,3))*C(NUM2,INDEX,LATOM) * &
                             pi12lo
-                       if (cdabs(conjg(ALM(INDEX,num,mu,3)) * &
-                            &    C(NUM2,INDEX,LATOM)*pi12lo) &
-                            .ge.1e-20) then
-                          write(*,*) "info: contribution from APW+lo", &
-                               & conjg(ALM(INDEX,num,mu,3)) * &
-                               & C(NUM2,INDEX,LATOM)*pi12lo
-                       endif
                     ENDDO
                  ENDDO
               ENDDO
@@ -268,4 +261,4 @@ END SUBROUTINE l2AMN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-07 10:44:16 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-12 12:30:15 assman@faepop71.tu-graz.ac.at>
