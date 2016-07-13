@@ -4,9 +4,13 @@
 ###
 ### Copyright 2013-2016 Elias Assmann
 
-VERSION := $(shell git describe)
-ifeq "$(VERSION)" ""
-VERSION = $(lastword '$version: v1.0.0-123-gf296f82$')
+-include make.sys
+
+SHELL=/bin/bash
+
+Version := $(shell git describe)
+ifndef VERSION
+   VERSION = $(lastword '$version: v1.0.0-125-g8d4fa31$')
 endif
 
 SIMPLE      := SRC_trig doc test
