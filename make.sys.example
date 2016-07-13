@@ -65,8 +65,15 @@ CFLAGS 	+= -Wall -O3
 endif
 
 
-# /---
-#| Local Variables:
-#| mode: Makefile
-#| End:
-# \---
+### To run wien2wannier tests, define a ‘WIENROOT’ directory where the
+### new version will be installed.
+# WIENROOT_TEST ?=
+
+
+## /---
+##| Local Variables:
+##| mode: makefile-gmake
+##| End:
+## \---
+##
+## Time-stamp: <2016-07-13 17:19:27 assman@faepop71.tu-graz.ac.at>

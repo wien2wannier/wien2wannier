@@ -2,21 +2,25 @@
 ###
 ###    wien2wannier main Makefile
 ###
-### Copyright 2013-2015 Elias Assmann
+### Copyright 2013-2016 Elias Assmann
 
-VERSION := $(shell git describe)
-ifeq "$(VERSION)" ""
-VERSION = $(lastword '$version: v1.0.0-155-gb96c9f1$')
+-include make.sys
+
+SHELL=/bin/bash
+
+Version := $(shell git describe)
+ifndef VERSION
+   VERSION = $(lastword '$version: v1.0.0-126-g0320e17$')
 endif
 
-SIMPLE      := SRC_trig doc
+SIMPLE      := SRC_trig doc test
 REALCOMPLEX := SRC_w2w SRC_wplot
 
 SUBDIRS := $(SIMPLE) $(REALCOMPLEX)
 
-.PHONY: all clean $(SUBDIRS) dist
+.PHONY: all clean distclean $(SUBDIRS) dist-tmp wien-tar wien-dist install
 
-all: $(SUBDIRS)
+all: SRC_w2w SRC_wplot SRC_trig
 
 $(REALCOMPLEX):
 	$(MAKE) -C $@ real
@@ -24,6 +28,9 @@ $(REALCOMPLEX):
 
 $(SIMPLE):
 	$(MAKE) -C $@
+
+test: target-dir = $(WIENROOT_TEST)
+test: install
 
 clean:
 	for dir in $(SUBDIRS); do \
@@ -38,6 +45,17 @@ distclean:
 
 %/Makefile.orig: %/Makefile
 	perl -pe 's/^\#.orig\#//' $^ >$@
+
+
+### ‘install’ target
+###
+### This is a bare-bones install procedure for updating wien2wannier
+### in an existing Wien2k directory.  Use with caution.
+target-dir ?= $(WIENROOT)
+install: files = $(shell find SRC_{w2w,wplot,trig} -type f -perm /a+x)
+install: all
+	install -t$(target-dir) $(files)
+
 
 ### Distribution targets
 
@@ -82,4 +100,4 @@ wien-dist: dist-tmp
 	rm -rf $(dist-dir) $(Morig)
 
 
-## Time-stamp: <2016-07-13 11:19:22 assman@faepop71.tu-graz.ac.at>
+## Time-stamp: <2016-07-13 12:19:22 assman@faepop71.tu-graz.ac.at>
