@@ -1,5 +1,6 @@
 make.sys
 TODO
+wien2wannier-*.tar
 wien2wannier-*.tar.gz
 SRC_trig/convham
 SRC_trig/findbands
