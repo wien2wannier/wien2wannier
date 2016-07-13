@@ -18,7 +18,7 @@ PROGRAM write_wplotin
   character(*), parameter :: &
        fmt_idiv = "(4(I0,1X), T45, A)", &
        fmt_A    = "(A, T45, A)", &
-       fmt_grid = "(6(I0,1X), T45, A)"
+       fmt_grid = "(3(I0,1X), T45, A)"
 
   woutfileend  = ".wout"
 
@@ -84,11 +84,11 @@ PROGRAM write_wplotin
 
   print '(A)',"Enter number of mesh points, [nx ny nz]"
   read (*,*) vec(:)
-  write(1, fmt_grid) vec(:), 0,0,0, "# grid points and echo increments"
+  write(1, fmt_grid) vec(:), "# grid points and echo increments"
 
   write(1, fmt_A)"NO", "# DEP(HASING)|NO (POST-PROCESSING)"
-  write(1, fmt_A)"WAN ANG LARGE", "# switch ANG|ATU|AU LARGE|SMALL"
-  write(1, fmt_A)"1 1", "# k-point, Wannier index"
+  write(1, fmt_A)"ANG LARGE", "# switch ANG|ATU|AU LARGE|SMALL"
+  write(1, fmt_A)"1 F", "# k-point, Wannier index"
 END PROGRAM write_wplotin
 
 
@@ -98,4 +98,4 @@ END PROGRAM write_wplotin
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2016-07-12 15:16:39 assman@faepop71.tu-graz.ac.at>
