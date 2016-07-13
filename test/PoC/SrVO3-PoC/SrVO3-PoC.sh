@@ -6,7 +6,7 @@
 
 set -e
 
-w2wdir=$(realpath $(dirname $0)/../..)
+w2wdir=$(realpath $(dirname $0)/../../..)
 x="$w2wdir/SRC/x_lapw -d"
 
 me=SrVO3-PoC
@@ -62,4 +62,4 @@ $w2wdir/SRC_wplot/wplot wplot.def
 
 $w2wdir/SRC/wplot2xsf_lapw
 
-## Time-stamp: <2016-07-13 16:51:27 assman@faepop71.tu-graz.ac.at>
+## Time-stamp: <2016-07-13 17:52:07 assman@faepop71.tu-graz.ac.at>

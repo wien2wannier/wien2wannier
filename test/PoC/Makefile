@@ -30,4 +30,6 @@ clean:
 	   git clean -f $d
 	done
 
-## Time-stamp: <2016-07-13 17:23:45 assman@faepop71.tu-graz.ac.at>
+	rm -rf */W
+
+## Time-stamp: <2016-07-13 18:04:37 assman@faepop71.tu-graz.ac.at>
