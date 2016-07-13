@@ -6,7 +6,7 @@
 
 VERSION := $(shell git describe)
 ifeq "$(VERSION)" ""
-VERSION = $(lastword '$version: v1.0.0-121-ge443ce8$')
+VERSION = $(lastword '$version: v1.0.0-123-g910c55a$')
 endif
 
 SIMPLE      := SRC_trig doc
@@ -39,31 +39,47 @@ distclean:
 %/Makefile.orig: %/Makefile
 	perl -pe 's/^\#.orig\#//' $^ >$@
 
-Morig := $(addsuffix /Makefile.orig,SRC_w2w SRC_wplot SRC_trig)
+### Distribution targets
 
-## Make a tarball for extracting directly in Wien2k root folder and
-## bundle with INSTALL, compile_wien2wannier.sh
+## dist variables
+Morig    := $(addsuffix /Makefile.orig,SRC_w2w SRC_wplot SRC_trig)
+dist-dir := wien2wannier-$(VERSION)-wiendist
+tarname  := wien2wannier-$(VERSION)-expand-in-wienroot
+scripts  := $(notdir $(wildcard SRC/*))
+w2wlinks := ../doc/wien2wannier_userguide.pdf \
+	    ../COPYING ../README ../NEWS ../doc/CHEATSHEET
+
+## Make a tarball for extracting directly in Wien2k root folder
 ##
 ## This should perhaps strip the time-stamps.
-wien-dist: dir     = wien2wannier-$(VERSION)-wiendist
-wien-dist: tarname = wien2wannier-$(VERSION)-expand-in-wienroot
-wien-dist: scripts = $(notdir $(wildcard SRC/*))
-wien-dist: w2wlinks= ../doc/wien2wannier_userguide.pdf ../COPYING \
-	   	     ../README ../NEWS ../doc/CHEATSHEET
-wien-dist: distclean doc/wien2wannier_userguide.pdf $(Morig)
-	mkdir $(dir); \
-	cd $(dir); \
+dist-tmp: distclean doc/wien2wannier_userguide.pdf $(Morig)
+	mkdir $(dist-dir); \
+	cd $(dist-dir); \
 	ln -s -t. ../SRC* \
 		../compile_wien2wannier.sh ../INSTALL ../WIEN-VERSION; \
 	cp -t. SRC/*; \
 	ln -s -tSRC_w2w $(w2wlinks); \
-	tar --exclude-vcs -chf $(tarname).tar SRC* $(scripts); \
+	tar --exclude-vcs -chf $(tarname).tar SRC* $(scripts);
+
+## Make tarball and clean up
+wien-tar: dist-tmp
+	mv $(dist-dir)/$(tarname).tar .
+
+	cd $(dist-dir); \
 	rm SRC* $(scripts)
 
-	tar --exclude-vcs -chzf $(dir).tar.gz $(dir)
+	for l in $(notdir $(w2wlinks)); do rm SRC_w2w/$$l; done
+	rm -rf $(dist-dir) $(Morig)
+
+## Make tarball and bundle with INSTALL, compile_wien2wannier.sh
+wien-dist: dist-tmp
+	cd $(dist-dir); \
+	rm SRC* $(scripts)
+
+	tar --exclude-vcs -chzf $(dist-dir).tar.gz $(dist-dir)
 
 	for l in $(notdir $(w2wlinks)); do rm SRC_w2w/$$l; done
-	rm -rf $(dir) $(Morig)
+	rm -rf $(dist-dir) $(Morig)
 
 
-## Time-stamp: <2016-02-09 14:14:51 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-07-13 11:08:26 assman@faepop71.tu-graz.ac.at>
