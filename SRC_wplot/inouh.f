@@ -47,9 +47,9 @@ subroutine inouh (dp,dq,dr,dq1,dfl,dv,z,test,nuc)
      dq(10)=dq1
      dp(10)=dbe*dq1
   else
-     dval=dv+z*(3.-dr(1)*dr(1)/(dr(nuc)*dr(nuc)))/(dr(nuc)+dr(nuc))
+     dval=dv+z*(3-dr(1)*dr(1)/(dr(nuc)*dr(nuc)))/(dr(nuc)+dr(nuc))
      deva1=0
-     deva2=(dval-3.*z/(dr(nuc)+dr(nuc)))/dvc-dd
+     deva2=(dval-3*z/(dr(nuc)+dr(nuc)))/dvc-dd
      deva3=z/(dr(nuc)*dr(nuc)*dr(nuc)*dsal)
      if (dk <= 0) then
         dp(10)=dq1
@@ -101,4 +101,4 @@ end subroutine inouh
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 19:25:03 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-07 14:04:50 assman@faepop71.tu-graz.ac.at>

@@ -27,8 +27,8 @@
       real(DPk) :: DPR, DQR, dsum
       integer   :: i
 
-      DPR=DP+DM*((251.*DEP(1)+2616.*DEP(3)+1901.*DEP(5))-(1274.*DEP(2)+2774.*DEP(4)))
-      DQR=DQ+DM*((251.*DEQ(1)+2616.*DEQ(3)+1901.*DEQ(5))-(1274.*DEQ(2)+2774.*DEQ(4)))
+      DPR=DP+DM*((251*DEP(1)+2616*DEP(3)+1901*DEP(5))-(1274*DEP(2)+2774*DEP(4)))
+      DQR=DQ+DM*((251*DEQ(1)+2616*DEQ(3)+1901*DEQ(5))-(1274*DEQ(2)+2774*DEQ(4)))
 
       DO 13 I=2,5
          DEP(I-1)=DEP(I)
@@ -40,8 +40,8 @@
       DEP(5)=-DK*DPR + (DSAL*DR+DSUM)*DQR
       DEQ(5)= DK*DQR -  DSUM*DPR
 
-      DP=DP+DM*((106.*DEP(2)+646.*DEP(4)+251.*DEP(5))-(19.*DEP(1)+264.*DEP(3)))
-      DQ=DQ+DM*((106.*DEQ(2)+646.*DEQ(4)+251.*DEQ(5))-(19.*DEQ(1)+264.*DEQ(3)))
+      DP=DP+DM*((106*DEP(2)+646*DEP(4)+251*DEP(5))-(19*DEP(1)+264*DEP(3)))
+      DQ=DQ+DM*((106*DEQ(2)+646*DEQ(4)+251*DEQ(5))-(19*DEQ(1)+264*DEQ(3)))
       DP = DKOEF1 * DP + DKOEF2 * DPR
       DQ = DKOEF1 * DQ + DKOEF2 * DQR
       DEP(5) = -DK * DP + (DSAL*DR+DSUM)*DQ
@@ -56,4 +56,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-05 17:18:13 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-13 10:32:24 assman@faepop71.tu-graz.ac.at>

@@ -87,7 +87,7 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
 !rschmid
 
 !jk   finite size of the nucleus
-      rnuc=2.2677e-05_DPk * (atom_mass(int(z))**(1/3.))
+      rnuc=2.2677e-05_DPk * (atom_mass(int(z))**(1/3._DPk))
       write(unit_out,*)'amass, r0:',atom_mass(int(z)),rnuc
       do 10 i=1,nmax
        d1=rnot*exp(DSTEP*(i-1.d0))
@@ -100,7 +100,7 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
       else
       dfl=nqk*nqk
       do i=1,nuc
-         dv(i)=dv(i)+z/dr(i)+z*((dr(i)/dr(nuc))**2-3.)/(2*dr(nuc))
+         dv(i)=dv(i)+z/dr(i)+z*((dr(i)/dr(nuc))**2-3)/(2*dr(nuc))
       end do
       end if
       dq1 = nqk/iabs(nqk)
@@ -120,8 +120,8 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
       do i=1,5
         dval=dr(i)**dfl
         if (i.ne.1) then
-          if (dp(i-1).ne.0.) then
-             if ((dp(i)/dp(i-1)).le.0.) then
+          if (dp(i-1) /= 0) then
+             if ((dp(i)/dp(i-1)) <= 0) then
                nodes=nodes+1
              endif
           endif
@@ -140,8 +140,8 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
         dp(i) = dp(i-1)
         dq(i) = dq(i-1)
         call inth (dp(i),dq(i),dv(i),dr(i))
-        if (dp(i-1).ne.0.) then
-          if ((dp(i)/dp(i-1)).gt.0.) then
+        if (dp(i-1) /= 0) then
+          if ((dp(i)/dp(i-1)) > 0) then
             nodes=nodes+1
           endif
         endif
@@ -162,4 +162,4 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 19:15:18 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-07 14:07:19 assman@faepop71.tu-graz.ac.at>
