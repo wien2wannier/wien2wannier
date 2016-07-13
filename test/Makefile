@@ -15,4 +15,15 @@ all: $(SUBDIRS)
 $(SUBDIRS):
 	$(MAKE) -C $@
 
-## Time-stamp: <2016-07-13 16:22:37 assman@faepop71.tu-graz.ac.at>
+clean:
+	for dir in $(SUBDIRS); do \
+		$(MAKE) -C $$dir clean; \
+		rm -f $$dir/Makefile.orig; \
+	done
+
+distclean:
+	for dir in $(SUBDIRS); do \
+		$(MAKE) -C $$dir clean; \
+	done
+
+## Time-stamp: <2016-07-13 17:53:30 assman@faepop71.tu-graz.ac.at>
