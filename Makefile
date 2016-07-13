@@ -18,7 +18,7 @@ REALCOMPLEX := SRC_w2w SRC_wplot
 
 SUBDIRS := $(SIMPLE) $(REALCOMPLEX)
 
-.PHONY: all clean distclean $(SUBDIRS) dist-tmp wien-tar wien-dist
+.PHONY: all clean distclean $(SUBDIRS) dist-tmp wien-tar wien-dist install
 
 all: SRC_w2w SRC_wplot SRC_trig
 
@@ -28,6 +28,9 @@ $(REALCOMPLEX):
 
 $(SIMPLE):
 	$(MAKE) -C $@
+
+test: target-dir = $(WIENROOT_TEST)
+test: install
 
 clean:
 	for dir in $(SUBDIRS); do \
@@ -42,6 +45,17 @@ distclean:
 
 %/Makefile.orig: %/Makefile
 	perl -pe 's/^\#.orig\#//' $^ >$@
+
+
+### ‘install’ target
+###
+### This is a bare-bones install procedure for updating wien2wannier
+### in an existing Wien2k directory.  Use with caution.
+target-dir ?= $(WIENROOT)
+install: files = $(shell find SRC_{w2w,wplot,trig} -type f -perm /a+x)
+install: all
+	install -t$(target-dir) $(files)
+
 
 ### Distribution targets
 
