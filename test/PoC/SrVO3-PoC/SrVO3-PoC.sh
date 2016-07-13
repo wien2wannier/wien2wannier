@@ -6,50 +6,27 @@
 
 set -e
 
-w2wdir=$(realpath $(dirname $0)/../../..)
-x="$w2wdir/SRC/x_lapw -d"
-
-me=SrVO3-PoC
-
 exec >$(basename $PWD).log
 
-init_lapw -b 2>&1
+init_lapw -b   2>&1
+run_lapw       2>&1
 
-run_lapw 2>&1
-
-$x lapw1 -band
-lapw1 lapw1.def 2>&1
-
-$w2wdir/SRC/write_insp_lapw -tmpl $WIENROOT/SRC_templates/case.insp
-
-$x spaghetti
-spaghetti spaghetti.def 2>&1
-
-$w2wdir/SRC/prepare_w2wdir_lapw W
+x lapw1 -band  2>&1
+write_insp_lapw
+x spaghetti    2>&1
 
 yes | clean_lapw
 
+prepare_w2wdir_lapw W
 cd W 
 
-$x kgen -fbz
-echo -e '64\n0' | kgen kgen.def 2>&1
+init_w2w -bands 21 23 -proj V:dt2g
 
-$w2wdir/SRC/write_inwf_lapw -bands 21 23 V:dt2g
+x lapw1        2>&1
+x w2w          2>&1
+x wannier90    2>&1
 
-$w2wdir/SRC_trig/write_win_backend <$w2wdir/SRC_templates/case.win \
-    W.inwf W.struct W.klist W.klist_band > W.win
-
-$w2wdir/SRC/wannier90_lapw -pp
-
-$x lapw1
-lapw1 lapw1.def 2>&1
-
-$x w2w
-$w2wdir/SRC_w2w/w2w w2w.def 2>&1
-
-$w2wdir/SRC/wannier90_lapw
-
-$w2wdir/SRC_trig/write_inwplot W <<EOF
+write_inwplot W <<EOF
 0 0 0 1
 1 0 0 1
 0 1 0 1
@@ -57,9 +34,7 @@ $w2wdir/SRC_trig/write_inwplot W <<EOF
 10 10 10
 EOF
 
-$x wplot -wf 1
-$w2wdir/SRC_wplot/wplot wplot.def
+x wplot -wf 1  2>&1
+wplot2xsf_lapw 2>&1
 
-$w2wdir/SRC/wplot2xsf_lapw
-
-## Time-stamp: <2016-07-13 17:52:07 assman@faepop71.tu-graz.ac.at>
+## Time-stamp: <2016-07-13 18:31:14 assman@faepop71.tu-graz.ac.at>
