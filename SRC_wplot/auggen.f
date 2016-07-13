@@ -60,7 +60,7 @@
         READ(unit_vector) ELO
         DO L=0,LMAX7
          LAPW(L,JATOM)=.TRUE.
-         IF (E(L).gt.150.) THEN
+         IF (E(L) > 150) THEN
           E(L)=E(L)-200.d0
           LAPW(L,JATOM)=.FALSE.
          ENDIF
@@ -262,4 +262,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 18:27:54 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-07 14:05:41 assman@faepop71.tu-graz.ac.at>
