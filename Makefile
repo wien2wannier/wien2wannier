@@ -2,21 +2,21 @@
 ###
 ###    wien2wannier main Makefile
 ###
-### Copyright 2013-2015 Elias Assmann
+### Copyright 2013-2016 Elias Assmann
 
 VERSION := $(shell git describe)
 ifeq "$(VERSION)" ""
-VERSION = $(lastword '$version: v1.0.0-123-g910c55a$')
+VERSION = $(lastword '$version: v1.0.0-123-gf296f82$')
 endif
 
-SIMPLE      := SRC_trig doc
+SIMPLE      := SRC_trig doc test
 REALCOMPLEX := SRC_w2w SRC_wplot
 
 SUBDIRS := $(SIMPLE) $(REALCOMPLEX)
 
-.PHONY: all clean $(SUBDIRS) dist
+.PHONY: all clean distclean $(SUBDIRS) dist-tmp wien-tar wien-dist
 
-all: $(SUBDIRS)
+all: SRC_w2w SRC_wplot SRC_trig
 
 $(REALCOMPLEX):
 	$(MAKE) -C $@ real
@@ -82,4 +82,4 @@ wien-dist: dist-tmp
 	rm -rf $(dist-dir) $(Morig)
 
 
-## Time-stamp: <2016-07-13 11:08:26 assman@faepop71.tu-graz.ac.at>
+## Time-stamp: <2016-07-13 12:19:22 assman@faepop71.tu-graz.ac.at>
