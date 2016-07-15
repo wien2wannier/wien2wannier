@@ -1,7 +1,7 @@
 !!! wien2wannier/SRC_wplot/trans.f
 
 subroutine trans(stru)
-  use param,     only: DPk
+  use const,     only: DPk
   use latt,      only: br1, br2, br3, br4
   use param,     only: Nsym
   use sym2,      only: rtrans=>trans, imat
@@ -95,4 +95,4 @@ END SUBROUTINE TRANS
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-06 16:07:36 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:45:02 assman@faepop71.tu-graz.ac.at>

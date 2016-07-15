@@ -29,7 +29,8 @@ SUBROUTINE OUTWIN(REL,V,RI,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
 !
 ! ----------------------------------------------------------------
 
-  use param, only: DPk, Nrad, clight
+  use param, only: Nrad, clight
+  use const, only: DPk
   use work1, only: A, B
 
   implicit none
@@ -129,4 +130,4 @@ END SUBROUTINE OUTWIN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 20:03:07 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:45:26 assman@faepop71.tu-graz.ac.at>

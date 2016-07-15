@@ -2,7 +2,8 @@
 
       subroutine RINT13(rel, A, B, X, Y, S, jatom, stru)
       use radgrd,    only: dx
-      use param,     only: DPk, Nrad, clight
+      use const,     only: DPk
+      use param,     only: Nrad, clight
       use structmod, only: struct_t
 
       implicit none
@@ -75,4 +76,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 19:46:44 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:45:42 assman@faepop71.tu-graz.ac.at>

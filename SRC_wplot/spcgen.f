@@ -1,7 +1,7 @@
 !!! wien2wannier/SRC_wplot/spcgen.f
 
 SUBROUTINE SPCGEN(NAT,RMT,ATMS)
-  use param, only: DPk
+  use const, only: DPk
   use latt,  only: br4
 
   implicit none
@@ -50,4 +50,4 @@ END SUBROUTINE SPCGEN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-28 12:22:05 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:43:04 assman@faepop71.tu-graz.ac.at>

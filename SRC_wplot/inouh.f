@@ -9,7 +9,8 @@ subroutine inouh (dp,dq,dr,dq1,dfl,dv,z,test,nuc)
 ! noyau de dimensions finies si nuc non nul
 ! nstop controle la convergence du developpement limite
 ! **********************************************************************
-  use param, only: DPk, Nrad
+  use const, only: DPk
+  use param, only: Nrad
   use ps1,   only: dep, deq, dd, dvc, dsal, dk
 
   implicit none
@@ -101,4 +102,4 @@ end subroutine inouh
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-07 14:04:50 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:46:53 assman@faepop71.tu-graz.ac.at>

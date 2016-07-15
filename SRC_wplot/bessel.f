@@ -1,7 +1,7 @@
 !!! wien2wannier/SRC_wplot/bessel.f
 
 SUBROUTINE BESSEL(NK,LDNK,BK,NMT,RAD,LMAX2,F,DF)
-  use param, only: DPk
+  use const, only: DPk
 
   implicit none
 
@@ -35,4 +35,4 @@ END SUBROUTINE BESSEL
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 16:25:52 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:45:07 assman@faepop71.tu-graz.ac.at>

@@ -1,7 +1,7 @@
 !!! wien2wannier/SRC_wplot/orth.f
 
 LOGICAL FUNCTION ORTH(A)
-  use param, only: DPk
+  use const, only: DPk
   implicit none
 
   real(DPk), intent(in) :: A(3,3)
@@ -34,4 +34,4 @@ END FUNCTION ORTH
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 18:40:12 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:42:26 assman@faepop71.tu-graz.ac.at>

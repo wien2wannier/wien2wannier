@@ -6,7 +6,7 @@ subroutine DVBES1(FJ,DJ,SM,NT)
 !-----X   DJ=DFJ/DX WHERE X=SM*RI                                 X----X
 !-----X                    D.D.KOELLING                      X----X----X
 !-----X----X----X----X----X----X----X----X----X----X----X----X----X----X
-  use param, only: DPk
+  use const, only: DPk
 
   implicit none
 
@@ -45,4 +45,4 @@ end subroutine DVBES1
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-28 14:00:57 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:46:09 assman@faepop71.tu-graz.ac.at>

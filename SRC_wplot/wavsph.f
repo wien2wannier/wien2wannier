@@ -3,7 +3,8 @@
       subroutine WAVSPH(R, Bfac, iAt, iR, Psi, Y, iatnr)
       use radgrd, only: RM
       use work,   only: aug
-      use param,  only: DPk, kconjg, Lmax7
+      use const,  only: DPk
+      use param,  only: kconjg, Lmax7
 
       implicit none
 
@@ -87,4 +88,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 20:03:13 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:44:40 assman@faepop71.tu-graz.ac.at>

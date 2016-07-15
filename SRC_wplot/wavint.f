@@ -1,7 +1,7 @@
 !!! wien2wannier/SRC_wplot/wavint.f
 
 SUBROUTINE WAVINT(R,NPW,PSI,bk,coef,nmat)
-  use param, only: DPk
+  use const, only: DPk
 
   implicit none
 
@@ -42,4 +42,4 @@ END SUBROUTINE WAVINT
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 19:58:33 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:44:47 assman@faepop71.tu-graz.ac.at>

@@ -7,7 +7,8 @@
 !rschmid
 
       subroutine dergl(g_l,der1,rnot,dx,mesh)
-      use param, only: Nrad, DPk
+      use param, only: Nrad
+      use const, only: DPk
 
       implicit none
 
@@ -103,4 +104,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 19:04:59 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:51:24 assman@faepop71.tu-graz.ac.at>

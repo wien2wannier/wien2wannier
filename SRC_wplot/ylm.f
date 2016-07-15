@@ -6,7 +6,7 @@ SUBROUTINE YLM(V,LMAX,Y)
 ! version of ylm.f which was found to be numerically unstable for
 ! arguments close to but not on the z-axis (P. Balah, priv. comm.)
 ! -----------------------------------------------------------------
-  use param, only: DPk, TAU
+  use const, only: DPk, TAU
 
   implicit none
 
@@ -275,4 +275,4 @@ END SUBROUTINE YLM
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-06 16:00:35 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:45:50 assman@faepop71.tu-graz.ac.at>

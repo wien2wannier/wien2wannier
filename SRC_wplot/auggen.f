@@ -8,8 +8,9 @@
       use atspdt,    only: P, DP
       use radfu,     only: rrad
       use work1,     only: A, B
-      use param,     only: DPk, unit_out, unit_vsp, unit_vector, NLOat, &
-           Nrad, Nrf, Lmax7, LOmax
+      use const,     only: DPk
+      use param,     only: NLOat, Nrad, Nrf, Lmax7, LOmax, &
+           &               unit_out, unit_vsp, unit_vector
       use structmod, only: struct_t
 
       implicit none
@@ -262,4 +263,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-07 14:05:41 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:43:52 assman@faepop71.tu-graz.ac.at>

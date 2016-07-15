@@ -1,10 +1,10 @@
 !!! wien2wannier/SRC_wplot/locdef.f
 
 SUBROUTINE LOCDEF(ROT0,IMAT,ROT)
-  use latt, only: br2, br4
-
+  use latt,  only: br2, br4
+  use const, only: DPk
   !:17[
-  use param, only: DPk, addloc, userot
+  use param, only: addloc, userot
   !:17]
 
   implicit none
@@ -96,4 +96,4 @@ END SUBROUTINE LOCDEF
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 16:24:15 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:42:16 assman@faepop71.tu-graz.ac.at>

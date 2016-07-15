@@ -108,13 +108,15 @@ C_OBJS = $(R_OBJS)
 #
 #  Dependency information for object files
 #
-MOD_USERS = auggen.o auglo.o augpw.o bessel.o dergl.o diracout.o	\
-	    dvbes1.o findmt.o gbass.o grdgen.o inouh.o inth.o		\
-	    locdef.o main.o orth.o outwin.o rint13.o rotdef.o		\
-	    spcgen.o sphbes.o trans.o wavint.o wavsph.o wplot.o ylm.o
+MOD_USERS = auggen.o auglo.o augpw.o dergl.o diracout.o findmt.o	\
+	    grdgen.o inouh.o inth.o locdef.o main.o outwin.o rint13.o	\
+	    rotdef.o spcgen.o trans.o wavsph.o wplot.o
 
-UTIL_USERS = auggen.o auglo.o findmt.o grdgen.o latgen.o main.o	\
-	     moduls.o rint13.o rotdef.o trans.o wplot.o
+UTIL_USERS = auggen.o augpw.o auglo.o bessel.o diracout.o dergl.o	\
+	     dvbes1.o findmt.o gbass.o grdgen.o inouh.o inth.o		\
+	     latgen.o locdef.o main.o moduls.o orth.o outwin.o		\
+	     rint13.o rotdef.o spcgen.o sphbes.o trans.o wavint.o	\
+	     wavsph.o wplot.o ylm.o
 
 #........................................................................
 #
@@ -173,4 +175,4 @@ $(util_users): $(UTILOBJ)
 $(util_users): FFLAGS += -I$(UTILDIR)
 
 
-## Time-stamp: <2016-02-10 16:57:45 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-07-15 11:53:24 assman@faepop71.tu-graz.ac.at>

@@ -1,9 +1,10 @@
 !!! wien2wannier/SRC_wplot/rotdef.f
 
 subroutine rotdef(stru, IOP)
+  use const,     only: DPk
   use structmod, only: struct_t
   use clio,      only: croak
-  use param,     only: unit_out, mvatom, DPk
+  use param,     only: unit_out, mvatom
   use latt,      only: br2
   use struct,    only: pos
   use sym2,      only: imat, trans, iord
@@ -117,4 +118,4 @@ subroutine rotdef(stru, IOP)
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-06 16:02:00 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:41:39 assman@faepop71.tu-graz.ac.at>

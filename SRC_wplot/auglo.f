@@ -4,7 +4,8 @@
       use struct,    only: POS
       use lolog,     only: iLO
       use loabc,     only: Alo
-      use param,     only: DPk, Lmax7, LOmax, Nrf
+      use const,     only: DPk
+      use param,     only: Lmax7, LOmax, Nrf
       use structmod, only: struct_t
 
       implicit none
@@ -62,4 +63,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 19:56:44 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:44:23 assman@faepop71.tu-graz.ac.at>

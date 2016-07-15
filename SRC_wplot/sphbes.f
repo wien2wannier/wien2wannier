@@ -1,7 +1,7 @@
 !!! wien2wannier/SRC_wplot/sphbes.f
 
 subroutine SPHBES(N,X,FJ)
-  use param, only: DPk
+  use const, only: DPk
 
   implicit none
 
@@ -104,4 +104,4 @@ subroutine SPHBES(N,X,FJ)
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 19:50:26 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:46:00 assman@faepop71.tu-graz.ac.at>

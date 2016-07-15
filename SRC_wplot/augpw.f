@@ -5,7 +5,8 @@
       use atspdt, only: P, DP
       use bessfu, only: irad, fj, dfj
       use lolog,  only: lapw
-      use param,  only: DPk, kconjg, Lmax7, Nrf
+      use param,  only: kconjg, Lmax7, Nrf
+      use const,  only: DPk
 
       implicit none
 
@@ -118,4 +119,4 @@
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-29 19:57:06 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:44:12 assman@faepop71.tu-graz.ac.at>

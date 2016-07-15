@@ -4,7 +4,8 @@
 
 SUBROUTINE GRDGEN(MODE,NP)
   use grid,  only: NPG, Rgrid, ireg, ilat, IRI
-  use param, only: BUFSZ, DPk, unit_in, unit_out, unit_grid, unit_psink
+  use const, only: DPk, BUFSZ
+  use param, only: unit_in, unit_out, unit_grid, unit_psink
   use latt,  only: BR1, BR4
   use clio,  only: croak
   use util,  only: string
@@ -290,4 +291,4 @@ end SUBROUTINE GRDGEN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-23 15:40:11 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:42:54 assman@faepop71.tu-graz.ac.at>

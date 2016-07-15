@@ -1,7 +1,7 @@
 !!! wien2wannier/SRC_wplot/gbass.f
 
 SUBROUTINE GBASS(RBAS,GBAS,TWOPI)
-  use param, only: DPk, TAU
+  use const, only: DPk, TAU
 
   implicit none
 
@@ -59,4 +59,4 @@ END SUBROUTINE GBASS
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-06 15:58:23 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:45:14 assman@faepop71.tu-graz.ac.at>

@@ -25,7 +25,8 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
 ! ----------------------------------------------------------------
   use ams,   only: atom_mass
   use ps1,   only: dep, deq, db=>dd, dvc, dsal, dk, dm=>dm1
-  use param, only: DPk, Nrad, unit_out, clight
+  use const, only: DPk
+  use param, only: Nrad, unit_out, clight
 
   implicit none
 
@@ -162,4 +163,4 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-07 14:07:19 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:46:22 assman@faepop71.tu-graz.ac.at>

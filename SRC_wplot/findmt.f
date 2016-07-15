@@ -3,7 +3,7 @@
 subroutine FINDMT(P, atms, stru, iAt, iLat, iR, R)
       use struct,    only: RMT, POS
       use radgrd,    only: dx
-      use param,     only: DPk
+      use const,     only: DPk
       use latt,      only: br2
       use structmod, only: struct_t
 
@@ -105,4 +105,4 @@ subroutine FINDMT(P, atms, stru, iAt, iLat, iR, R)
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-23 16:44:09 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 11:43:11 assman@faepop71.tu-graz.ac.at>
