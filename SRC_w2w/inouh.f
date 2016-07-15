@@ -1,6 +1,6 @@
 !!! wien2wannier/SRC_w2w/inouh.f
 
-subroutine inouh (dp,dq,dr,dq1,dfl,dv,z,test,nuc,nstop)
+subroutine inouh (dp,dq,dr,dq1,dfl,dv,z,test,nuc)
 
 ! valeurs initiales pour l integration vers l exrerieur
 ! dp grande composante    dq petite composante    dr bloc des points
@@ -16,11 +16,11 @@ subroutine inouh (dp,dq,dr,dq1,dfl,dv,z,test,nuc,nstop)
 
   implicit none
 
-  integer  :: nuc, nstop
+  integer  :: nuc
   real(R8) :: dp(nrad), dq(nrad), dr(nrad), dq1, dfl, dv, z, test
 
   intent(in)  :: nuc, dr, dq1, dfl, dv, z, test
-  intent(out) :: nstop, dp, dq
+  intent(out) :: dp, dq
 
   integer  :: i,j, m
   real(R8) :: dval, dm, deva1,deva2,deva3, dbe, dsum, dpr,dqr
@@ -49,9 +49,9 @@ subroutine inouh (dp,dq,dr,dq1,dfl,dv,z,test,nuc,nstop)
         dp(10)=dbe*dq1
 
       else
-        dval=dv+z*(3.-dr(1)*dr(1)/(dr(nuc)*dr(nuc)))/(dr(nuc)+dr(nuc))
-        deva1=0.
-        deva2=(dval-3.*z/(dr(nuc)+dr(nuc)))/dvc-db
+        dval=dv+z*(3-dr(1)*dr(1)/(dr(nuc)*dr(nuc)))/(dr(nuc)+dr(nuc))
+        deva1=0
+        deva2=(dval-3*z/(dr(nuc)+dr(nuc)))/dvc-db
         deva3=z/(dr(nuc)*dr(nuc)*dr(nuc)*dsal)
         if (dk.le.0.d0) then
           dp(10)=dq1
@@ -89,11 +89,7 @@ subroutine inouh (dp,dq,dr,dq1,dfl,dv,z,test,nuc,nstop)
         dp(m+10)=dval
         dq(m+10)=dsum
         m=m+1
-        if (m.gt.20) then
-          nstop=45
-        else
-          goto 41
-        endif
+        if (m <= 20) goto 41
       endif
       return
       end
@@ -105,4 +101,4 @@ subroutine inouh (dp,dq,dr,dq1,dfl,dv,z,test,nuc,nstop)
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-07 13:09:03 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 18:03:03 assman@faepop71.tu-graz.ac.at>

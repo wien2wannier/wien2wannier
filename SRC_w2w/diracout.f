@@ -56,7 +56,7 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
 !      DR   =    radial mesh
       real(R8) :: dv(nrad),  dr(NRAD)
       real(R8) :: d1, dfl, dq1, Rnuc, dval, slo
-      integer  :: i, nuc, nstop
+      integer  :: i, nuc
 
 !rschmid
 !   Set up radial mesh.
@@ -87,24 +87,24 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
       write(unit_out,*)'amass, r0:',atom_mass(int(z)),rnuc
       do 10 i=1,nmax
        d1=rnot*exp(DSTEP*(i-1.d0))
-      if (d1.ge.rnuc) goto 20
+      if (d1 >= rnuc) goto 20
  10   continue
  20   nuc=I
       write(unit_out,*)'nuc=',nuc
-      if (nuc.le.0) then
+      if (nuc <= 0) then
       dfl = sqrt(nqk*nqk-z*z/(dvc*dvc))
       else
       dfl=nqk*nqk
-      do 30 i=1,nuc
-         dv(i)=dv(i)+z/dr(i)+z*((dr(i)/dr(nuc))**2-3.)/(2*dr(nuc))
-30    continue
+      do i=1,nuc
+         dv(i)=dv(i)+z/dr(i)+z*((dr(i)/dr(nuc))**2-3)/(2*dr(nuc))
+      end do
       end if
       dq1 = nqk/iabs(nqk)
 
 !rschmid
 !  Determine expansion of the potential at the origin.
 !rschmid
-      CALL INOUH (dp,dq,dr,dq1,dfl,dv(1),Z,TEST,nuc,NSTOP)
+      CALL INOUH (dp,dq,dr,dq1,dfl,dv(1),Z,TEST,nuc)
 
 !rschmid
 !  Set up boundary conditions using a small r expansion.
@@ -113,9 +113,9 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
       nodes = 0
       do i=1,5
         dval=dr(i)**dfl
-        if (i.ne.1) then
-          if (dp(i-1).ne.0.) then
-             if ((dp(i)/dp(i-1)).le.0.) then
+        if (i /= 1) then
+          if (dp(i-1) /= 0) then
+             if ((dp(i)/dp(i-1)) <= 0) then
                nodes=nodes+1
              endif
           endif
@@ -134,8 +134,8 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
         dp(i) = dp(i-1)
         dq(i) = dq(i-1)
         call inth (dp(i),dq(i),dv(i),dr(i))
-        if (dp(i-1).ne.0.) then
-          if ((dp(i)/dp(i-1)).gt.0.) then
+        if (dp(i-1) /= 0.) then
+          if ((dp(i)/dp(i-1)) > 0) then
             nodes=nodes+1
           endif
         endif
@@ -156,4 +156,4 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-08 13:07:51 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 18:09:20 assman@faepop71.tu-graz.ac.at>

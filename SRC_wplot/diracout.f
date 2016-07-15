@@ -1,66 +1,62 @@
 !!! wien2wannier/SRC_wplot/diracout.f
 
 subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
-!rschmid
-!         Integration of Dirac equation.
-!
-!  Input:
-!
-!    rel    switch for relativ. - nonrelativ. calculation
-!    v      rad.sym. potential in Hartree
-!    rnot   first radial meshpoint
-!    dstep  log. step
-!    nmax    number of radial meshpoints
-!    eh     energy in hartree
-!    nqk    relativistic quantum number kappa
-!    z      charge of nucleus
-!
-!  Output:
-!
-!    val,slo:  Wellenfunktion und Steigung am Kugelrand
-!    nodes:    nomber of nodes
-!
-!rschmid
-!
-! ----------------------------------------------------------------
-  use ams,   only: atom_mass
-  use ps1,   only: dep, deq, db=>dd, dvc, dsal, dk, dm=>dm1
-  use const, only: DPk
-  use param, only: Nrad, unit_out, clight
 
-  implicit none
-
-  logical :: rel
-
-  real(DPk) :: v(Nrad), rnot, dstep, eh, val, slo, z
-  integer   :: nmax, nqk, nodes
-
-  intent(in)  :: rel, v, rnot, dstep, nmax, eh, nqk, z
-  intent(out) :: val, slo, nodes
-
-!rschmid
-!     V     =   potential*r
-!      DR   =    radial mesh
+! Integration of Dirac equation
+! -----------------------------
+      use param, only: clight, unit_out, Nrad
+      use const, only: R8
 !     dp    =  large component of the solution of the dirac equation
 !     dq    =  small component of the solution
-!rschmid
-  real(DPk), dimension(Nrad) :: dr, dp, dq, dv
+      use uhelp, only: dp => A, dq => B
+      use PS1,   only: dep, deq, db=>dd, dvc, dsal, dk, dm=>dm1
 
-  save :: dp, dq
+      implicit none
 
-  real(DPk), parameter :: DKOEF = 1/720._DPk
+!  Input:
+!    rel    switch for relativ. - nonrelativ. calculation
+!    V      rad.sym. potential in Hartree, V = potential*r
+!    Rnot   first radial meshpoint
+!    dstep  log. step
+!    Nmax   number of radial meshpoints
+!    EH     energy in hartree
+!    Nqk    relativistic quantum number kappa
+!    Z      charge of nucleus
+      real(R8), intent(in)  :: V(Nrad), Rnot, dstep, EH, Z
+      logical,  intent(in)  :: rel
+      integer,  intent(in)  :: Nmax, Nqk
 
-! DEP,DEQ DERIVEES DE DP ET DQ   DB=ENERGIE/DVC    DVC VITESSE DE LA
-! LUMIERE EN U.A.   DSAL=2.*DVC   DK NOMBRE QUANTIQUE KAPPA
-! DM=PAS EXPONENTIEL/720., DKOEF=1./720.
+!  Output:
+!    val,slo:  Wellenfunktion und Steigung am Kugelrand
+!    nodes:    nomber of nodes
+      real(R8), intent(out) :: val
+      integer,  intent(out) :: nodes
 
-!rschmid
-!  The name of dm should be changed to avoid a name collision
-!  with dm in inouh
-!rschmid
+      real(R8), parameter :: dkoef=1 / 720._R8, test=1.e-8_R8
+      real(R8), parameter :: atom_mass(103) = (/ &
+           &   1.0_R8,   4.0_R8,   6.9_R8,   9.0_R8,  10.8_R8,  12.0_R8, &
+           &  14.0_R8,  16.0_R8,  19.0_R8,  20.2_R8,  23.0_R8,  24.3_R8, &
+           &  27.0_R8,  28.1_R8,  31.0_R8,  32.0_R8,  35.4_R8,  40.0_R8, &
+           &  39.1_R8,  40.0_R8,  45.0_R8,  47.9_R8,  50.9_R8,  52.0_R8, &
+           &  54.9_R8,  55.8_R8,  58.9_R8,  58.7_R8,  63.5_R8,  65.4_R8, &
+           &  69.7_R8,  72.6_R8,  74.9_R8,  79.0_R8,  79.9_R8,  83.8_R8, &
+           &  85.5_R8,  87.6_R8,  88.9_R8,  91.2_R8,  92.9_R8,  95.9_R8, &
+           &  98.0_R8, 101.1_R8, 102.9_R8, 106.4_R8, 107.9_R8, 112.4_R8, &
+           & 114.8_R8, 118.7_R8, 121.8_R8, 127.6_R8, 126.9_R8, 131.3_R8, &
+           & 132.9_R8, 137.3_R8, 138.9_R8, 140.1_R8, 140.9_R8, 144.2_R8, &
+           & 145.0_R8, 150.4_R8, 152.0_R8, 157.3_R8, 158.9_R8, 162.5_R8, &
+           & 164.9_R8, 167.3_R8, 168.9_R8, 173.0_R8, 175.0_R8, 178.5_R8, &
+           & 180.9_R8, 183.8_R8, 186.2_R8, 190.2_R8, 192.2_R8, 195.1_R8, &
+           & 197.0_R8, 200.6_R8, 204.4_R8, 207.2_R8, 209.0_R8, 209.0_R8, &
+           & 210.0_R8, 222.0_R8, 223.0_R8, 226.0_R8, 227.0_R8, 232.0_R8, &
+           & 231.0_R8, 238.0_R8, 237.0_R8, 244.0_R8, 243.0_R8, 247.0_R8, &
+           & 247.0_R8, 251.0_R8, 252.0_R8, 257.0_R8, 258.0_R8, 259.0_R8, &
+           & 262.0_R8 /)
 
-  integer   :: i, nuc
-  real(DPk) :: rnuc, d1, test, dval, dfl, dq1
+!      DR   =    radial mesh
+      real(R8) :: dv(nrad),  dr(NRAD)
+      real(R8) :: d1, dfl, dq1, Rnuc, dval, slo
+      integer  :: i, nuc
 
 !rschmid
 !   Set up radial mesh.
@@ -72,10 +68,9 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
       if (rel) then
          dvc = clight
       else
-         dvc = 1.e10_DPk
+         dvc = 1e10_R8
       endif
-
-      dsal = 2.d0*dvc
+      dsal = 2*dvc
       db = eh/dvc
       dk = nqk
       dm=dstep*dkoef
@@ -88,15 +83,15 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
 !rschmid
 
 !jk   finite size of the nucleus
-      rnuc=2.2677e-05_DPk * (atom_mass(int(z))**(1/3._DPk))
+      rnuc=2.2677e-05_R8*(atom_mass(int(z))**(1/3._R8))
       write(unit_out,*)'amass, r0:',atom_mass(int(z)),rnuc
       do 10 i=1,nmax
        d1=rnot*exp(DSTEP*(i-1.d0))
-      if (d1.ge.rnuc) goto 20
+      if (d1 >= rnuc) goto 20
  10   continue
  20   nuc=I
       write(unit_out,*)'nuc=',nuc
-      if (nuc.le.0) then
+      if (nuc <= 0) then
       dfl = sqrt(nqk*nqk-z*z/(dvc*dvc))
       else
       dfl=nqk*nqk
@@ -109,8 +104,6 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
 !rschmid
 !  Determine expansion of the potential at the origin.
 !rschmid
-      test =1.e-8
-
       CALL INOUH (dp,dq,dr,dq1,dfl,dv(1),Z,TEST,nuc)
 
 !rschmid
@@ -120,7 +113,7 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
       nodes = 0
       do i=1,5
         dval=dr(i)**dfl
-        if (i.ne.1) then
+        if (i /= 1) then
           if (dp(i-1) /= 0) then
              if ((dp(i)/dp(i-1)) <= 0) then
                nodes=nodes+1
@@ -137,11 +130,11 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
 !    Perform outward integration of dirac equation
 !rschmid
 
-      do i = 6, nmax
+      do i = unit_out, nmax
         dp(i) = dp(i-1)
         dq(i) = dq(i-1)
         call inth (dp(i),dq(i),dv(i),dr(i))
-        if (dp(i-1) /= 0) then
+        if (dp(i-1) /= 0.) then
           if ((dp(i)/dp(i-1)) > 0) then
             nodes=nodes+1
           endif
@@ -163,4 +156,4 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-15 11:46:22 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 18:16:40 assman@faepop71.tu-graz.ac.at>

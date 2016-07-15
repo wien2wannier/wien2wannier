@@ -8,7 +8,7 @@ module param
   private :: BUFSZ, DPk
   public
 
-  character(*), parameter, private :: rev_str="$version: v1.0.0-167-g34964e8$"
+  character(*), parameter, private :: rev_str="$version: v1.0.0-169-g37b004a$"
   character(*), parameter, public  :: &
        wplot_version = rev_str(11 : len (rev_str)-1)
 
@@ -181,10 +181,20 @@ module work1
   real(DPk) :: A(Nrad), B(Nrad)
 end module work1
 
+module uhelp
+  use param, only: Nrad
+  use const, only: R8
+
+  implicit none
+  private
+
+  real(R8), public :: A(NRAD), B(NRAD)
+end module uhelp
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-15 11:41:15 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 18:17:43 assman@faepop71.tu-graz.ac.at>
