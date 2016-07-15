@@ -14,6 +14,8 @@ subroutine SPHBES(N,X,FJ)
 !*****        29 MAY,1968
 
   use const, only: R8
+  use clio,  only: croak
+  use util,  only: string
 
   implicit none
 
@@ -31,15 +33,11 @@ subroutine SPHBES(N,X,FJ)
   real(R8) :: hfxsq, xl, twm, ta, xlp, cufac, ffo, ffn, xi, fm, sdr, ffp, ser
   integer  :: ns, m, mm, j, jj
 
-  IF(N >= 0) GOTO 7
-  PRINT 2
-2 FORMAT (33H1 ERROR, N SHOULD NOT BE NEGATIVE  )
-  GO TO 99
-7 if (X >= 0)  GO TO 10
-  PRINT 9
-9 FORMAT (33H1 ERROR, X SHOULD NOT BE NEGATIVE  )
-  GO TO 99
-10 IF (X > XLIM) GO TO 25
+  if (N < 0) call croak('error in SPHBES: N should not be negative - ' &
+       // trim(string(N)))
+  if (X < 0) call croak('error in SPHBES: x should not be negative - ' &
+       // trim(string(X)))
+  if (X > XLIM) GO TO 25
   HFXSQ=HF*X*X
   XL=1
   TWM=1
@@ -54,7 +52,7 @@ subroutine SPHBES(N,X,FJ)
   XL=XL*X
   IF (M.LE.N)  GO TO 11
   RETURN
-25 CUFAC=4.2D0
+25 CUFAC=4.2_R8
   IF (X.LT.(N-2)) CUFAC=TNHF/(N+HF-X)
   NS=N+5+int(X*CUFAC)
   !*******************  ADD ADDITIONAL FACTOR  ***************************
@@ -94,7 +92,7 @@ subroutine SPHBES(N,X,FJ)
   do M=1,MM
      FJ(M)=FJ(M)*SER
   end do
-  GO TO 98
+  return
 56 JJ= M+1
   NS=N+1
   do J = JJ,NS
@@ -102,9 +100,6 @@ subroutine SPHBES(N,X,FJ)
   end do
   SDR=SDR*TN50
   GO TO 32
-99 call OUTERR('SPHBES','look in output.')
-  stop 'SPHBES - Error'
-98 return
 end subroutine SPHBES
 
 
@@ -114,4 +109,4 @@ end subroutine SPHBES
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-12 12:24:31 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 15:12:39 assman@faepop71.tu-graz.ac.at>

@@ -86,8 +86,7 @@ distclean: clean
 #  Object files common to both REAL and COMPLEX version
 #  (i.e., these are the same for REAL and COMPLEX)
 #
-OBJS = util_w2w.o dvbes1.o outerr.o rotate.o mknam.o cputim.o ylm.o	\
-       sphbes.o
+OBJS = util_w2w.o dvbes1.o rotate.o mknam.o cputim.o ylm.o sphbes.o
 
 # Comment about ‘cputim.o’: ‘siteconfig’ will copy one of the
 # ‘cputim_*.[fc]’ to ‘cputim.[fc]; the pattern rules below will then
@@ -176,4 +175,4 @@ $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
 	$(foreach o, $(util_users), $d/$o)): $(O_DIR)/util_w2w.o
 
 
-## Time-stamp: <2016-07-06 11:26:32 assman@faepop71.tu-graz.ac.at>
+## Time-stamp: <2016-07-15 14:42:00 assman@faepop71.tu-graz.ac.at>

@@ -15,6 +15,7 @@ subroutine LATGEN
   use struct, only: alpha, aa, bb, cc, lattic, pia, vol
   use gener,  only: br1, br2
   use const,  only: R8, TAU
+  use clio,   only: croak
 
   implicit none
 
@@ -39,11 +40,9 @@ subroutine LATGEN
   IF(LATTIC(1:1).EQ.'B') GOTO 40
   IF(LATTIC(1:1).EQ.'C') GOTO 50
   IF(LATTIC(1:1).EQ.'R') GOTO 60
-  !
-  !        Error: wrong lattice, stop execution
-  !
-  GOTO 900
-  !
+
+  call croak('error in LATGEN: bad lattice type `'//trim(lattic)//"'")
+
   !.....HEXAGONAL LATTICE
 10 CONTINUE
   BR1(1,1)=2.D0/SQRT3*PIA(1)
@@ -309,16 +308,6 @@ subroutine LATGEN
   !
   !.....DEFINE ROTATION MATRICES IN NONSYMMORPHIC CASE
   CALL ROTDEF
-  !
-  RETURN
-  !
-  !        Error messages
-  !
-900 CALL OUTERR('LATGEN','wrong lattice.')
-  STOP 'LATGEN - Error'
-  !
-  !        End of 'LATGEN'
-  !
 end subroutine LATGEN
 
 
@@ -328,4 +317,4 @@ end subroutine LATGEN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-07 09:26:23 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-15 16:03:34 assman@faepop71.tu-graz.ac.at>
