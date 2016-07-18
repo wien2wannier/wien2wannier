@@ -8,7 +8,7 @@ module param
   private :: BUFSZ, DPk
   public
 
-  character(*), parameter, private :: rev_str="$version: v1.0.0-133-gca1baaa$"
+  character(*), parameter, private :: rev_str="$version: v1.0.0-177-g47ccffc$"
   character(*), parameter, public  :: &
        wplot_version = rev_str(11 : len (rev_str)-1)
 
