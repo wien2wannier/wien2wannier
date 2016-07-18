@@ -7,7 +7,7 @@ subroutine INTH (DP,DQ,DV,DR)
 ! CE POINT
 ! **********************************************************************
   use const, only: R8
-  use ps1,   only: dep, deq, db=>dd, dvc, dsal, dk, dm=>dm1
+  use ps1,   only: dep, deq, db, dvc, dsal, dk, dm
 
   implicit none
 
@@ -55,4 +55,4 @@ end subroutine INTH
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-15 18:30:05 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 11:26:53 assman@faepop71.tu-graz.ac.at>

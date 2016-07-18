@@ -9,7 +9,7 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
 !     dp    =  large component of the solution of the dirac equation
 !     dq    =  small component of the solution
       use uhelp, only: dp => A, dq => B
-      use PS1,   only: dep, deq, db=>dd, dvc, dsal, dk, dm=>dm1
+      use PS1,   only: dep, deq, db, dvc, dsal, dk, dm
 
       implicit none
 
@@ -156,4 +156,4 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-15 18:16:40 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 11:25:45 assman@faepop71.tu-graz.ac.at>

@@ -12,7 +12,7 @@ subroutine inouh (dp,dq,dr,dq1,dfl,dv,z,test,nuc)
 ! **********************************************************************
   use param, only: Nrad
   use const, only: R8
-  use PS1,   only: dep, deq, db=>dd, dvc, dsal, dk ! we define out own dm
+  use PS1,   only: dep, deq, db, dvc, dsal, dk ! we define out own dm
 
   implicit none
 
@@ -101,4 +101,4 @@ subroutine inouh (dp,dq,dr,dq1,dfl,dv,z,test,nuc)
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-15 18:04:03 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 11:26:20 assman@faepop71.tu-graz.ac.at>
