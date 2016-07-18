@@ -89,7 +89,7 @@ distclean: clean
 #  Object files common to both REAL and COMPLEX version
 #  (i.e., these are the same for REAL and COMPLEX)
 #
-OBJS = moduls.o wplot.o latgen.o rotdef.o locdef.o orth.o grdgen.o	\
+OBJS = modules.o wplot.o latgen.o rotdef.o locdef.o orth.o grdgen.o	\
        spcgen.o findmt.o auggen.o augpw.o auglo.o wavsph.o wavint.o	\
        trans.o bessel.o gbass.o outwin.o rint13.o ylm.o sphbes.o	\
        dvbes1.o diracout.o dergl.o inouh.o inth.o
@@ -114,7 +114,7 @@ MOD_USERS = auggen.o auglo.o augpw.o dergl.o diracout.o findmt.o	\
 
 UTIL_USERS = auggen.o augpw.o auglo.o bessel.o diracout.o dergl.o	\
 	     dvbes1.o findmt.o gbass.o grdgen.o inouh.o inth.o		\
-	     latgen.o locdef.o main.o moduls.o orth.o outwin.o		\
+	     latgen.o locdef.o main.o modules.o orth.o outwin.o		\
 	     rint13.o rotdef.o spcgen.o sphbes.o trans.o wavint.o	\
 	     wavsph.o wplot.o ylm.o
 
@@ -162,17 +162,17 @@ $(C_DIR)/%.o: %.F Makefile
 $(UTILOBJ): $(SRCDIR)/util_w2w.F $(SRCDIR)/Makefile
 	make -C $(SRCDIR) $(LIBDIR)/util_w2w.o
 
-# Dependencies on ‘moduls.o’ and ‘util_w2w.o’; these files might have
+# Dependencies on ‘modules.o’ and ‘util_w2w.o’; these files might have
 # real/complex versions, or not
 mod_users  = $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
 		$(foreach o, $(MOD_USERS), $d/$o))
 util_users = $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
 		$(foreach o, $(UTIL_USERS), $d/$o))
 
-$(mod_users): $(O_DIR)/moduls.o
+$(mod_users): $(O_DIR)/modules.o
 
 $(util_users): $(UTILOBJ)
 $(util_users): FFLAGS += -I$(UTILDIR)
 
 
-## Time-stamp: <2016-07-15 11:53:24 assman@faepop71.tu-graz.ac.at>
+## Time-stamp: <2016-07-18 11:07:43 assman@faepop71.tu-graz.ac.at>

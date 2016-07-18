@@ -26,7 +26,7 @@ import numpy as np
 import re
 import traceback
 
-__version__ = "$version: v1.0.0-169-g37b004a$"
+__version__ = "$version: v1.0.0-169-gd658e90$"
 
 try:
     __version__ = re.search(":\s*(.*?)\s*\$", __version__).group(1)
