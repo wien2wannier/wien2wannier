@@ -1,4 +1,51 @@
-!!! wien2wannier/SRC_w2w/modules.F
+!!! wien2wannier/SRC_w2w/modules.f
+!!!
+!!!    Modules for wien2wannier.  This file contains modules that are
+!!!    independent of real/complex compilation.
+!!!
+!!! Copyright 2010-2012 Jan Kuneš, Philipp Wissgott
+!!!           2013-2016 Elias Assmann
+
+!!/=== Defined here: =============================
+!!
+!! Amn_Mmn: init_Amn_Mmn(), overlap(:,:,:), c(:,:,:)
+!!
+!! assleg:  init_assleg(), YR(:,:), N, MAXDIM
+!!
+!! atspdt:  P(0:Lmax2, Nrf), DP(0:Lmax2,Nrf)
+!!
+!! bessel:  rj(:,:), ri_mat(:,:), init_bessel()
+!!
+!! gener:   BR1(3,3), BR2(3,3)
+!!
+!! loabc:   alo(0:LOmax, Nloat, Nrf)
+!!
+!! lolog:   n_rad(0:lmax2), ilo(0:lomax), loor(0:lomax), lapw(0:lmax2),
+!!          Nlo, Nlov, Nlon
+!!
+!! pairs:   init_pairs(), BQX(:), BQY(:), BQZ(:), BQX1(:), BQY1(:), BQZ1(:)
+!!          KP(:), KPB(:)
+!!
+!! param: rev_str, clight, iBlock, Lmax2, lxdos, LOmax, Ncom, Ndif,
+!!          Ngau, Nloat, Nmat, Nrad, Nrf, unit_amn, unit_def,
+!!          unit_eig, unit_ene, unit_fermi, unit_in, unit_mmn,
+!!          unit_nnkp, unit_out, unit_struct, unit_vector, unit_vsp
+!!
+!! PS1:     DEP(5), DEQ(5), DB, DVC, DSAL, DK, DM
+!!
+!! radfu:   RF1(Nrad,0:Lmax2,nrf), RF2(Nrad,0:Lmax2,Nrf)
+!!
+!! struct:  init_struct(), nat, iord, lattic, cform, title, irel, rel,
+!!          AA,BB,CC, VOL, pia(3), alpha(3), aname(:), R0(:), DX(:),
+!!          RMT(:), zz(:), mult(:), jrj(:), v(:), pos(:,:), trans(:,:),
+!!          transij(:,:), rotloc(:,:,:), rotij(:,:,:), iz(:,:,:)
+!!
+!! uhelp:   A(Nrad), B(Nrad)
+!!
+!! xa:      init_xa(), bk(3), bkrot(3), bkrloc(3), fj(:,:), dfj(:,:),
+!!          phs(:), r(:)
+!!
+!!\===============================================
 
 module param
   use const, only: R8, C16
@@ -7,7 +54,7 @@ module param
 
   public
 
-  character(*), parameter, private :: rev_str="$version: v1.0.0-170-g1208e0f$"
+  character(*), parameter, private :: rev_str="$version: v1.0.0-171-g02d187e$"
   character(*), parameter, public  :: &
        wien2wannier_version = rev_str(11 : len (rev_str)-1)
 
@@ -136,7 +183,6 @@ MODULE struct
 6000 FORMAT(///,3X,'ERROR IN LAPW0 : MULT(JATOM)=0 ...', &
           /, 20X,'JATOM=',I3,3X,'INDEX=',I3,3X,'MULT=',I3)
   END SUBROUTINE init_struct
-
 END MODULE struct
 
 MODULE bessel
@@ -186,40 +232,6 @@ MODULE xa
      allocate(r(nrad))
    end subroutine init_xa
 END MODULE xa
-
-MODULE xa3
-  use const, only: R8
-#ifdef _COMPLEX_
-  use const, only: C16
-#endif
-
-  implicit none
-  private
-  public :: init_xa3, XK,YK,ZK, BKX,BKY,BKZ, GX,GY,GZ, vecsz, a
-
-#ifndef _COMPLEX_
-  real(R8), &
-#else
-  complex(C16), &
-#endif
-  allocatable :: a(:,:,:)
-
-  integer,  allocatable :: GX(:,:),GY(:,:),GZ(:,:), vecsz(:)
-  real(R8), allocatable :: BKX(:), BKY(:), BKZ(:)
-  real(R8), allocatable :: XK(:),  YK(:),  ZK(:)
-
-CONTAINS
-  subroutine init_xa3(nb, nmat, num_kpts)
-    integer, intent(in) :: NB, Nmat, num_kpts
-
-    allocate( a  (Nmat, Nb, num_kpts), vecsz(num_kpts) )
-    allocate( BKX(Nmat),         BKY(Nmat),         BKZ(Nmat),          &
-         &    GX (Nmat,num_kpts), GY(Nmat,num_kpts), GZ(Nmat,num_kpts), &
-         &    XK (     num_kpts), YK(     num_kpts), ZK(     num_kpts))
-
-    GX = 0; GY = 0; GZ = 0
-  END SUBROUTINE init_xa3
-END MODULE xa3
 
 module Amn_Mmn
   use const, only: C16
@@ -298,7 +310,7 @@ module loabc
   private
 
   ! abc calculates the cofficients a,b,c of the lo
-  real(R8), public :: alo(0:lomax, Nloat, Nrf)
+  real(R8), public :: alo(0:LOmax, Nloat, Nrf)
 end module loabc
 
 module uhelp
@@ -308,7 +320,7 @@ module uhelp
   implicit none
   private
 
-  real(R8), public :: A(NRAD), B(NRAD)
+  real(R8), public :: A(Nrad), B(Nrad)
 end module uhelp
 
 module radfu
@@ -319,7 +331,7 @@ module radfu
   private
 
   ! radial functions large and small component
-  real(R8), public :: RF1(NRAD,0:LMAX2,nrf), RF2(NRAD,0:LMAX2,nrf)
+  real(R8), public :: RF1(Nrad,0:Lmax2,Nrf), RF2(Nrad,0:Lmax2,Nrf)
 end module radfu
 
 module PS1
@@ -339,4 +351,4 @@ end module PS1
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-07 10:16:21 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 13:15:58 assman@faepop71.tu-graz.ac.at>
