@@ -1,6 +1,7 @@
 !!! wien2wannier/SRC_w2w/ylm.f
 
-subroutine YLM(V,LMAX,Y)
+module     Ylm_m; contains
+subroutine Ylm(V,LMAX,Y)
   use const, only: R8, C16, TAU
 
   implicit none
@@ -253,8 +254,8 @@ subroutine YLM(V,LMAX,Y)
         I2L    = I2L    - 1
      end do
   end do
-end subroutine YLM
-
+end subroutine Ylm
+end module     Ylm_m
 
 !!/---
 !! Local Variables:
@@ -262,4 +263,4 @@ end subroutine YLM
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-07 12:50:47 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 11:50:03 assman@faepop71.tu-graz.ac.at>

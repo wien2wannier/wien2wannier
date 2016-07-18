@@ -1,6 +1,7 @@
 !!! wien2wannier/SRC_w2w/gaunt1.f
 
-real(R8) pure function GAUNT1(LP,L,LS,MP,M,MS)
+module                 gaunt1_m; contains
+real(R8) pure function gaunt1(LP,L,LS,MP,M,MS)
 !
   use assleg, only: YR, N
   use const,  only: R8
@@ -48,7 +49,8 @@ real(R8) pure function GAUNT1(LP,L,LS,MP,M,MS)
       end do
       GAUNT1 = S
 !
-    end function GAUNT1
+end function gaunt1
+end module   gaunt1_m
 
 
 !!/---
@@ -57,4 +59,4 @@ real(R8) pure function GAUNT1(LP,L,LS,MP,M,MS)
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-06 11:34:59 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 13:56:26 assman@faepop71.tu-graz.ac.at>

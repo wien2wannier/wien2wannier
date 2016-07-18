@@ -6,6 +6,7 @@
 !
 !rschmid
 
+module     dergl_m; contains
 subroutine dergl(g_l,der1,rnot,dx,mesh)
   use param, only: Nrad
   use const, only: R8
@@ -97,6 +98,7 @@ subroutine dergl(g_l,der1,rnot,dx,mesh)
   RAD=R(MESH)
   DER1(MESH)=dfldi(MESH)/RAD/DX
 end subroutine dergl
+end module     dergl_m
 
 !!/---
 !! Local Variables:
@@ -104,4 +106,4 @@ end subroutine dergl
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-15 17:56:24 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 11:40:52 assman@faepop71.tu-graz.ac.at>

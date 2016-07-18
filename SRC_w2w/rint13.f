@@ -1,6 +1,7 @@
 !!! wien2wannier/SRC_w2w/rint13.f
 
-subroutine RINT13(A,B,X,Y,S,JATOM)
+module     rint13_m; contains
+subroutine rint13(A,B,X,Y,S,JATOM)
   !     PERFORM RADIAL INTEGRALS REQUIRED BY BHDK13
   !                            D.D.KOELLING
 
@@ -40,8 +41,8 @@ subroutine RINT13(A,B,X,Y,S,JATOM)
   S=2*Z2+4*Z4+R*(A(J)*X(J)+CIN*B(J)*Y(J))+P2
   S=(DX(JATOM)*S+P1)/3.0D0
   IF(J1.GT.1) S=S+0.5D0*DX(JATOM)*(P1+P2)
-end subroutine RINT13
-
+end subroutine rint13
+end module     rint13_m
 
 !!/---
 !! Local Variables:
@@ -49,4 +50,4 @@ end subroutine RINT13
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-07 11:35:31 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 15:51:07 assman@faepop71.tu-graz.ac.at>

@@ -1,6 +1,7 @@
 !!! wien2wannier/SRC_w2w/rotate.f
 
-subroutine ROTATE (VECTOR,ROTMAT,ROTVEC)
+module     rotate_m; contains
+subroutine rotate(VECTOR,ROTMAT,ROTVEC)
   !     ROTATE PERFORMS A ROTATION OF THE VECTOR FROM THE GENERAL
   !     CARTESIAN COORDINATION SYSTEM INTO THE  LOCAL ONE  OF THE
   !     JATOM-TH SPHERE.
@@ -24,8 +25,8 @@ subroutine ROTATE (VECTOR,ROTMAT,ROTVEC)
      end do
      ROTVEC(JCOORD)=DOTPRO
   end do
-end subroutine ROTATE
-
+end subroutine rotate
+end module     rotate_m
 
 !!/---
 !! Local Variables:
@@ -33,4 +34,4 @@ end subroutine ROTATE
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-07 10:32:46 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 15:50:58 assman@faepop71.tu-graz.ac.at>

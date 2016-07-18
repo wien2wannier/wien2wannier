@@ -1,6 +1,7 @@
 !!! wien2wannier/SRC_w2w/latgen.f
 
-subroutine LATGEN
+module     latgen_m; contains
+subroutine latgen
 !
 !     LATGEN GENERATES TWO BRAVAIS MATRICES, DEFINES THE VOLUME OF
 !     THE UNIT CELL AND CALLS ROTDEF
@@ -16,6 +17,9 @@ subroutine LATGEN
   use gener,  only: br1, br2
   use const,  only: R8, TAU
   use clio,   only: croak
+
+  !! procedure includes
+  use rotdef_m
 
   implicit none
 
@@ -307,8 +311,9 @@ subroutine LATGEN
   VOL=AA*BB*CC/RVFAC
   !
   !.....DEFINE ROTATION MATRICES IN NONSYMMORPHIC CASE
-  CALL ROTDEF
-end subroutine LATGEN
+  call ROTDEF
+end subroutine latgen
+end module     latgen_m
 
 
 !!/---
@@ -317,4 +322,4 @@ end subroutine LATGEN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-15 16:03:34 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 15:55:31 assman@faepop71.tu-graz.ac.at>

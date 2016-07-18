@@ -1,6 +1,7 @@
 !!! wien2wannier/SRC_w2w/gaunt2.f
 
-subroutine GAUNT2
+module     gaunt2_m; contains
+subroutine gaunt2
   ! set YR needed in function GAUNT1
 
   use assleg, only: YR, N, init_assleg
@@ -77,7 +78,8 @@ subroutine GAUNT2
      IF (M - L ==0) goto 30
      IF (L .LE. LOMAX) GOTO 10
   end do
-end subroutine GAUNT2
+end subroutine gaunt2
+end module gaunt2_m
 
 
 !!/---
@@ -86,4 +88,4 @@ end subroutine GAUNT2
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-07 12:18:49 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 13:57:13 assman@faepop71.tu-graz.ac.at>

@@ -1,5 +1,6 @@
 !!! wien2wannier/SRC_w2w/l2mmn.f
 
+module     l2Mmn_m; contains
 subroutine l2Mmn(NB,num_kpts,NNTOT,LJMAX)
   use const,   only: R8, C16, TAU
   use param,   only: unit_out, unit_vsp, unit_vector, NRF, Lmax2
@@ -11,6 +12,13 @@ subroutine l2Mmn(NB,num_kpts,NNTOT,LJMAX)
   use pairs,   only: kp, kpb, bqx, bqy, bqz
   use gener,   only: br1
   use lolog,   only: n_rad
+
+  !! procedure includes
+  use almgen_m
+  use gaunt1_m
+  use radint_m
+  use atpar_m
+  use Ylm_m
 
   implicit none
 
@@ -30,13 +38,6 @@ subroutine l2Mmn(NB,num_kpts,NNTOT,LJMAX)
 
   real(R8) :: BM, tt2,tt3, t2, arg1, arg2, arg3
   integer  :: index1,index2,indexj, irf1,irf2, lj, m1,m2,mj, mu, latom, l_index, l1, l2
-
-  interface
-     real(R8) pure function GAUNT1(LP,L,LS,MP,M,MS)
-       use const, only: R8
-       integer, intent(in) :: L, LP, LS, M, MP, MS
-     end function GAUNT1
-  end interface
 
   integer :: k1_prog_itvl
   k1_prog_itvl = min(max(num_kpts/10, 1), 100)
@@ -63,7 +64,7 @@ subroutine l2Mmn(NB,num_kpts,NNTOT,LJMAX)
      itape=unit_vector
      jtape=unit_vsp
      rewind(itape)
-     CALL ATPAR(JATOM, itape, jtape)
+     call atpar(JATOM, itape, jtape)
      FAC=2*TAU*RMT(JATOM)**2/sqrt(VOL)
      rewind(itape)
 
@@ -76,7 +77,7 @@ subroutine l2Mmn(NB,num_kpts,NNTOT,LJMAX)
         KY1=YK(kkk)
         KZ1=ZK(kkk)
         !	write(92,*)'k-point:',kkk,KX1,KY1,KZ1
-        CALL almgen(ALM,JATOM,LFIRST,NB,KKK)
+        call almgen(ALM,JATOM,LFIRST,NB,KKK)
         k2loop: DO k2=1,NNTOT
            if (k2.gt.1) pair_index=pair_index+1
            kkk=KPB(pair_index)
@@ -92,7 +93,7 @@ subroutine l2Mmn(NB,num_kpts,NNTOT,LJMAX)
            BK(2)=BX*BR1(2,1)+BY*BR1(2,2)+BZ*BR1(2,3)
            BK(3)=BX*BR1(3,1)+BY*BR1(3,2)+BZ*BR1(3,3)
            BM=SQRT(BK(1)*BK(1)+BK(2)*BK(2)+BK(3)*BK(3))
-           CALL RADINT(JATOM,LJMAX,BM)                  ! compute radial intergrals <R(r)|j_(|b|*r)|R'(r)>
+           call radint(JATOM,LJMAX,BM)                  ! compute radial intergrals <R(r)|j_(|b|*r)|R'(r)>
            CALL YLM (BK,LJMAX,YLB)                      ! computer Y_lm(b)
            indexj=0
            DO LJ=0,LJMAX
@@ -161,47 +162,9 @@ subroutine l2Mmn(NB,num_kpts,NNTOT,LJMAX)
 
   ! ....END LOOP OVER ALL ATOMS
 
-  RETURN
-
-2032 FORMAT(50X,I2,//)
-   contains
-     subroutine ptime(descr, unit)
-       character(len=*), intent(in), optional :: descr
-       integer,          intent(in), optional :: unit
-
-       character(len=*), parameter :: fmt = "('Times for ', A, T33, '(sec):', &
-            & F8.3, ' wall;', F9.3)"!, ' cpu =', F8.3, ' user +', F8.3, ' sys')"
-
-       real(r8),     save :: cputime1, cputime2
-       integer,    save :: walltime1, walltime2, count_rate
-       integer,    save :: default_lun
-       integer          :: lun
-
-       if (.not. present(descr)) then
-          call cpu_time(cputime1)
-          call system_clock(walltime1, count_rate)
-
-          if (present(unit)) default_lun=unit
-
-          return
-       end if
-
-       if (present(unit)) then
-          lun=unit
-       else
-          lun=default_lun
-       end if
-
-       call cpu_time(cputime2)
-       call system_clock(walltime2)
-
-       write(lun, fmt) descr, real(walltime2-walltime1)/count_rate, &
-            & (cputime2-cputime1)
-
-       walltime1 = walltime2
-       cputime1  = cputime2
-     end subroutine ptime
-END SUBROUTINE l2MMN
+2032 format(50X,I2,//)
+end subroutine l2MMN
+end module     l2Mmn_m
 
 
 !!/---
@@ -210,4 +173,4 @@ END SUBROUTINE l2MMN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-07 13:11:11 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 15:55:57 assman@faepop71.tu-graz.ac.at>

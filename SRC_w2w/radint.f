@@ -1,12 +1,17 @@
 !!! wien2wannier/SRC_w2w/radint.f
 
-subroutine RADINT(JATOM,LJMAX,BM)
+module     radint_m; contains
+subroutine radint(JATOM,LJMAX,BM)
   use param,  only: Lmax2, Nrad
   use struct, only: jrj, R0, dx
   use bessel, only: rj, ri_mat
   use lolog,  only: n_rad
   use const,  only: R8
   use radfu,  only: RF1, RF2
+
+  !! procedure includes
+  use sphbes_m
+  use rint13_m
 
   implicit none
 
@@ -48,8 +53,8 @@ subroutine RADINT(JATOM,LJMAX,BM)
         end do ljloop
      end do
   end do
-end subroutine RADINT
-
+end subroutine radint
+end module radint_m
 
 !!/---
 !! Local Variables:
@@ -57,4 +62,4 @@ end subroutine RADINT
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-07 10:18:18 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 15:55:16 assman@faepop71.tu-graz.ac.at>

@@ -1,7 +1,9 @@
 !!! wien2wannier/SRC_w2w/atpar.f
 
-subroutine ATPAR (JATOM, itape, jtape)
-  ! calculate radial functions for atoms JATOM
+module     atpar_m; contains
+subroutine atpar(JATOM, itape, jtape)
+!!! calculate radial functions for atoms JATOM
+
   use param,  only: unit_out, clight, Nrad, Nloat, lomax, Lmax2
   use struct, only: JRJ, mult, Nat, aname, R0, dx, zz, rel
   use lolog,  only: nlo,nlov,nlon,loor,ilo,lapw,n_rad
@@ -9,6 +11,13 @@ subroutine ATPAR (JATOM, itape, jtape)
   use const,  only: R8
   use uhelp,  only: A, B
   use radfu,  only: RF1, RF2
+
+  !! procedure includes
+  use diracout_m
+  use outwin_m
+  use rint13_m
+  use dergl_m
+  use abc_m
 
   implicit none
 
@@ -99,9 +108,9 @@ subroutine ATPAR (JATOM, itape, jtape)
      !     DELE IS THE UPWARD AND DOWNWARD ENERGY SHIFT IN HARTREES
 
      E1=EI-DELE
-     CALL OUTWIN(REL,VR,R0(JATOM),DX(JATOM),JRJ(JATOM),E1,            &
+     call OUTWIN(REL,VR,R0(JATOM),DX(JATOM),JRJ(JATOM),E1,            &
           FL,UVB,DUVB,NODEL,ZZ(jatom))
-     CALL RINT13(A,B,A,B,OVLP,JATOM)
+     call RINT13(A,B,A,B,OVLP,JATOM)
      TRX=1.0D0/SQRT(OVLP)
      IMAX=JRJ(JATOM)
      DO M=1,IMAX
@@ -176,9 +185,9 @@ subroutine ATPAR (JATOM, itape, jtape)
            IF(rlo(jlo,l)) THEN
               ei=elo(l,nloat)/2.d0
               kappa=l
-              CALL diracout(rel,vr(1),r0(jatom),dx(jatom),jrj(jatom),    &
-                   ei,kappa,uv,duv,nodes,zz(jatom))
-              CALL dergl(a,b,r0(jatom),dx(jatom),jrj(jatom))
+              call diracout(rel,vr(1),r0(jatom),dx(jatom),jrj(jatom),    &
+                   &        ei,kappa,uv,duv,nodes,zz(jatom))
+              call dergl(a,b,r0(jatom),dx(jatom),jrj(jatom))
               DO m = 1, jrj(jatom)
                  r_m = r0(jatom)*exp(dx(jatom)*(m-1))
                  b(m) = b(m)*r_m/(2.d0*clight+(elo(l,jlo)- &
@@ -212,7 +221,8 @@ subroutine ATPAR (JATOM, itape, jtape)
 
   write(unit_out, "('number of rad. functions per L:',8I3)") &
        n_rad(0 : lmax2)
-END SUBROUTINE ATPAR
+end subroutine atpar
+end module     atpar_m
 
 
 !!/---
@@ -221,4 +231,4 @@ END SUBROUTINE ATPAR
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-12 12:45:38 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 15:55:07 assman@faepop71.tu-graz.ac.at>

@@ -1,6 +1,7 @@
 !!! wien2wannier/SRC_w2w/dvbes1.f
 
-subroutine DVBES1(FJ,DJ,SM,NT)
+module     dvbes1_m; contains
+subroutine dvbes1(FJ,DJ,SM,NT)
 !-----X----X----X----X----X----X----X----X----X----X----X----X----X----X
 !-----X CALCULATE THE DERIVATIVES OF THE BESSEL FUNCTIONS.   X----X----X
 !-----X   DJ=DFJ/DX WHERE X=SM*RI                                 X----X
@@ -36,7 +37,8 @@ subroutine DVBES1(FJ,DJ,SM,NT)
         LM=LM+1
      end do
   end if
-end subroutine DVBES1
+end subroutine dvbes1
+end module     dvbes1_m
 
 
 !!/---
@@ -45,4 +47,4 @@ end subroutine DVBES1
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-15 12:09:17 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 11:49:12 assman@faepop71.tu-graz.ac.at>

@@ -3,7 +3,7 @@
 !!!    Main program ‘w2w’
 !!!
 !!! Copyright 2010-2012 Jan Kuneš, Philipp Wissgott
-!!!           2013-2015 Elias Assmann
+!!!           2013-2016 Elias Assmann
 
 !!/--- Files expected in ‘def’ ---
 !!  5 inwf	'old'	  'formatted'
@@ -20,8 +20,8 @@
 !!\---
 
 program wf
-  use param,    only: unit_def, unit_vector, unit_fermi, unit_in, unit_ene,&
-       &              unit_struct, unit_nnkp, unit_amn, unit_mmn, unit_out,&
+  use param,    only: unit_def, unit_vector, unit_fermi, unit_in, unit_ene, &
+       &              unit_nnkp, unit_amn, unit_mmn, unit_out,              &
        &              wien2wannier_version, Lmax2, Nmat, Nrad, Nrf
   use const,    only: R8, BUFSZ
   use struct,   only: aa,bb,cc, irel, alpha, Nat, lattic, title, init_struct
@@ -34,6 +34,14 @@ program wf
   use wien2k,   only: errflg, errclr, gtfnam
   use gener,    only: br2
   use clio,     only: croak
+
+  !! procedure includes
+  use read_vec_m
+  use gaunt2_m
+  use latgen_m
+  use planew_m
+  use l2mmn_m
+  use l2amn_m
 
   implicit none
 
@@ -74,7 +82,7 @@ program wf
   end do def
 20 close(unit_def)
 
-  write(unit_out, '("W2W ", A /)'), wien2wannier_version
+  write(unit_out, '("W2W ", A /)') wien2wannier_version
 
 !!!.....READ STRUCT
   CALL init_struct
@@ -154,7 +162,7 @@ program wf
      call paropen(unit_vector, vecfn, iproc, iloop, &
           STATUS='old', FORM='unformatted')
 
-     CALL read_vec(nemin,nemax,kkk,maxx,maxy,maxz,efermi)
+     call read_vec(nemin,nemax,kkk,maxx,maxy,maxz,efermi)
 
      CLOSE(unit_vector)
   end do vectorfiles
@@ -206,7 +214,7 @@ program wf
   WRITE(unit_out, "(3X,'NUMBER OF ATOMS IN UNITCELL  = ',I3)") NAT
   WRITE(unit_out, "(3X,'MODE OF CALCULATION IS',7X,'= ',A4)") IREL
 
-  CALL LATGEN
+  call latgen
   !     rotate boundary vectors
   do i=1,N_pair
      bx=bqx1(i); by=bqy1(i); bz=bqz1(i)
@@ -252,4 +260,4 @@ end program wf
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-15 16:02:04 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 15:55:45 assman@faepop71.tu-graz.ac.at>

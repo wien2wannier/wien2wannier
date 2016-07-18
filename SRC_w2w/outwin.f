@@ -1,6 +1,7 @@
 !!! wien2wannier/SRC_w2w/outwin.f
 
-subroutine OUTWIN(REL,V,RNOT,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
+module     outwin_m; contains
+subroutine outwin(REL,V,RNOT,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
   !         Integration der skalarrel. Schroedingergleichung
   !
   !    Rydberg Einheiten
@@ -111,8 +112,8 @@ subroutine OUTWIN(REL,V,RNOT,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
   VAL = A(JRI)/RNET(JRI)
   SLO = DG3/(DH*RNET(JRI))
   SLO = (SLO-VAL)/RNET(JRI)
-end subroutine OUTWIN
-
+end subroutine outwin
+end module outwin_m
 
 !!/---
 !! Local Variables:
@@ -120,4 +121,4 @@ end subroutine OUTWIN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-11 18:58:56 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 15:49:29 assman@faepop71.tu-graz.ac.at>

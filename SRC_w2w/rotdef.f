@@ -1,6 +1,7 @@
 !!! wien2wannier/SRC_w2w/rotdef.f
 
-SUBROUTINE ROTDEF
+module     rotdef_m; contains
+subroutine rotdef
   !
   !     THE MATRICES  ROTIJ(3,3,INDEX)  TRANSFORM THE POSITION OF AN
   !     ATOM TO ITS CORRESPONDING POSITION OF AN EQUIVALENT ATOM.
@@ -89,8 +90,8 @@ SUBROUTINE ROTDEF
   if (NCOUNT /= INDEX) call croak('error in ROTDEF: &
        &ROTIJ not defined for all atoms of basis.  NCOUNT = ' &
        &// trim(string(Ncount)))
-END SUBROUTINE ROTDEF
-
+end subroutine rotdef
+end module     rotdef_m
 
 !!/---
 !! Local Variables:
@@ -98,4 +99,4 @@ END SUBROUTINE ROTDEF
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-15 16:34:06 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 15:51:42 assman@faepop71.tu-graz.ac.at>

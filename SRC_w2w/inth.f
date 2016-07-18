@@ -1,6 +1,7 @@
 !!! wien2wannier/SRC_w2w/inth.f
 
-subroutine INTH (DP,DQ,DV,DR)
+module     inth_m; contains
+subroutine inth(DP,DQ,DV,DR)
 !
 ! INTEGRATION PAR LA METHODE DE ADAMS A 5 POINTS DE LA GRANDE COMPOSANTE
 ! DP ET DE LA PETITE COMPOSANTE DQ AU POINT DR,DV ETANT LE POTENTIEL EN
@@ -46,8 +47,8 @@ subroutine INTH (DP,DQ,DV,DR)
   DQ = DKOEF1 * DQ + DKOEF2 * DQR
   DEP(5) = -DK * DP + (DSAL*DR+DSUM)*DQ
   DEQ(5) =  DK * DQ - DSUM * DP
-end subroutine INTH
-
+end subroutine inth
+end module     inth_m
 
 !!/---
 !! Local Variables:
@@ -55,4 +56,4 @@ end subroutine INTH
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-15 18:30:14 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 11:37:29 assman@faepop71.tu-graz.ac.at>

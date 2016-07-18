@@ -1,7 +1,8 @@
 !!! wien2wannier/SRC_w2w/abc.f
 
+module     abc_m; contains
 subroutine abc(l,jatom,pei,pi12lo,pe12lo,jlo,lapw)
-  use param,  only: unit_out, nloat, lomax, nrf, lmax2
+  use param,  only: unit_out, Nrf
   use struct, only: RMT
   use loabc,  only: alo
   use atspdt, only: P, DP
@@ -51,6 +52,7 @@ subroutine abc(l,jatom,pei,pi12lo,pe12lo,jlo,lapw)
 10 FORMAT ('LO COEFFICIENT: l,A,B,C  ',i2,5X,6F12.5)
   return
 end subroutine abc
+end module     abc_m
 
 
 !!/---
@@ -59,4 +61,4 @@ end subroutine abc
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-06 11:12:53 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 15:10:05 assman@faepop71.tu-graz.ac.at>

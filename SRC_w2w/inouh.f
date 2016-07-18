@@ -1,5 +1,6 @@
 !!! wien2wannier/SRC_w2w/inouh.f
 
+module     inouh_m; contains
 subroutine inouh (dp,dq,dr,dq1,dfl,dv,z,test,nuc)
 
 ! valeurs initiales pour l integration vers l exrerieur
@@ -92,13 +93,12 @@ subroutine inouh (dp,dq,dr,dq1,dfl,dv,z,test,nuc)
         if (m <= 20) goto 41
       endif
       return
-      end
-
-
+    end subroutine inouh
+end module inouh_m
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-15 18:03:03 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 11:37:38 assman@faepop71.tu-graz.ac.at>

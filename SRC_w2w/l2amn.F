@@ -1,6 +1,7 @@
 !!! wien2wannier/SRC_w2w/l2amn.F
 
-SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
+module     l2amn_m; contains
+subroutine l2amn(NB,NPROJ,NUM_KPTS)
   use param,   only: Lmax2, iblock, Ndif, NRF, Nmat, lomax, &
        unit_vsp, unit_out, unit_amn
   use const,   only: R8, C16, TAU
@@ -14,6 +15,13 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
   use atspdt,  only: P, DP
   use const,   only: R8, C16
   use radfu,   only: RF1, RF2
+
+  !! procedure includes
+  use rint13_m
+  use rotate_m
+  use harmon_m
+  use atpar_m
+  use Ylm_m
 
   implicit none
 
@@ -53,7 +61,7 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
      itape=9
      jtape=unit_vsp
      rewind(itape)
-     CALL ATPAR(JATOM, itape, jtape)
+     call atpar(JATOM, itape, jtape)
      rewind(itape)
      write(unit_out,*)'******************************************'
      do i=1,3
@@ -69,7 +77,7 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
            BKY(I)=YK(kkk)+GY(I,kkk)
            BKZ(I)=ZK(kkk)+GZ(I,kkk)
         ENDDO
-        CALL HARMON(N,BKX,BKY,BKZ,LMAX2,FJ,DFJ,RMT(JATOM))    ! calculate Bessel functions j_l(|Q+k|*RMT)
+        call harmon(N,BKX,BKY,BKZ,LMAX2,FJ,DFJ,RMT(JATOM))    ! calculate Bessel functions j_l(|Q+k|*RMT)
 
         FAC=2*TAU*RMT(JATOM)**2/sqrt(VOL)
         ALM=0
@@ -92,11 +100,11 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
                  bk(1)=bkx(i)
                  bk(2)=bky(i)
                  bk(3)=bkz(i)
-                 CALL ROTATE (bk,rotij(1,1,latom),bkrot) ! go to coord. of latom
+                 call ROTATE (bk,rotij(1,1,latom),bkrot) ! go to coord. of latom
                  bk(1)=bkrot(1)*br1(1,1)+bkrot(2)*br1(1,2)+bkrot(3)*br1(1,3) ! transform Q+k to cartesian coordinates
                  bk(2)=bkrot(1)*br1(2,1)+bkrot(2)*br1(2,2)+bkrot(3)*br1(2,3)
                  bk(3)=bkrot(1)*br1(3,1)+bkrot(2)*br1(3,2)+bkrot(3)*br1(3,3)
-                 CALL ROTATE (bk,rotloc(1,1,jatom),bkrloc) ! go to local (rotated) coords
+                 call ROTATE (bk,rotloc(1,1,jatom),bkrloc) ! go to local (rotated) coords
                  CALL YLM (bkrloc,LMAX2,YL) ! calculate Y_lm(Q+k)
                  arg=bkrot(1)*pos(1,lfirst)+  &
                       bkrot(2)*pos(2,lfirst)+  &
@@ -252,7 +260,8 @@ SUBROUTINE l2AMN(NB,NPROJ,NUM_KPTS)
   ENDDO
 
   RETURN
-END SUBROUTINE l2AMN
+end subroutine l2amn
+end module     l2amn_m
 
 
 !!/---
@@ -261,4 +270,4 @@ END SUBROUTINE l2AMN
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-12 12:30:15 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 15:56:42 assman@faepop71.tu-graz.ac.at>

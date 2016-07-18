@@ -5,7 +5,8 @@
 !!! Copyright 2010-2012 Jan Kuneš, Philipp Wissgott
 !!!           2013-2015 Elias Assmann
 
-SUBROUTINE read_vec(NEMIN,NEMAX,kkk,maxx,maxy,maxz,efermi)
+module     read_vec_m; contains
+subroutine read_vec(NEMIN,NEMAX,kkk,maxx,maxy,maxz,efermi)
   use param,  only: unit_out, unit_eig, unit_vector
   use const,  only: R8, Ryd_eV
   USE struct, only: nat
@@ -57,8 +58,8 @@ SUBROUTINE read_vec(NEMIN,NEMAX,kkk,maxx,maxy,maxz,efermi)
   end do kpoint
 
 998 write(unit_out,*)'vector read in',kkk
-END SUBROUTINE read_vec
-
+end subroutine read_vec
+end module read_vec_m
 
 !!/---
 !! Local Variables:
@@ -66,4 +67,4 @@ END SUBROUTINE read_vec
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-07 13:14:42 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 14:05:59 assman@faepop71.tu-graz.ac.at>

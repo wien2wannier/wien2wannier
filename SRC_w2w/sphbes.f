@@ -1,6 +1,7 @@
 !!! wien2wannier/SRC_w2w/sphbes.f
 
-subroutine SPHBES(N,X,FJ)
+module     sphbes_m; contains
+subroutine sphbes(N,X,FJ)
 !***  VERSION III-UPPER LIMIT OBTAINED FROM THE EXPRESSIONS OF
 !***             CORBATO AND URETSKY USING A LIMIT OF E SUB M OF
 !***             2**-30 WHICH IS APPROXIMATELY 1.E-9
@@ -100,8 +101,8 @@ subroutine SPHBES(N,X,FJ)
   end do
   SDR=SDR*TN50
   GO TO 32
-end subroutine SPHBES
-
+end subroutine sphbes
+end module     sphbes_m
 
 !!/---
 !! Local Variables:
@@ -109,4 +110,4 @@ end subroutine SPHBES
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-15 15:12:39 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-18 11:50:13 assman@faepop71.tu-graz.ac.at>
