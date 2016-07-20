@@ -42,12 +42,7 @@
 !!    count_kmesh_klist(), count_kmesh_band()
 !!
 !!
-!! wannier90: Reading ‘chk’ files
-!!
-!!    type(chk_t), chk_read()
-!!
-!!
-!! wien2k: Procedures nicked from Wien2k
+!! Wien2k: Procedures nicked from Wien2k
 !!
 !!    errflg(), errclr(), gtfnam()
 !!
@@ -85,11 +80,12 @@ module const
   real(DPk), parameter :: SQ3        = sqrt(3._DPk)
   real(DPk), parameter :: Ryd_eV     = 13.605698_DPk ! value for WIEN compat.
   real(DPk), parameter :: Ang_Bohr   = 1.8897261246_DPk
+  real(DPk), parameter :: clight     = 137.0359895_DPk
 end module const
 
 
 !---------------  Assorted miscellanea                        ---------------
-MODULE util
+module util
   use const, only: DPk, BUFSZ, ERROR_unit
   implicit none
 
@@ -405,7 +401,7 @@ contains
     end do
     if (present(unit)) unit=newunit
   end function newunit
-end MODULE util
+end module util
 
 
 !---------------  Helper procedures for command line interface --------------
@@ -1669,162 +1665,13 @@ contains
 end module kpoints
 
 
-!---------------- Reading ‘chk’ files                  ----------------------
-!
-! Mostly copied from Wannier90
-module Wannier90
-  use const, only: DPk
-  use util,  only: newunit
-
-  implicit none
-  private
-  public :: chk_t, chk_read
-
-  interface chk_read
-     module procedure chk_read_fname, chk_read_unit, chk_read_argstr
-  end interface chk_read
-
-  type chk_t
-     character(len=33)          :: header ! usually, date and time
-     character(len=20)          :: checkpoint
-     !                             #k,       #WF       #B
-     integer                    :: num_kpts, num_wann, num_bands
-     ! total number of neighbors per k-point
-     integer                    :: nntot
-
-     ! selection of the optimal subspace (#B × #WF × #k)
-     complex(DPk), allocatable  :: u_matrix_opt(:,:,:)
-     ! rotation to the optimally smooth states in subspace (#WF × #WF × #k)
-     complex(DPk), pointer      :: u_matrix    (:,:,:)
-     ! overlaps M_mn are stored in ‘chk’ for restart (#WF × #WF × #nn × #k)
-     complex(DPk), allocatable  :: m_matrix(:,:,:,:)
-     !                            [Å] (3 × #WF),        [Å²] (#WF)
-     real(DPk),    allocatable :: wannier_centres(:,:), wannier_spreads(:)
-     ! kpoints in lattice vecs (3 × #k)
-     real(DPk),    allocatable :: kpt_latt(:,:)
-
-     ! disentanglement parameters
-     logical                    :: have_disentangled
-     real(DPk)                  :: omega_invariant
-     logical, allocatable       :: lwindow(:,:) ! (#B × #k)
-     integer, allocatable       :: ndimwin(:)   ! (#k)
-
-     integer                    :: num_exclude_bands
-     integer, allocatable       :: exclude_bands(:) ! (num_exclude_bands)
-
-     real(DPk), dimension(3, 3) :: real_lattice, recip_lattice
-     integer,   dimension(3)    :: mp_grid
-  end type chk_t
-
-contains
-  subroutine chk_read_unit(lun, chk, read_mmn)
-    integer,           intent(in)  :: lun
-    type(chk_t),       intent(out) :: chk
-    logical, optional, intent(in)  :: read_mmn
-
-    logical   :: rm
-    integer   :: j, jk, l
-
-    if (present(read_mmn)) then
-       rm = read_mmn
-    else
-       rm = .true.
-    end if
-
-    read(lun) chk%header
-    read(lun) chk%num_bands
-    read(lun) chk%num_exclude_bands
-    allocate( chk%exclude_bands(chk%num_exclude_bands) )
-    read(lun) chk%exclude_bands
-    read(lun)(chk%real_lattice (:,j), j=1,3)
-    read(lun)(chk%recip_lattice(:,j), j=1,3)
-    read(lun) chk%num_kpts
-    read(lun) chk%mp_grid
-    allocate( chk%kpt_latt(3, chk%num_kpts) )
-    read(lun)(chk%kpt_latt(:,j), j=1,chk%num_kpts)
-    read(lun) chk%nntot
-    read(lun) chk%num_wann
-    read(lun) chk%checkpoint
-    read(lun) chk%have_disentangled
-
-    DIS: if (chk%have_disentangled) then
-       read(lun)  chk%omega_invariant
-       allocate(  chk%lwindow(chk%num_bands, chk%num_kpts) )
-       read(lun) (chk%lwindow(:,jk), jk=1,chk%num_kpts)
-       allocate(  chk%ndimwin(chk%num_kpts) )
-       read(lun)  chk%ndimwin
-       allocate(  chk%u_matrix_opt(chk%num_bands, chk%num_wann, chk%num_kpts) )
-       read(lun)((chk%u_matrix_opt(:,j,jk),j=1,chk%num_wann),jk=1,chk%num_kpts)
-    end if DIS
-
-    allocate(  chk%u_matrix(chk%num_wann, chk%num_wann, chk%num_kpts) )
-    read(lun)((chk%u_matrix(:,j,jk), j=1,chk%num_wann), jk=1,chk%num_kpts)
-
-    Mmn: if (rm) then
-       allocate(chk%m_matrix(chk%num_wann,chk%num_wann,chk%nntot,chk%num_kpts))
-       read(lun) (((chk%m_matrix(:, j, l, jk), &
-            &            j=1,chk%num_wann), l=1,chk%nntot), jk=1,chk%num_kpts)
-    else
-       read(lun)
-    end if Mmn
-
-    allocate( chk%wannier_centres(3, chk%num_wann) )
-    read(lun)(chk%wannier_centres(:,j),j=1,chk%num_wann)
-    allocate( chk%wannier_spreads(chk%num_wann) )
-    read(lun) chk%wannier_spreads
-  end subroutine chk_read_unit
-
-
-!!! Wrappers for calling the above with a filename instead of an open
-!!! unit
-  subroutine chk_read_fname(fname, chk, read_mmn)
-    use util, only: newunit
-
-    character(*),      intent(in)  :: fname
-    type(chk_t),       intent(out) :: chk
-    logical, optional, intent(in)  :: read_mmn
-
-    integer :: lun
-    logical :: rm
-
-    if (present(read_mmn)) then
-       rm = read_mmn
-    else
-       rm = .true.
-    end if
-
-    open(unit=newunit(lun), file=fname, status='old', FORM='unformatted')
-    call chk_read_unit(lun, chk, rm)
-    close(lun)
-  end subroutine chk_read_fname
-
-  subroutine chk_read_argstr(arg, chk, read_mmn)
-    use clio, only: argstr
-
-    type(argstr),      intent(in)  :: arg
-    type(chk_t),       intent(out) :: chk
-    logical, optional, intent(in)  :: read_mmn
-
-    logical :: rm
-
-    if (present(read_mmn)) then
-       rm = read_mmn
-    else
-       rm = .true.
-    end if
-
-    call chk_read_fname(arg%s, chk, rm)
-  end subroutine chk_read_argstr
-end module Wannier90
-
-
 !--------------- Procedures nicked from Wien2k       ------------------------
-module wien2k
+module Wien2k
   private
   public :: errflg, errclr, gtfnam
-  contains
-      SUBROUTINE ERRFLG(FNAME,MSG)
-      CHARACTER(*)      FNAME, MSG
+contains
+  subroutine ERRFLG(FNAME,MSG)
+    character(*)      FNAME, MSG
 !
 !     ..................................................................
 !
@@ -1891,38 +1738,36 @@ module wien2k
 !        INSTITUT FUER TECHNISCHE ELEKTROCHEMIE            --  TU VIENNA
 !     ..................................................................
 !
-      OPEN (99,FILE=FNAME,ERR=900)
-      WRITE (99,9000) MSG
-      CLOSE (99)
-      OPEN (99,FILE=FNAME,ERR=900)
+    open (99,FILE=FNAME,ERR=900)
+    write (99,9000) MSG
+    close (99)
+    open (99,FILE=FNAME,ERR=900)
 !
-      RETURN
+    return
 !
 !        Errors
 !
-  900 STOP 'ERRFLG - couldn''t open errorflag-file.'
+900 stop 'ERRFLG - couldn''t open errorflag-file.'
 !
- 9000 FORMAT (A)
+9000 format (A)
 !
 !        End of 'ERRFLG'
 !
-    END SUBROUTINE ERRFLG
+  end subroutine ERRFLG
 
 
-    SUBROUTINE ERRCLR(FNAME)
-      CHARACTER*(*)      FNAME
+  subroutine ERRCLR(FNAME)
+    character*(*)      FNAME
 
-      CLOSE (99)
-      OPEN (99,FILE=FNAME,STATUS='REPLACE')
-      RETURN
-    END SUBROUTINE ERRCLR
+    close (99)
+    open (99,FILE=FNAME,STATUS='REPLACE')
+  end subroutine ERRCLR
 
-      SUBROUTINE GTFNAM(DEFFN,ERRFN,IPROC)
+  subroutine GTFNAM(DEFFN,ERRFN,IPROC)
+    implicit none
 
-        implicit none
-
-      CHARACTER(*)      DEFFN, ERRFN
-      INTEGER            IPROC
+    character(*)      DEFFN, ERRFN
+    integer            IPROC
 !
 !     ..................................................................
 !
@@ -1998,66 +1843,59 @@ module wien2k
 !
 !        Local Parameters
       !
-      CHARACTER(5)       ERREXT
-      PARAMETER          (ERREXT = 'error')
+    character(5)       ERREXT
+    parameter          (ERREXT = 'error')
 !
 !        Local Scalars
 !
-      INTEGER            I, iarg
+    integer            I, iarg
 !
 !        extract the command-line argument
 !
-      IPROC=0
-      iarg=command_argument_count()
-      if(iarg.eq.1) then
-         CALL get_command_argument(iarg,DEFFN)
-      else if(iarg.eq.2) then
-         CALL get_command_argument(2,DEFFN)
-         READ(DEFFN,*)IPROC
-         CALL get_command_argument(1,DEFFN)
-      else
-         STOP 'GTFNAM - One or two commandline arguments have to be given.'
-      endif
-!
+    IPROC=0
+    iarg=command_argument_count()
+    if(iarg.eq.1) then
+       CALL get_command_argument(iarg,DEFFN)
+    else if(iarg.eq.2) then
+       CALL get_command_argument(2,DEFFN)
+       READ(DEFFN,*)IPROC
+       CALL get_command_argument(1,DEFFN)
+    else
+       STOP 'GTFNAM - One or two commandline arguments have to be given.'
+    endif
+
 !        generate a name for the error-message file
-!
-      DO 10 I = LEN(DEFFN), 1, -1
-         IF (DEFFN(I:I) .EQ. '.') THEN
-            IF (LEN(ERRFN) .LT. (I+LEN(ERREXT))) GOTO 910
-            ERRFN(1:I) = DEFFN(1:I)
-            ERRFN(I+1:LEN(ERRFN)) = ERREXT
-            GOTO 30
-         ENDIF
-   10 CONTINUE
-!
+    do I = len(DEFFN), 1, -1
+       if (DEFFN(I:I) .eq. '.') then
+          if (len(ERRFN) .lt. (I+len(ERREXT))) goto 910
+          ERRFN(1:I) = DEFFN(1:I)
+          ERRFN(I+1:len(ERRFN)) = ERREXT
+          goto 30
+       end if
+    end do
+
 !        the name of the definition file contains no '.', it is assumed
 !        that this name contains no extension - append the extension
 !        '.error' to get a name for the error file.
-!
-      DO 20 I = LEN(DEFFN), 1, -1
-         IF (DEFFN(I:I) .NE. ' ') THEN
-            IF (LEN(ERRFN) .LT. (I+1+LEN(ERREXT))) GOTO 910
-            ERRFN(1:I) = DEFFN(1:I)
-            ERRFN(I+1:LEN(ERRFN)) = '.' // ERREXT
-            GOTO 30
-         ENDIF
-   20 CONTINUE
-!
+    do I = len(DEFFN), 1, -1
+       if (DEFFN(I:I) .ne. ' ') then
+          if (len(ERRFN) .lt. (I+1+len(ERREXT))) goto 910
+          ERRFN(1:I) = DEFFN(1:I)
+          ERRFN(I+1:LEN(ERRFN)) = '.' // ERREXT
+          goto 30
+       end if
+    end do
+
 !        filename contains only spaces
-!
-      STOP 'GTFNAM - string ERRFN contains just spaces.'
-   30 CONTINUE
-!
-      RETURN
-!
+    stop 'GTFNAM - string ERRFN contains just spaces.'
+30  continue
+
+    return
+
 !        Errors
-!
-  910 STOP 'GTFNAM - string ERRFN too short to hold filename.'
-!
-!        End of 'GTFNAM'
-!
-      END SUBROUTINE
-END MODULE wien2k
+910 stop 'GTFNAM - string ERRFN too short to hold filename.'
+  end subroutine GTFNAM
+end module Wien2k
 
 
 !----------------  Reallocation of various arrays           -----------------
@@ -2205,4 +2043,4 @@ end module reallocate
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-07 12:04:08 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-20 10:00:38 assman@faepop71.tu-graz.ac.at>

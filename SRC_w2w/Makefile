@@ -94,7 +94,7 @@ distclean: clean
 #  The two versions go to different directories so we can keep both
 #  versions around.
 #
-R_OBJS = mod_rc.o almgen.o l2amn.o planew.o
+R_OBJS = modules_rc.o
 C_OBJS = $(R_OBJS)
 
 #........................................................................
@@ -120,19 +120,14 @@ OBJS = $(filter-out $(R_OBJS) $(RC_OBJS) cputim_%, \
 #  Dependency information for object files
 #
 
-# modules.f
-mod_users = abc.o almgen.o atpar.o diracout.o dergl.o gaunt1.o		\
-	    gaunt2.o harmon.o inouh.o inth.o main.o latgen.o l2amn.o	\
-	    l2mmn.o outwin.o rint13.o planew.o read_vec.o radint.o	\
-	    rotdef.o
-
-# mod_rc.f
-modrc_users = almgen.o main.o l2amn.o l2mmn.o planew.o read_vec.o
-
-# util_w2w.F
-util_users = abc.o atpar.o dergl.o dvbes1.o harmon.o inouh.o inth.o	\
-	     latgen.o main.o modules.o outwin.o read_vec.o rint13.o	\
-	     rotate.o rotdef.o sphbes.o ylm.o
+## util_w2w.F:   utilities used in SRC_w2w, SRC_wplot, SRC_trig
+util_users   = mod_w2w.o modules.o modules_rc.o main.o
+## mod_w2w.f:    modules and procedures shared by SRC_w2w and SRC_wplot
+modw2w_users = modules.o modules_rc.o main.o
+## modules.f:    modules and procedures for SRC_w2w
+mod_users    = modules_rc.o main.o
+## modules_rc.f: modules and procedures for SRC_w2w -- real/complex
+modrc_users  = main.o
 
 #........................................................................
 #
@@ -175,20 +170,25 @@ $(C_DIR)/%.o: %.[fF] Makefile
 #  Dependencies
 #
 
-# Dependencies on ‘mod_rc.o’; we know these files must have
-# real/complex versions
-$(foreach o, $(modrc_users), $(R_DIR)/$o): $(R_DIR)/mod_rc.o
-$(foreach o, $(modrc_users), $(C_DIR)/$o): $(C_DIR)/mod_rc.o
-
-# Dependencies on ‘modules.o’; these files might have real/complex
-# versions, or not
-$(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
-	$(foreach o, $(mod_users), $d/$o)): $(O_DIR)/modules.o
-
-# Dependencies on ‘util_w2w.o’; these files might have real/complex
-# versions, or not
+## Dependencies on ‘util_w2w.o’; these files might have real/complex
+## versions, or not
 $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
 	$(foreach o, $(util_users), $d/$o)): $(O_DIR)/util_w2w.o
 
+## Dependencies on ‘mod_w2w.o’; these files might have real/complex
+## versions, or not
+$(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
+	$(foreach o, $(modw2w_users), $d/$o)): $(O_DIR)/mod_w2w.o
 
-## Time-stamp: <2016-07-18 14:04:55 assman@faepop71.tu-graz.ac.at>
+## Dependencies on ‘modules.o’; these files might have real/complex
+## versions, or not
+$(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
+	$(foreach o, $(mod_users), $d/$o)): $(O_DIR)/modules.o
+
+## Dependencies on ‘modules_rc.o’; we know these files must have
+## real/complex versions
+$(foreach o, $(modrc_users), $(R_DIR)/$o): $(R_DIR)/modules_rc.o
+$(foreach o, $(modrc_users), $(C_DIR)/$o): $(C_DIR)/modules_rc.o
+
+
+## Time-stamp: <2016-07-20 10:35:22 assman@faepop71.tu-graz.ac.at>

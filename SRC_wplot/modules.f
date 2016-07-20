@@ -1,23 +1,12 @@
-!!! wien2wannier/SRC_wplot/moduls.f
+!!! wien2wannier/SRC_wplot/modules.f
 
-module param
-  use const, only: BUFSZ, DPk
+module wplot
+  use const, only: BUFSZ
 
   implicit none
 
-  private :: BUFSZ, DPk
+  private :: BUFSZ
   public
-
-  character(*), parameter, private :: rev_str="$version: v1.0.0-179-g8c15bf0$"
-  character(*), parameter, public  :: &
-       wplot_version = rev_str(11 : len (rev_str)-1)
-
-!!!/=== The following is from the old ‘param.inc_{r,c}’ ===================
-!     >> Standard WIEN97 Parameters <<
-!
-!     Constant parameter definition
-!
-  integer, parameter :: Nrad=981, Nsym=48, lmax7=8, LOmax=3, NRF=4, NLOat=3
 
 !:17[
 !     There are a couple of optional features in how to set-up the wave
@@ -34,39 +23,165 @@ module param
   logical, parameter :: &
        kconjg=.true., UseRot=.true., AddLoc=.true., mvatom=.true.
 !:17]
-!!!!!\=== END param.inc ===================================================
 
-  real(DPk), parameter :: clight=137.0359991_DPk
+  integer, parameter :: unit_grid=7,  unit_psink=21, unit_psiarg=22
+  integer, parameter :: unit_inwf=31, unit_chk  =32, unit_rot   =33
 
-  integer, parameter :: unit_in=5, unit_out=6, unit_struct=8, unit_vector=10
-  integer, parameter :: unit_grid=7, unit_vsp=18, unit_inwf=31, unit_chk=32
-  integer, parameter :: unit_psink=21, unit_psiarg=22, unit_def=1
-  integer, parameter :: unit_rot=33
+  integer, parameter :: Nsym=48, Lmax7=8
 
 !!! The following is set by ‘wplot.f’ to be passed to ‘main.F’
   character(BUFSZ) :: vecfn, psinkfn, psiargfn, outfn
   integer          :: idx_wann=0, iproc=0
-end module param
+end module wplot
 
-module ams
+
+!---------------- Reading ‘chk’ files                  ----------------------
+!
+! Mostly copied from Wannier90
+module Wannier90
   use const, only: DPk
+  use util,  only: newunit
 
-  ! FIXME: get more precise atomic mass data
-  real(DPk), parameter :: atom_mass(103) = (/ &
-       &    1.0,   4.0,   6.9,   9.0,  10.8,  12.0,  14.0,  16.0,  19.0, &
-       &   20.2,  23.0,  24.3,  27.0,  28.1,  31.0,  32.0,  35.4,  40.0, &
-       &   39.1,  40.0,  45.0,  47.9,  50.9,  52.0,  54.9,  55.8,  58.9, &
-       &   58.7,  63.5,  65.4,  69.7,  72.6,  74.9,  79.0,  79.9,  83.8, &
-       &   85.5,  87.6,  88.9,  91.2,  92.9,  95.9,  98.0, 101.1, 102.9, &
-       &  106.4, 107.9, 112.4, 114.8, 118.7, 121.8, 127.6, 126.9, 131.3, &
-       &  132.9, 137.3, 138.9, 140.1, 140.9, 144.2, 145.0, 150.4, 152.0, &
-       &  157.3, 158.9, 162.5, 164.9, 167.3, 168.9, 173.0, 175.0, 178.5, &
-       &  180.9, 183.8, 186.2, 190.2, 192.2, 195.1, 197.0, 200.6, 204.4, &
-       &  207.2, 209.0, 209.0, 210.0, 222.0, 223.0, 226.0, 227.0, 232.0, &
-       &  231.0, 238.0, 237.0, 244.0, 243.0, 247.0, 247.0, 251.0, 252.0, &
-       &  257.0, 258.0, 259.0, 262.0                                     &
-       /)
-end module ams
+  implicit none
+  private
+  public :: chk_t, chk_read
+
+  interface chk_read
+     module procedure chk_read_fname, chk_read_unit, chk_read_argstr
+  end interface chk_read
+
+  type chk_t
+     character(len=33)          :: header ! usually, date and time
+     character(len=20)          :: checkpoint
+     !                             #k,       #WF       #B
+     integer                    :: num_kpts, num_wann, num_bands
+     ! total number of neighbors per k-point
+     integer                    :: nntot
+
+     ! selection of the optimal subspace (#B × #WF × #k)
+     complex(DPk), allocatable  :: u_matrix_opt(:,:,:)
+     ! rotation to the optimally smooth states in subspace (#WF × #WF × #k)
+     complex(DPk), pointer      :: u_matrix    (:,:,:)
+     ! overlaps M_mn are stored in ‘chk’ for restart (#WF × #WF × #nn × #k)
+     complex(DPk), allocatable  :: m_matrix(:,:,:,:)
+     !                            [Å] (3 × #WF),        [Å²] (#WF)
+     real(DPk),    allocatable :: wannier_centres(:,:), wannier_spreads(:)
+     ! kpoints in lattice vecs (3 × #k)
+     real(DPk),    allocatable :: kpt_latt(:,:)
+
+     ! disentanglement parameters
+     logical                    :: have_disentangled
+     real(DPk)                  :: omega_invariant
+     logical, allocatable       :: lwindow(:,:) ! (#B × #k)
+     integer, allocatable       :: ndimwin(:)   ! (#k)
+
+     integer                    :: num_exclude_bands
+     integer, allocatable       :: exclude_bands(:) ! (num_exclude_bands)
+
+     real(DPk), dimension(3, 3) :: real_lattice, recip_lattice
+     integer,   dimension(3)    :: mp_grid
+  end type chk_t
+
+contains
+  subroutine chk_read_unit(lun, chk, read_mmn)
+    integer,           intent(in)  :: lun
+    type(chk_t),       intent(out) :: chk
+    logical, optional, intent(in)  :: read_mmn
+
+    logical   :: rm
+    integer   :: j, jk, l
+
+    if (present(read_mmn)) then
+       rm = read_mmn
+    else
+       rm = .true.
+    end if
+
+    read(lun) chk%header
+    read(lun) chk%num_bands
+    read(lun) chk%num_exclude_bands
+    allocate( chk%exclude_bands(chk%num_exclude_bands) )
+    read(lun) chk%exclude_bands
+    read(lun)(chk%real_lattice (:,j), j=1,3)
+    read(lun)(chk%recip_lattice(:,j), j=1,3)
+    read(lun) chk%num_kpts
+    read(lun) chk%mp_grid
+    allocate( chk%kpt_latt(3, chk%num_kpts) )
+    read(lun)(chk%kpt_latt(:,j), j=1,chk%num_kpts)
+    read(lun) chk%nntot
+    read(lun) chk%num_wann
+    read(lun) chk%checkpoint
+    read(lun) chk%have_disentangled
+
+    DIS: if (chk%have_disentangled) then
+       read(lun)  chk%omega_invariant
+       allocate(  chk%lwindow(chk%num_bands, chk%num_kpts) )
+       read(lun) (chk%lwindow(:,jk), jk=1,chk%num_kpts)
+       allocate(  chk%ndimwin(chk%num_kpts) )
+       read(lun)  chk%ndimwin
+       allocate(  chk%u_matrix_opt(chk%num_bands, chk%num_wann, chk%num_kpts) )
+       read(lun)((chk%u_matrix_opt(:,j,jk),j=1,chk%num_wann),jk=1,chk%num_kpts)
+    end if DIS
+
+    allocate(  chk%u_matrix(chk%num_wann, chk%num_wann, chk%num_kpts) )
+    read(lun)((chk%u_matrix(:,j,jk), j=1,chk%num_wann), jk=1,chk%num_kpts)
+
+    Mmn: if (rm) then
+       allocate(chk%m_matrix(chk%num_wann,chk%num_wann,chk%nntot,chk%num_kpts))
+       read(lun) (((chk%m_matrix(:, j, l, jk), &
+            &            j=1,chk%num_wann), l=1,chk%nntot), jk=1,chk%num_kpts)
+    else
+       read(lun)
+    end if Mmn
+
+    allocate( chk%wannier_centres(3, chk%num_wann) )
+    read(lun)(chk%wannier_centres(:,j),j=1,chk%num_wann)
+    allocate( chk%wannier_spreads(chk%num_wann) )
+    read(lun) chk%wannier_spreads
+  end subroutine chk_read_unit
+
+
+!!! Wrappers for calling the above with a filename instead of an open
+!!! unit
+  subroutine chk_read_fname(fname, chk, read_mmn)
+    use util, only: newunit
+
+    character(*),      intent(in)  :: fname
+    type(chk_t),       intent(out) :: chk
+    logical, optional, intent(in)  :: read_mmn
+
+    integer :: lun
+    logical :: rm
+
+    if (present(read_mmn)) then
+       rm = read_mmn
+    else
+       rm = .true.
+    end if
+
+    open(unit=newunit(lun), file=fname, status='old', FORM='unformatted')
+    call chk_read_unit(lun, chk, rm)
+    close(lun)
+  end subroutine chk_read_fname
+
+  subroutine chk_read_argstr(arg, chk, read_mmn)
+    use clio, only: argstr
+
+    type(argstr),      intent(in)  :: arg
+    type(chk_t),       intent(out) :: chk
+    logical, optional, intent(in)  :: read_mmn
+
+    logical :: rm
+
+    if (present(read_mmn)) then
+       rm = read_mmn
+    else
+       rm = .true.
+    end if
+
+    call chk_read_fname(arg%s, chk, rm)
+  end subroutine chk_read_argstr
+end module Wannier90
 
 
 !!! “Minimodules” (converted COMMON blocks &c.)
@@ -201,4 +316,4 @@ end module uhelp
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-18 17:16:57 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-20 11:38:09 assman@faepop71.tu-graz.ac.at>

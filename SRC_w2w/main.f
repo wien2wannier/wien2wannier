@@ -20,9 +20,10 @@
 !!\---
 
 program wf
-  use param,    only: unit_def, unit_vector, unit_fermi, unit_in, unit_ene, &
-       &              unit_nnkp, unit_amn, unit_mmn, unit_out,              &
-       &              wien2wannier_version, Lmax2, Nmat, Nrad, Nrf
+  use param,    only: unit_def, unit_vector, unit_in, unit_out, &
+       &              wien2wannier_version, Lmax2, Nrad, Nrf
+  use w2w,      only: Nmat, unit_nnkp, unit_amn, unit_mmn, unit_ene, &
+       &              unit_fermi
   use const,    only: R8, BUFSZ
   use struct,   only: aa,bb,cc, irel, alpha, Nat, lattic, title, init_struct
   use xa,       only: init_xa
@@ -260,4 +261,4 @@ end program wf
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-18 15:55:45 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-19 18:04:27 assman@faepop71.tu-graz.ac.at>
