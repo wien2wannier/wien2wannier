@@ -51,7 +51,7 @@ O_DIR := lib
 R_DIR := libr
 C_DIR := libc
 
-###############################################################################
+#############################################################################
 
 FFLAGS+= $(FGEN) $(FOPT) -I$(O_DIR)
 R_EXEC = $(DESTDIR)/$(R_EXECNAME)
@@ -60,7 +60,7 @@ C_EXEC = $(DESTDIR)/$(C_EXECNAME)
 ## site-specific configuration may overwrite the above
 -include ../make.sys
 
-#..............................................................................
+#............................................................................
 #
 #  convenience rules
 #
@@ -87,7 +87,7 @@ distclean: clean
 #  (i.e., these are the same for REAL and COMPLEX)
 #
 OBJS = util_w2w.o dvbes1.o inverss.o outerr.o ph.o inth.o rotate.o	\
-       sphbes.o ylm.o mknam.o cputim.o
+       sphbes.o ylm.o cputim.o
 
 # Comment about ‘cputim.o’: ‘siteconfig’ will copy one of the
 # ‘cputim_*.[fc]’ to ‘cputim.[fc]; the pattern rules below will then
@@ -176,4 +176,4 @@ $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
 	$(foreach o, $(util_users), $d/$o)): $(O_DIR)/util_w2w.o
 
 
-## Time-stamp: <2016-04-08 17:50:08 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-07-21 15:05:42 assman@faepop71.tu-graz.ac.at>
