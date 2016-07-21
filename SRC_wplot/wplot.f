@@ -3,7 +3,7 @@
 !!!    Main program ‘wplot’
 !!!
 !!! Copyright 2010-2012 Jan Kuneš, Philipp Wissgott
-!!!           2014-2015 Elias Assmann
+!!!           2014-2016 Elias Assmann
 
 !!/--- Files expected in ‘def’ ---
 !!  5 inwplot	  'old'		'formatted'
@@ -18,12 +18,18 @@
 !! 32 chk	  'old'		'unformatted'
 !!\---
 
-program wplot
+program wf_r
   use const, only: BUFSZ
   use clio,  only: fetcharg, argstr
-  use param, only: unit_def, unit_vector, unit_psink, unit_psiarg, unit_out,&
-       vecfn, psinkfn, psiargfn, outfn, idx_wann, iproc
-  IMPLICIT none
+  use param, only: unit_def, unit_vector, unit_out
+  use wplot, only: unit_psink, unit_psiarg, vecfn, psinkfn, psiargfn, outfn,&
+       &           idx_wann, iproc
+
+  !! procedure includes
+  use locdef_m
+  use main_m
+
+  implicit none
 
   type(argstr)     :: defname
   character(BUFSZ) :: fname
@@ -55,8 +61,8 @@ program wplot
 8001 close(unit_def)
 
   !     << start wave function evaluation >>
-  call main(iproc)
-end program wplot
+  call main()
+end program wf_r
 
 
 !!/---
@@ -65,4 +71,4 @@ end program wplot
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-12-22 18:13:31 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-20 15:03:40 assman@faepop71.tu-graz.ac.at>

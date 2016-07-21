@@ -1,5 +1,19 @@
-!!! wien2wannier/SRC_wplot/main.F
+!!! wien2wannier/SRC_wplot/modules_rc.F
+!!!
+!!!    Modules for wien2wannier.  This file contains modules that
+!!!    depend on real/complex compilation.
 
+!!/=== Defined here: =============================
+!!
+!! Procedure module main_m
+!!
+!!\===============================================
+
+module     main_m
+  implicit none
+  private
+  public :: main
+contains
 subroutine main()
   use struct,    only: pos, RMT
   use radgrd,    only: rm, dx
@@ -17,20 +31,29 @@ subroutine main()
   use clio,      only: croak, carp
   use Wannier90, only: chk_t, chk_read
   use structmod, only: struct_t, struct_read
-  use param,     only: Nrad, Nsym, NRF, NLOAt, LOmax, Lmax7, idx_wann,      &
-       unit_in, unit_out, unit_struct, unit_vector, unit_chk, unit_rot,     &
-       unit_inwf, unit_psink, unit_psiarg, outfn, vecfn, psinkfn, psiargfn, &
-       iproc, wplot_version
+  use param,     only: NRF, NLOAt, LOmax, Nrad, wien2wannier_version, &
+       &               unit_in, unit_out, unit_struct, unit_vector
+  use wplot,     only: unit_inwf, unit_psink, unit_psiarg, unit_chk, &
+       &               unit_rot, outfn, vecfn, psinkfn, psiargfn, &
+       &               iproc, Lmax7, idx_wann, Nsym
+
+  !! procedure includes
+  use bessel_m
+  use wavsph_m
+  use wavint_m
+  use rotdef_m
+  use locdef_m
+  use latgen_m
+  use grdgen_m
+  use spcgen_m
+  use findmt_m
+  use auggen_m
+  use auglo_m
+  use augpw_m
+  use trans_m
+  use orth_m
 
   implicit none
-
-  interface
-     logical function orth(A)
-       use const, only: DPk
-
-       real(DPk), intent(in) :: A(3,3)
-     end function orth
-  end interface
 
   character(BUFSZ) :: buf
   character( 3)    :: switch, iunit
@@ -45,24 +68,24 @@ subroutine main()
   type(chk_t)    :: chk
 
 #ifndef _COMPLEX_
-  REAL(DPk),    allocatable :: CF(:)
+  real(DPk),    allocatable :: CF(:)
 #else
-  COMPLEX(DPk), allocatable :: CF(:)
+  complex(DPk), allocatable :: CF(:)
 #endif
 
-  COMPLEX(DPk), allocatable ::  COEF(:) !changed by pwissgott
+  complex(DPk), allocatable ::  COEF(:) !changed by pwissgott
 
   real(DPk),allocatable :: BK(:,:)
 
-  COMPLEX(DPk),allocatable :: PSI(:),tot(:)
-  COMPLEX(DPk) ALM((LMAX7+1)*(LMAX7+1),NRF), Y((LMAX7+1)*(LMAX7+1))
-  COMPLEX(DPk) PHS
+  complex(DPk),allocatable :: PSI(:),tot(:)
+  complex(DPk) ALM((LMAX7+1)*(LMAX7+1),NRF), Y((LMAX7+1)*(LMAX7+1))
+  complex(DPk) PHS
   real(DPk),allocatable ::  ROTLOC(:,:,:),atms(:,:)
   integer,allocatable :: IOP(:),nreg(:)
   integer,allocatable ::  KX(:),KY(:),KZ(:)
   complex(DPk), allocatable :: uu(:), rotmat(:,:)
   real(DPk),allocatable :: tmprot(:)
-  LOGICAL :: DEPHAS, rotate=.false.
+  logical :: DEPHAS, rotate=.false.
 
   integer :: i, ie, ieabs, ierr, iG, ik, il, il1, imax, index, index1, irf
   integer :: iseig, iloop
@@ -123,10 +146,10 @@ subroutine main()
      call croak("unknown units option "//iunit)
   end select
 
-  IF(WHPSI.EQ.'     ')WHPSI='LARGE'
-  IF(WHPSI.NE.'SMALL'.AND.WHPSI.NE.'LARGE') &
+  if(WHPSI.eq.'     ')WHPSI='LARGE'
+  if(WHPSI.ne.'SMALL'.and.WHPSI.ne.'LARGE') &
        call croak('ERROR: UNKNOWN REL. COMPONENT OPTION')
-  LARGE = WHPSI .EQ. 'LARGE'
+  LARGE = WHPSI .eq. 'LARGE'
 
 !     << read in wave function selection (and file handling) >>
   read (unit_in,*) iseig, rotate
@@ -143,7 +166,7 @@ subroutine main()
   call wfopen(unit_psiarg, psiargfn, iseig, STATUS='unknown')
   call wfopen(unit_out,    outfn,    iseig, STATUS='unknown')
 
-  write(unit_out, '("W2W ", A /)'), wplot_version
+  write(unit_out, '("W2W ", A /)') wien2wannier_version
 
   write(unit_out,"( ' selected ',A7,' :',I5)") 'Wannier function   ', iseig
 
@@ -238,8 +261,8 @@ subroutine main()
         if(RMT(jneq) == rad(j))then
            irad(jneq) = j
            cycle atoms
-        ENDIF
-     end DO
+        endif
+     end do
 
      NMT        = NMT + 1
      rad(NMT)   = RMT(jneq)
@@ -256,14 +279,14 @@ subroutine main()
        &//' symm    Q(:,1)  Q(:,2)  Q(:,3)    t(:)')")
 
   iord = size(stru%rsym, 3)
-  IF(IORD.GT.NSYM) call croak('NSYM too small')
+  if(IORD.gt.NSYM) call croak('NSYM too small')
 
   imat   = stru%rsym
   rtrans = stru%rtrans
-  DO K=1,IORD
+  do K=1,IORD
      write(unit_out,"(I5,3I8,F13.5/2(5X,3I8,F13.5/))") &
           K,((IMAT(J,I,K),J=1,3),RTRANS(I,K),I=1,3)
-  end DO
+  end do
 
   write(unit_out, &
        "( ' POSITIONS OF THE BASIS ATOMS'                &
@@ -290,16 +313,16 @@ subroutine main()
 
 !     << set up local rotations for all basis atoms (in Cartesian coord.) >>
   INDEX=0
-  DO JNEQ=1,stru%Nneq
+  do JNEQ=1,stru%Nneq
      INDEX1 = INDEX+1
 !       << store ROTLOC(1.atom) before updating it >>
      ROT0(:,:) = ROTLOC(:,:, index1)
 
-     DO MU=1,STRU%MULT(JNEQ)
+     do MU=1,STRU%MULT(JNEQ)
         INDEX = INDEX+1
-        CALL LOCDEF(ROT0,IMAT(1,1,IOP(INDEX)),ROTLOC(1,1,INDEX))
-     end DO
-  end DO
+        call LOCDEF(ROT0,IMAT(1,1,IOP(INDEX)),ROTLOC(1,1,INDEX))
+     end do
+  end do
 
   write(unit_out, &
        "(/' SYMMETRY ADAPTED LOCAL ROTATION MATRICES' &
@@ -308,23 +331,23 @@ subroutine main()
        & ,'  with x_j and x''_i in Cartesian coord.'  &
        &//' atom  symm.      T(:,1)      T(:,2)      T(:,3)')")
 
-  DO INDEX=1,stru%nat
+  do INDEX=1,stru%nat
      write(unit_out,"(2(I5,1X),3F12.6,2(/12X,3F12.6)/)") &
           STRU%NEQ2AT(INDEX),IOP(INDEX), &
           ((ROTLOC(I,J,INDEX),I=1,3),J=1,3)
 
-     IF(.NOT.ORTH(ROTLOC(:,:,INDEX)))THEN
-        WRITE(unit_out,"(/'CURRENT ROTATION MATRIX IS NOT ORTHOGONAL')")
+     if(.not.ORTH(ROTLOC(:,:,INDEX)))then
+        write(unit_out,"(/'CURRENT ROTATION MATRIX IS NOT ORTHOGONAL')")
         call croak('Local rotation matrix not orthogonal')
-     ENDIF
-  end DO
+     endif
+  end do
 
 !     << read in the evaluation grid >>
 ! -------------------------------------------------------------------------
 ! NPG        -- the total number of grid points of the evaluation grid
 ! RGRID(:,i) -- the i-th grid point in primitive fractional coordinates
 ! -------------------------------------------------------------------------
-  CALL GRDGEN(GridMode,NP)
+  call GRDGEN(GridMode,NP)
   allocate (psi(npg))
   allocate (tot(npg))
   tot=0
@@ -334,7 +357,7 @@ subroutine main()
 ! SPC := Sum(i=1,3) [-s_i,+s_i] * a_i  with  s_i > 0
 ! and {a_1,a_2,a_3} being the primitive lattice vectors
 ! ---------------------------------------------------------------
-  CALL SPCGEN(stru%Nneq,RMT,ATMS)
+  call SPCGEN(stru%Nneq,RMT,ATMS)
   write(unit_out, &
        "(/' PRIMITIVE CELLS SURROUNDING THE MUFFIN TIN SPHERES' &
        & /' --------------------------------------------------' &
@@ -342,10 +365,10 @@ subroutine main()
        &  '  with  a_i = primitive lattice vector'              &
        &//' atom     RMT         s_1      s_2      s_3')")
 
-  DO JNEQ=1, stru%Nneq
+  do JNEQ=1, stru%Nneq
      write(unit_out,"(I5,F10.5,3X,3F9.5)") &
           JNEQ,RMT(JNEQ),(ATMS(I,JNEQ),I=1,3)
-  end DO
+  end do
 !     << determine into which sphere each grid point r falls >>
 ! -------------------------------------------------------------------------
 ! if in interstitial:
@@ -361,29 +384,29 @@ subroutine main()
 ! -------------------------------------------------------------------------
   NREG(:) = 0
 
-  DO IG=1,NPG
+  do IG=1,NPG
      call findmt(RGRID(1,IG), atms, stru, index, iLat(1,ig), iri(ig), R)
      IREG(IG) = INDEX
      NREG(INDEX)= NREG(INDEX) + 1
-     IF(INDEX.GT.0)THEN
+     if(INDEX.gt.0)then
 !         << in muffin tin sphere around R(NX,NY,NZ) + R0(IAT) >>
 !         << transform r-R-R0 into local Cartesian coordinates >>
 ! -----------------------------------------------------------------------
 ! psi(r) = psi'(T^-1(r)) with psi' as the (LAPW1)-provided wave functions
 ! -----------------------------------------------------------------------
 !         << r' := T^-1(r) >>
-        DO I=1,3
+        do I=1,3
            RGRID(I,IG) = ROTLOC(I,1,INDEX)*R(1) &
                 + ROTLOC(I,2,INDEX)*R(2) &
                 + ROTLOC(I,3,INDEX)*R(3)
-        end DO
-     ELSE
+        end do
+     else
 !         << in interstitial >>
         RGRID(:,IG) = R(:)
-     ENDIF
-  end DO
+     endif
+  end do
 
-  IF(NPG.GT.0)THEN
+  if(NPG.gt.0)then
      write(unit_out, &
           "(/' GRID POINT DISTRIBUTION'               &
           & /' -----------------------'               &
@@ -391,22 +414,22 @@ subroutine main()
           & /I7,3X,'int',I10,2P,F11.1,' %')")         &
           0,NREG(0),NREG(0)/real(NPG, DPk)
 
-     DO INDEX=1,stru%nat
+     do INDEX=1,stru%nat
         write(unit_out,"(I7,I5,I11,2P,F11.1,' %')") &
              INDEX,STRU%NEQ2AT(INDEX),NREG(INDEX), &
              NREG(INDEX)/real(NPG, DPk)
-     end DO
-  ENDIF
+     end do
+  endif
 
 !     << finally transform POS into global Cartesian coord. >>
-  DO INDEX=1,stru%nat
-     DO J=1,3
+  do INDEX=1,stru%nat
+     do J=1,3
         R(J) = POS(1,INDEX)*BR2(1,J) + POS(2,INDEX)*BR2(2,J) &
              + POS(3,INDEX)*BR2(3,J)
-     end DO
+     end do
 
      POS(:,INDEX) = R(:)
-  end DO
+  end do
 
 ! #######################################
 ! # PART III : wave function processing #
@@ -428,7 +451,7 @@ subroutine main()
        &  ' of the wave functions')")                         &
        WHPSI
 
-  IF(DEPHAS) WRITE(unit_out,"( ' after dephasing of the wave function')")
+  if(DEPHAS) write(unit_out,"( ' after dephasing of the wave function')")
   write(unit_out,"( ' data provided    :  ',A,'  [in ',A3,' units]')") &
        SWITCH//'(PSI)',IUNIT
   write(BUF(1:67), &
@@ -440,7 +463,7 @@ subroutine main()
 ! -----------------------------------------
 !     prefactor = 1/sqrt( vol(UC) )
 ! -----------------------------------------
-  PREFAC = PREFAC / SQRT(STRU%VOL)
+  PREFAC = PREFAC / sqrt(STRU%VOL)
 !
 !     << scale reciprocal basis vectors with 2pi >>
   BR3 = TAU*BR3
@@ -509,7 +532,7 @@ subroutine main()
            uu(j)=local_contribution
         enddo
 
-        IF(IERR.GT.0) KKKABS = KKK
+        if(IERR.gt.0) KKKABS = KKK
         NPW = NMATK - NLO
 
         if (nmatk > nmat) then
@@ -528,7 +551,7 @@ subroutine main()
         allocate ( FJ(0:LMAX7,NMATk,NMT),DFJ(0:LMAX7,NMATk,NMT))
 
         !       << read in PW and local orbital wave vectors K >>
-        READ(unit_vector) (KX(IK),KY(IK),KZ(IK),IK=1,NMATK)
+        read(unit_vector) (KX(IK),KY(IK),KZ(IK),IK=1,NMATK)
         !
         write(unit_out, "(' k-point',I4,' : ',A10,&
              &' = (',F8.4,',',F8.4,',',F8.4,')'/' ',55('-'))")&
@@ -536,21 +559,21 @@ subroutine main()
 
 
         !       << transform K+k into global Cartesian coordinates >>
-        DO IK=1,NMATK
+        do IK=1,NMATK
            BK(:,ik) = BR3(1,:)*(KX(ik)+FK(1)) + BR3(2,:)*(KY(ik)+FK(2)) + BR3(3,:)*(KZ(ik)+FK(3))
-        end DO
+        end do
 
         !       << transform k into primitive fractional coordinates >>
         if(.not. stru%prim)then
-           DO J=1,3
+           do J=1,3
               R(J) = BR3(1,J)*FK(1) + BR3(2,J)*FK(2) + BR3(3,J)*FK(3)
-           end DO
-           DO I=1,3
+           end do
+           do I=1,3
               FK(I) = BR2(I,1)*R(1) + BR2(I,2)*R(2) + BR2(I,3)*R(3)
-           end DO
-        ELSE
+           end do
+        else
            FK(:) = TAU * FK(:)
-        ENDIF
+        endif
 
 !       << load spherical Bessel functions and their derivatives >>
 ! -----------------------------------------------------------------
@@ -592,9 +615,9 @@ subroutine main()
 ! ----------------------------------------------------------------------------
         IL1 = NPW
         LATOM  = 0
-        DO JNEQ=1,stru%Nneq
+        do JNEQ=1,stru%Nneq
            IMAX = STRU%NPT(JNEQ)
-           DO JMULT=1,STRU%MULT(JNEQ)
+           do JMULT=1,STRU%MULT(JNEQ)
               LATOM = LATOM + 1
               call augpw(latom, Npw, Alm, rotloc, Y, bk, coef, Nmatk, &
                    stru%neq2at)
@@ -602,7 +625,7 @@ subroutine main()
               IL=IL1
               call auglo(latom, il, Alm, rotloc, Y, bk, coef, nmatk, &
                    stru)
-              IF (JMULT.EQ.STRU%MULT(JNEQ)) IL1=IL
+              if (JMULT.eq.STRU%MULT(JNEQ)) IL1=IL
 
 !             << add 4pi*i^l Rmt^2 factor to ALM, BLM and CLM and >>
 !             << set up the eigen state's augmentation functions  >>
@@ -613,33 +636,33 @@ subroutine main()
 ! ----------------------------------------------------------------------------
               PHS = 2*TAU * RMT(JNEQ)*RMT(JNEQ)
               LM = 0
-              DO L=0,LMAX7
-                 DO M=-L,L
+              do L=0,LMAX7
+                 do M=-L,L
                     LM=LM+1
-                    DO I=1,IMAX
+                    do I=1,IMAX
                        ALMSUM=0
-                       DO irf=1,nrf
+                       do irf=1,nrf
                           ALMSUM=ALMSUM+ALM(LM,irf)*RRAD(I,L,irf,JNEQ)
-                       ENDDO
+                       enddo
                        AUG(I,LM,LATOM)=ALMSUM*PHS
-                    end DO
-                 end DO
+                    end do
+                 end do
                  PHS = (0.0D0,1.0D0)*PHS
-              end DO
-           end DO
-        end DO
+              end do
+           end do
+        end do
 
 !
 !         << now evaluate the wave function on the grid >>
-        DO IG=1,NPG
-           IF(IREG(IG).EQ.0)THEN
+        do IG=1,NPG
+           if(IREG(IG).eq.0)then
 !             << grid point in interstitial >>
               if(LARGE)then
                  call WAVINT(RGRID(1,IG),NPW,PSI(IG),bk,coef,nmatk)
               else
                  PSI(IG)=(0.0D0,0.0D0)
               endif
-           ELSE
+           else
 !             << grid point in atomic sphere at R(ILAT) + R_a(IREG) >>
 !             << load calc. Bloch factor e^ikR >>
               ARG = FK(1)*ILAT(1,IG) + FK(2)*ILAT(2,IG)  &
@@ -647,12 +670,12 @@ subroutine main()
               PHS = cmplx(cos(arg), sin(arg), DPk)
               call WAVSPH(Rgrid(1,ig), PHS, ireg(ig), iri(ig), Psi(ig), Y, &
                    stru%neq2at)
-           ENDIF
-        end DO
+           endif
+        end do
 
-        DO IG=1,NPG
+        do IG=1,NPG
            tot(ig)=tot(ig)+psi(ig)
-        ENDDO
+        enddo
      end do kpoints
   end do vecfiles
 
@@ -675,57 +698,65 @@ subroutine main()
   write(unit_psink, 3020) abs(tot/kkk)**2
   write(unit_psiarg,3020) atan2(aimag(tot), real(tot))
 3020 format(1P,10E16.8)
-
-  RETURN
-
-
-contains
-  subroutine wfopen(unit, file, iwf, iostat, status, form)
-    integer,      intent(in)            :: unit
-    character(*), intent(in)            :: file
-    integer,      intent(in)            :: iwf
-    integer,      intent(out), optional :: iostat
-    character(*), intent(in),  optional :: status
-    character(*), intent(in),  optional :: form
-
-    character(len=BUFSZ) :: tmpnam
-    character(len=   11) :: f = 'FORMATTED'
-    character(len=    7) :: s = 'UNKNOWN'
-    integer              :: idot
-
-    if (present(status)) s = status
-    if (present(form))   f = form
-
-    if (iwf==0) then
-       tmpnam = file
-    else
-       idot = scan(file, '.', BACK=.true.)
-
-       if (idot/=0) then
-          write(tmpnam, '(A, "_", I0, A)') &
-               file(1:idot-1), iwf, trim(file(idot:))
-       else
-          write(tmpnam, '(A, "_", I0)') trim(file), iwf
-       end if
-    end if
-
-    if (present(iostat)) then
-       open(unit, FILE=tmpnam, STATUS=s, FORM=f, IOSTAT=iostat)
-    else
-       open(unit, FILE=tmpnam, STATUS=s, FORM=f)
-    end if
-  end subroutine wfopen
-
-  pure function Id(N)
-    integer, intent(in) :: N
-    real(DPk)           :: Id(N,N)
-
-    integer :: i
-
-    Id = 0
-    forall(i=1:N) Id(i,i) = 1
-  end function Id
 end subroutine main
+
+subroutine wfopen(unit, file, iwf, iostat, status, form)
+  use const, only: BUFSZ
+
+  implicit none
+
+  integer,      intent(in)            :: unit
+  character(*), intent(in)            :: file
+  integer,      intent(in)            :: iwf
+  integer,      intent(out), optional :: iostat
+  character(*), intent(in),  optional :: status
+  character(*), intent(in),  optional :: form
+
+  character(len=BUFSZ) :: tmpnam
+  character(len=   11) :: f
+  character(len=    7) :: s
+  integer              :: idot
+
+  f = 'FORMATTED'
+  s = 'UNKNOWN'
+
+  if (present(status)) s = status
+  if (present(form))   f = form
+
+  if (iwf==0) then
+     tmpnam = file
+  else
+     idot = scan(file, '.', BACK=.true.)
+
+     if (idot/=0) then
+        write(tmpnam, '(A, "_", I0, A)') &
+             file(1:idot-1), iwf, trim(file(idot:))
+     else
+        write(tmpnam, '(A, "_", I0)') trim(file), iwf
+     end if
+  end if
+
+  if (present(iostat)) then
+     open(unit, FILE=tmpnam, STATUS=s, FORM=f, IOSTAT=iostat)
+  else
+     open(unit, FILE=tmpnam, STATUS=s, FORM=f)
+  end if
+end subroutine wfopen
+
+pure function Id(N)
+  use const, only: DPk
+
+  implicit none
+
+  integer, intent(in) :: N
+  real(DPk)           :: Id(N,N)
+
+  integer :: i
+
+  Id = 0
+  forall(i=1:N) Id(i,i) = 1
+end function Id
+end module main_m
 
 
 !!/---
@@ -734,4 +765,4 @@ end subroutine main
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-06 16:04:32 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-21 14:39:29 assman@faepop71.tu-graz.ac.at>
