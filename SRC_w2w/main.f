@@ -31,7 +31,7 @@ program wf
   use Amn_Mmn,  only: c, lmax2, Nmat, Nrad, Nrf, init_Mmn
   use ams,      only: init_ams
   use pairs,    only: kp, kpb, bqx,bqy,bqz, bqx1,bqy1,bqz1, init_pairs
-  use util,     only: paropen
+  use util,     only: paropen, ptime
   use wien2k,   only: errflg, errclr, gtfnam
   use gener,    only: br1, br2
 
@@ -49,7 +49,7 @@ program wf
   integer :: ljmax, nproj, maxx,maxy,maxz, maxg, n, n_pair, nen
   integer :: nemin, nemax, Nb, Nk, nntot, bx,by,bz, kkk
 
-  real(r8) :: t1, t2, t3, x1, x2
+  real(r8) :: x1, x2
   real(r8) :: efermi
 
 !-----------------------------------------------------------------------
@@ -217,23 +217,20 @@ program wf
   call paropen(unit_vector, vecfn, iproc, 1, STATUS='old', FORM='unformatted')
 
   if (MMN) then
-     call cputim(t1)
+     call ptime
      call l2mmn(Nb,Nk,NNTOT,LJMAX)
-     call cputim(t2)
+     call ptime('l2mmn')
      !JXZ: MAXG is not pre-defined
      MAXG = 0
      write(unit_out,*)'MXG=',MAXG
      call planew(Nb,Nk,NNTOT,maxx+1,maxy+1,maxz+1)
-     call cputim(t3)
-     write(unit_out,*)'CPU l2mmn:',t2-t1
-     write(unit_out,*)'CPU planew:',t3-t2
+     call ptime('planew')
   endif
 
   if (AMN) then
-     call cputim(t1)
+     call ptime
      call l2amn(Nb,NPROJ,Nk)
-     call cputim(t2)
-     write(unit_out,*)'CPU l2amn:',t2-t1
+     call ptime('l2amn')
   endif
 
   CALL ERRCLR(ERRFN)
@@ -304,4 +301,4 @@ END program wf
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-04-08 17:27:49 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-07-21 15:03:21 assman@faepop71.tu-graz.ac.at>
