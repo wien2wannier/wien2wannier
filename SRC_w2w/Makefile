@@ -53,7 +53,7 @@ O_DIR := lib
 R_DIR := libr
 C_DIR := libc
 
-###############################################################################
+#############################################################################
 
 FFLAGS+= $(FGEN) $(FOPT) -I$(O_DIR)
 R_EXEC = $(DESTDIR)/$(R_EXECNAME)
@@ -62,7 +62,7 @@ C_EXEC = $(DESTDIR)/$(C_EXECNAME)
 ## site-specific configuration may overwrite the above
 -include ../make.sys
 
-#..............................................................................
+#............................................................................
 #
 #  convenience rules
 #
@@ -191,4 +191,4 @@ $(foreach o, $(modrc_users), $(R_DIR)/$o): $(R_DIR)/modules_rc.o
 $(foreach o, $(modrc_users), $(C_DIR)/$o): $(C_DIR)/modules_rc.o
 
 
-## Time-stamp: <2016-07-20 10:35:22 assman@faepop71.tu-graz.ac.at>
+## Time-stamp: <2016-07-21 15:17:00 assman@faepop71.tu-graz.ac.at>

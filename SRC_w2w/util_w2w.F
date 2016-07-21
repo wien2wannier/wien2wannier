@@ -119,10 +119,11 @@ module util
      real(DPk)            :: cpu1 =0, cputot =0
      integer              :: wall1=0, walltot=0, countrate=0
      character(len=BUFSZ) :: &
-          fmt = "('Times for ',A,T33,'(sec):',F8.3,' wall;',F9.3,' CPU')"
+          fmt = "('Times for ', A, T33, '(sec):', &
+          &       F8.3, ' wall;', F9.3, ' CPU')"
      integer              :: unit=ERROR_UNIT
-     ! flush after every write? -- initialized to F here because we do
-     ! not know if the target unit will support it
+     ! flush after every write? -- initialized to false here because
+     ! we do not know if the target unit will support it
      logical              :: flush=.false.
   end type ptimer
 
@@ -355,8 +356,11 @@ contains
     character(*), intent(in),  optional :: form
 
     character(len=BUFSZ) :: tmpnam
-    character(len=   11) :: f = 'FORMATTED'
-    character(len=    7) :: s = 'UNKNOWN'
+    character(len=   11) :: f
+    character(len=    7) :: s
+
+    f = 'FORMATTED'
+    s = 'UNKNOWN'
 
     if (present(status)) s = status
     if (present(form))   f = form
@@ -2043,4 +2047,4 @@ end module reallocate
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-20 10:00:38 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-21 15:14:22 assman@faepop71.tu-graz.ac.at>
