@@ -80,7 +80,7 @@ module const
   real(DPk), parameter :: SQ3        = sqrt(3._DPk)
   real(DPk), parameter :: Ryd_eV     = 13.605698_DPk ! value for WIEN compat.
   real(DPk), parameter :: Ang_Bohr   = 1.8897261246_DPk
-  real(DPk), parameter :: clight     = 137.0359895_DPk
+  real(DPk), parameter :: clight     = 137.0359991_DPk
 end module const
 
 
@@ -2047,4 +2047,4 @@ end module reallocate
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-21 15:14:22 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-22 15:04:40 assman@faepop71.tu-graz.ac.at>
