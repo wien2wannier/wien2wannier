@@ -1604,16 +1604,16 @@ subroutine rotdef(stru, IOP)
   write(unit_out,2000)
 
   INDEX=0
-  do JATOM=1,STRU%NNEQ
+  nneq: do JATOM=1,STRU%NNEQ
      INDEX1 = INDEX+1
 !!!       << store r_1.atom before updating it >>
      do J=1,3
         POS0(J) = STRU%POS(J,INDEX1)
      end do
 
-     do M=1,stru%mult(jatom)
+     mult: do M=1,stru%mult(jatom)
         INDEX = INDEX+1
-        do JOP=1,IORD
+        symop: do JOP=1,IORD
 
 !!!           << find {Q|t}(r_1.atom) >>
            do I=1,3
@@ -1647,17 +1647,17 @@ subroutine rotdef(stru, IOP)
                       + POS(3,INDEX)*BR2(3,J)
               end do
               write(unit_out,2010) JATOM,IOP(INDEX),(R(J),J=1,3)
-              cycle
+              cycle mult
            end if
-        end do
+        end do symop
 
 !!!         << something is wrong here >>
         write(unit_out,1000) INDEX1,INDEX
         write(unit_out,1010) INDEX1,(POS(I,INDEX1),I=1,3)
         write(unit_out,1010) INDEX ,(POS(I,INDEX ),I=1,3)
         call croak('error in ROTDEF')
-     end do
-  end do
+     end do mult
+  end do nneq
 
 1000 format(///3X,'ERROR IN ROTDEF:'/ &
        'NO SYMMETRY OPERATION FOUND TO MAP ATOM',I3, &
@@ -2250,4 +2250,4 @@ end module     trans_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-21 14:39:39 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-21 17:39:48 assman@faepop71.tu-graz.ac.at>
