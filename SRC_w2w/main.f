@@ -231,7 +231,7 @@ program wf
        &       STATUS='old', FORM='unformatted')
 
   if (MMN) then
-     call ptime
+     call ptime(unit_out)
      call l2mmn(Nb,Nk,NNTOT,LJMAX)
      call ptime('l2mmn')
      !JXZ: MAXG is not pre-defined
@@ -242,7 +242,7 @@ program wf
   endif
 
   if (AMN) then
-     call ptime
+     call ptime(unit_out)
      call l2amn(Nb,NPROJ,Nk)
      call ptime('l2amn')
   endif
@@ -258,4 +258,4 @@ end program wf
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-21 15:15:36 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-22 17:12:26 assman@faepop71.tu-graz.ac.at>
