@@ -217,7 +217,7 @@ program wf
   call paropen(unit_vector, vecfn, iproc, 1, STATUS='old', FORM='unformatted')
 
   if (MMN) then
-     call ptime
+     call ptime(unit_out)
      call l2mmn(Nb,Nk,NNTOT,LJMAX)
      call ptime('l2mmn')
      !JXZ: MAXG is not pre-defined
@@ -228,7 +228,7 @@ program wf
   endif
 
   if (AMN) then
-     call ptime
+     call ptime(unit_out)
      call l2amn(Nb,NPROJ,Nk)
      call ptime('l2amn')
   endif
@@ -301,4 +301,4 @@ END program wf
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-21 15:03:21 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-22 17:08:02 assman@faepop71.tu-graz.ac.at>
