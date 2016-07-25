@@ -1,4 +1,4 @@
-3D ORTHO                                    # mode O(RTHOGONAL)|N(ON-ORTHOGONAL)
+3D NONOR                                    # mode O(RTHOGONAL)|N(ON-ORTHOGONAL)
 0 0 0 1                                     # x,y,z,div of origin
 1 0 0 1                                     #              x-end
 0 1 0 1                                     #              y-end
