@@ -15,7 +15,7 @@
 !!
 !! Procedure modules:
 !!
-!!    dergl_m, inouh_m, inth_m, diracout_m, dvbes1_m, sphbes_m, Ylm_m
+!!    dergl_m, diracout_m, dvbes1_m, inouh_m, inth_m, sphbes_m, Ylm_m
 !!
 !!\===============================================
 
@@ -27,7 +27,7 @@ module param
   public
 
   character(*), parameter, private :: &
-       rev_str = "$version: v1.0.0-197-g6f6110d$"
+       rev_str = "$version: v1.0.0-198-g8044eb9$"
   character(*), parameter, public  :: &
        wien2wannier_version = rev_str(11 : len (rev_str)-1)
 
@@ -837,4 +837,4 @@ end module     Ylm_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-25 16:03:19 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-25 17:04:34 assman@faepop71.tu-graz.ac.at>
