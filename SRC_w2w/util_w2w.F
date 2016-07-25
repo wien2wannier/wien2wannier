@@ -1761,7 +1761,7 @@ contains
 
 
   subroutine ERRCLR(FNAME)
-    character*(*)      FNAME
+    character(*)      FNAME
 
     close (99)
     open (99,FILE=FNAME,STATUS='REPLACE')
@@ -2047,4 +2047,4 @@ end module reallocate
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-22 15:04:40 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-25 16:03:47 assman@faepop71.tu-graz.ac.at>

@@ -1023,7 +1023,7 @@ subroutine augpw(latom, Npw, Alm, rotloc, Y, bk, coef, Nmat, iatnr)
 
   implicit none
 
-  integer,      intent(in)  :: Latom, Npw, Nmat, iatnr(*)
+  integer,      intent(in)  :: Latom, Npw, Nmat, iatnr(:)
   real(DPk),    intent(in)  :: rotloc(3,3,*), BK(3,Nmat)
   complex(DPk), intent(out) :: ALM((LMAX7+1)*(LMAX7+1),nrf)
   complex(DPk), intent(out) :: Y((LMAX7+1)*(LMAX7+1))
@@ -1456,7 +1456,7 @@ subroutine wavsph(R, Bfac, iAt, iR, Psi, Y, iatnr)
 
   real(DPk),    intent(in)  :: R(3)
   complex(DPk), intent(in)  :: BFAC
-  integer,      intent(in)  :: iAt, iR, iatnr(*)
+  integer,      intent(in)  :: iAt, iR, iatnr(:)
   complex(DPk), intent(out) :: Psi, Y((LMAX7+1)*(LMAX7+1))
 
   complex(DPk) :: PHS, PHSLM
@@ -1550,8 +1550,8 @@ subroutine bessel(NK,LDNK,BK,NMT,RAD,LMAX2,F,DF)
         AK  = sqrt( BK(1,IK)*BK(1,IK) + BK(2,IK)*BK(2,IK) + &
              BK(3,IK)*BK(3,IK) )
         ARG = AK * RMT
-        call SPHBES(LMAX2,ARG,F(1,IK,IR))
-        call DVBES1(F(:,IK,IR),DF(:,IK,IR),ARG,LDIM)
+        call SPHBES(LMAX2, ARG, F(:, IK, IR))
+        call DVBES1(F(:,IK,IR),DF(:, IK, IR), ARG, LDIM)
         do L=1,LDIM
            DF(L,IK,IR) = DF(L,IK,IR)*AK
         end do
@@ -2250,4 +2250,4 @@ end module     trans_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-21 17:39:48 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-25 16:10:39 assman@faepop71.tu-graz.ac.at>

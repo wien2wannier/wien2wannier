@@ -27,7 +27,7 @@ module param
   public
 
   character(*), parameter, private :: &
-       rev_str = "$version: v1.0.0-195-g22ecd9d$"
+       rev_str = "$version: v1.0.0-197-g6f6110d$"
   character(*), parameter, public  :: &
        wien2wannier_version = rev_str(11 : len (rev_str)-1)
 
@@ -473,8 +473,8 @@ subroutine dvbes1(FJ,DJ,SM,NT)
 
   implicit none
 
-  real(DPk), intent(in)  :: FJ(*), SM
-  real(DPk), intent(out) :: DJ(*)
+  real(DPk), intent(in)  :: FJ(:), SM
+  real(DPk), intent(out) :: DJ(:)
   integer,   intent(in)  :: NT
 
   real(DPk), parameter :: ZUP = 1e-5_DPk
@@ -524,7 +524,7 @@ subroutine sphbes(N,X,FJ)
 
   integer,  intent(in)  :: N
   real(R8), intent(in)  :: X
-  real(R8), intent(out) :: FJ(*)
+  real(R8), intent(out) :: FJ(:)
 
   real(R8), parameter :: XLIM = 0.1_R8
   real(R8), parameter :: HF   = 0.5_R8
@@ -730,7 +730,7 @@ subroutine Ylm(V, lmax, Y)
 
   integer,      intent(in)  :: LMAX
   real(R8),     intent(in)  :: V(3)
-  complex(C16), intent(out) :: Y(*)
+  complex(C16), intent(out) :: Y(:)
 
   integer  :: I2L, I4L2, INDEX, INDEX2, L, M, MSIGN
   real(R8) :: A, B, C, AB, ABC, ABMAX, ABCMAX, D4LL1C, D2L13
@@ -837,4 +837,4 @@ end module     Ylm_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-20 10:19:41 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-25 16:03:19 assman@faepop71.tu-graz.ac.at>

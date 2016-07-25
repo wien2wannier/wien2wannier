@@ -180,7 +180,8 @@ module bessel
   implicit none
   private :: R8
 
-  real(R8), allocatable  ::rj(:,:),ri_mat(:,:)
+  ! Cave: rj's first index will start at 0
+  real(R8), allocatable :: rj(:,:), ri_mat(:,:)
 
 contains
   subroutine init_bessel(LMAX2,LJMAX,NRAD,NRF)
@@ -200,7 +201,8 @@ contains
           end do
        end do
     end do
-    allocate(rj(0:LJMAX+1,NRAD),ri_mat(NRF*NRF,L))
+    allocate(rj(0:LJMAX+1, NRAD), &
+         &   ri_mat(NRF*NRF, L))
   end subroutine init_bessel
 end module bessel
 
@@ -921,13 +923,12 @@ subroutine harmon(N,X,Y,Z,LMAX2,F,DF,RI)
 
   LMX=LMAX2+1
   do I=1,N
-     A(1)=X(I)*BR1(1,1)+Y(I)*BR1(1,2)+Z(I)*BR1(1,3)
-     A(2)=X(I)*BR1(2,1)+Y(I)*BR1(2,2)+Z(I)*BR1(2,3)
-     A(3)=X(I)*BR1(3,1)+Y(I)*BR1(3,2)+Z(I)*BR1(3,3)
-     XM=sqrt(A(1)**2+A(2)**2+A(3)**2)
+     A(:)=X(I)*BR1(1,:)+Y(I)*BR1(1,:)+Z(I)*BR1(1,:)
+
+     XM=sqrt(A(1)**2 + A(2)**2 + A(3)**2)
      XA=RI*XM
-     call SPHBES(LMAX2,XA,F(1,I))
-     call DVBES1(F(1,I),DF(1,I),XA,LMX)
+     call SPHBES(LMAX2, XA, F(:,I))
+     call DVBES1(F(:,I), DF(:,I), XA, LMX)
      do J=1,LMX
         DF(J,I)=XM*DF(J,I)
      end do
@@ -959,7 +960,7 @@ subroutine radint(JATOM,LJMAX,BM)
 
   do  I=1,JRJ(JATOM)
      RX=R0(JATOM)*exp(DX(JATOM)*(i-1))*BM
-     call sphbes(LJMAX+1,RX,rj(0,I))
+     call sphbes(LJMAX+1,RX,rj(:,I))
   enddo
   L_index=0
   do L1=0,LMAX2
@@ -1438,4 +1439,4 @@ end module     latgen_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-20 10:29:31 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-25 16:08:21 assman@faepop71.tu-graz.ac.at>
