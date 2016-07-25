@@ -143,7 +143,7 @@ if [[ $so ]]; then
         myln $file.eigup $file.eig
     fi
 
-    $bin/x w2waddsp
+    $bin/x -f $file w2waddsp
 fi
 
 ## link “spin-polarized” files required by Wannier90 to the names it
@@ -182,4 +182,4 @@ done
 exit $status
 
 
-## Time-stamp: <2016-01-26 16:59:46 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-07-25 10:38:37 assman@faepop71.tu-graz.ac.at>
