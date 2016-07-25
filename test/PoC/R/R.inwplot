@@ -1,0 +1,9 @@
+3D ORTHO                                    # mode O(RTHOGONAL)|N(ON-ORTHOGONAL)
+0 0 0 1                                     # x,y,z,div of origin
+1 0 0 1                                     #              x-end
+0 1 0 1                                     #              y-end
+0 0 1 1                                     #              z-end
+10 10 10                                    # grid points and echo increments
+NO                                          # DEP(HASING)|NO (POST-PROCESSING)
+ANG LARGE                                   # switch ANG|ATU|AU LARGE|SMALL
+1 F                                         # k-point, Wannier index
