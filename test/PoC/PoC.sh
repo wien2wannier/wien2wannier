@@ -28,15 +28,19 @@ x lapw1 -p                         2>&1
 x w2w -p                           2>&1
 x wannier90                        2>&1
 
-write_inwplot W <<EOF
+if [[ -s ../$1.inwplot ]]; then
+    cp ../$1.inwplot W.inwplot
+else
+    write_inwplot W <<EOF
 0 0 0 1
 1 0 0 1
 0 1 0 1
 0 0 1 1
 10 10 10
 EOF
+fi
 
 x wplot -wf 1 -p                   2>&1
 wplot2xsf_lapw                     2>&1
 
-## Time-stamp: <2016-07-14 16:55:43 assman@faepop71.tu-graz.ac.at>
+## Time-stamp: <2016-07-25 14:24:27 assman@faepop71.tu-graz.ac.at>
