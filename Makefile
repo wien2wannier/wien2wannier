@@ -8,9 +8,8 @@
 
 SHELL=/bin/bash
 
-Version := $(shell git describe)
 ifndef VERSION
-   VERSION = $(lastword '$version: v1.0.0-199-g2792182$')
+   VERSION = $(lastword '$version: v1.0.0-200-g67b09d9$')
 endif
 
 SIMPLE      := SRC_trig doc test
@@ -100,4 +99,4 @@ wien-dist: dist-tmp
 	rm -rf $(dist-dir) $(Morig)
 
 
-## Time-stamp: <2016-07-13 12:19:22 assman@faepop71.tu-graz.ac.at>
+## Time-stamp: <2016-07-26 16:08:44 assman@faepop71.tu-graz.ac.at>
