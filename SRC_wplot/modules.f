@@ -49,7 +49,7 @@ module wplot
   implicit none
 
   private :: BUFSZ
-  public
+  public; save
 
 !:17[
 !     There are a couple of optional features in how to set-up the wave
@@ -232,7 +232,7 @@ module atspdt
   use const, only: DPk
 
   implicit none
-  private
+  private; save
 
   real(DPk), allocatable, public :: P(:,:,:), DP(:,:,:)
 end module atspdt
@@ -241,7 +241,7 @@ module bessfu
   use const, only: DPk
 
   implicit none
-  private
+  private; save
 
   real(DPk), allocatable, public :: FJ(:,:,:), DFJ(:,:,:), RAD(:)
   integer,   allocatable, public :: IRAD(:)
@@ -251,7 +251,7 @@ module grid
   use const, only: DPk
 
   implicit none
-  private
+  private; save
 
   real(DPk), allocatable, public :: rgrid(:,:)
   integer,   allocatable, public :: ireg(:),ilat(:,:),iri(:)
@@ -262,7 +262,7 @@ module latt
   use const, only: DPk
 
   implicit none
-  private
+  private; save
 
 ! BR1(i,:) -- the real space lattice vectors a_i of the conventional u.c.
 ! BR2(i,:) -- the real space lattice vectors a_i of the primitive unit cell
@@ -276,14 +276,14 @@ module loabc
   use const, only: DPk
 
   implicit none
-  private
+  private; save
 
   real(DPk), allocatable, public :: ALO(:,:,:,:)
 end module loabc
 
 module lolog
   implicit none
-  public
+  public; save
 
   integer              :: NLO
   logical, allocatable :: LAPW(:,:)
@@ -294,7 +294,7 @@ module radfu
   use const, only: DPk
 
   implicit none
-  private
+  private; save
 
   real(DPk), allocatable, public :: RRAD(:,:,:,:)
 end module radfu
@@ -303,7 +303,7 @@ module radgrd
   use const, only: DPk
 
   implicit none
-  private
+  private; save
 
   real(DPk), allocatable, public :: RM(:,:), DX(:)
 end module radgrd
@@ -312,7 +312,7 @@ module struct
   use const, only: DPk
 
   implicit none
-  private
+  private; save
 
   real(DPk), allocatable, public :: POS(:,:), RMT(:)
 end module struct
@@ -322,7 +322,7 @@ module sym2
   use wplot, only: Nsym
 
   implicit none
-  private
+  private; save
 
   real(DPk), public :: TRANS(3,NSYM)
   integer,   public :: IMAT(3,3,NSYM), IORD
@@ -332,7 +332,7 @@ module work
   use const, only: DPK
 
   implicit none
-  private
+  private; save
 
   complex(DPK), allocatable, public :: aug(:,:,:)
 end module work
@@ -342,7 +342,7 @@ module work1
   use param, only: Nrad
 
   implicit none
-  private
+  private; save
 
   real(DPk), public :: A(Nrad), B(Nrad)
 end module work1
@@ -2250,4 +2250,4 @@ end module     trans_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-25 16:10:39 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-26 14:22:20 assman@faepop71.tu-graz.ac.at>

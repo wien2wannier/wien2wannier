@@ -49,7 +49,7 @@
 
 module w2w
   implicit none
-  public
+  public; save
 
   integer, parameter :: unit_amn=7,  unit_mmn  =8, unit_nnkp=11, unit_eig=12
   integer, parameter :: unit_ene=50, unit_fermi=51
@@ -64,7 +64,7 @@ module assleg
   use const, only: R8
 
   implicit none
-  private
+  private; save
 
   public :: YR, N, init_assleg
 
@@ -85,7 +85,7 @@ module struct
   implicit none
   private :: R8
 
-  public
+  public; save
 
   logical                    :: rel
   real(R8)                   :: AA,BB,CC,VOL,pia(3),alpha(3)
@@ -179,6 +179,7 @@ module bessel
   use const, only: R8
   implicit none
   private :: R8
+  public; save
 
   ! Cave: rj's first index will start at 0
   real(R8), allocatable :: rj(:,:), ri_mat(:,:)
@@ -211,7 +212,7 @@ module xa
   use const, only: R8, C16
   implicit none
   private :: R8, C16
-  public
+  public; save
 
   complex(C16), allocatable :: phs(:)
   real(R8),     allocatable :: fj(:,:),dfj(:,:),r(:)
@@ -231,7 +232,7 @@ module Amn_Mmn
   use const, only: C16
 
   implicit none
-  private
+  private; save
   public :: overlap, init_Amn_Mmn, c
 
   complex(C16), allocatable :: overlap(:,:,:), c(:,:,:)
@@ -252,7 +253,7 @@ end module Amn_Mmn
 
 module pairs
   implicit none
-  public
+  public; save
 
   integer, allocatable :: KP(:), KPB(:)
   integer, allocatable :: BQX(:),BQY(:),BQZ(:), BQX1(:),BQY1(:),BQZ1(:)
@@ -272,7 +273,7 @@ module lolog
   use param, only: Lmax2, lomax
 
   implicit none
-  private
+  private; save
 
   integer, public :: Nlo, Nlov, Nlon, n_rad(0:lmax2), ilo(0:lomax)
   logical, public :: loor(0:lomax), lapw(0:lmax2)
@@ -283,7 +284,7 @@ module gener
   use const, only: R8
 
   implicit none
-  private
+  private; save
 
   ! transformation between u.c. and cartesian coordinates
   real(R8), public :: BR1(3,3), BR2(3,3)
@@ -295,7 +296,7 @@ module atspdt
   use const, only: R8
 
   implicit none
-  private
+  private; save
 
   ! radial function and its slope at RMT
   real(R8), public :: P(0:Lmax2, Nrf), DP(0:Lmax2,Nrf)
@@ -307,7 +308,7 @@ module loabc
   use const, only: R8
 
   implicit none
-  private
+  private; save
 
   ! abc calculates the cofficients a,b,c of the lo
   real(R8), public :: alo(0:LOmax, Nloat, Nrf)
@@ -319,7 +320,7 @@ module radfu
   use const, only: R8
 
   implicit none
-  private
+  private; save
 
   ! radial functions large and small component
   real(R8), public :: RF1(Nrad,0:Lmax2,Nrf), RF2(Nrad,0:Lmax2,Nrf)
@@ -1439,4 +1440,4 @@ end module     latgen_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-25 16:08:21 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-26 14:16:05 assman@faepop71.tu-graz.ac.at>

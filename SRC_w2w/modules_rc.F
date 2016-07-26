@@ -24,7 +24,7 @@ module xa3
 #endif
 
   implicit none
-  private
+  private; save
   public :: init_xa3, XK,YK,ZK, BKX,BKY,BKZ, GX,GY,GZ, vecsz, a
 
 #ifndef _COMPLEX_
@@ -916,4 +916,4 @@ end module read_vec_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-20 10:35:44 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-26 14:16:59 assman@faepop71.tu-graz.ac.at>

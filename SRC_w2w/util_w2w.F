@@ -447,8 +447,8 @@ module clio
      module procedure fetchenv_str, fetchenv_int, fetchenv_real
   end interface fetchenv
 
-  type(argstr) :: progname
-  logical      :: got_progname = .false.
+  type(argstr), save :: progname
+  logical,      save :: got_progname = .false.
 contains
   subroutine get_progname()
     integer s
@@ -2047,4 +2047,4 @@ end module reallocate
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-25 16:03:47 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-26 14:17:51 assman@faepop71.tu-graz.ac.at>

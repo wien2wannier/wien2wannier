@@ -27,7 +27,7 @@ module param
   public
 
   character(*), parameter, private :: &
-       rev_str = "$version: v1.0.0-198-g8044eb9$"
+       rev_str = "$version: v1.0.0-199-g2792182$"
   character(*), parameter, public  :: &
        wien2wannier_version = rev_str(11 : len (rev_str)-1)
 
@@ -40,7 +40,7 @@ end module param
 module PS1
   use const, only: R8
   implicit none
-  private
+  private; save
 
   ! DEP,DEQ DERIVEES DE DP ET DQ   DB=ENERGIE/DVC    DVC VITESSE DE LA
   ! LUMIERE EN U.A.   DSAL=2.*DVC   DK NOMBRE QUANTIQUE KAPPA
@@ -53,7 +53,7 @@ module uhelp
   use const, only: R8
 
   implicit none
-  private
+  private; save
 
   real(R8), public :: A(Nrad), B(Nrad)
 end module uhelp
@@ -837,4 +837,4 @@ end module     Ylm_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-25 17:04:34 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-26 14:14:03 assman@faepop71.tu-graz.ac.at>
