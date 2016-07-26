@@ -20,21 +20,22 @@
 !!\---
 
 program wf
-  use param,    only: unit_def, unit_vector, unit_in, unit_out, &
-       &              wien2wannier_version, Lmax2, Nrad, Nrf
-  use w2w,      only: Nmat, unit_nnkp, unit_amn, unit_mmn, unit_ene, &
-       &              unit_fermi
-  use const,    only: R8, BUFSZ
-  use struct,   only: aa,bb,cc, irel, alpha, Nat, lattic, title, init_struct
-  use xa,       only: init_xa
-  use xa3,      only: init_xa3
-  use bessel,   only: init_bessel
-  use Amn_Mmn,  only: c, init_Amn_Mmn
-  use pairs,    only: kp, kpb, bqx,bqy,bqz, bqx1,bqy1,bqz1, init_pairs
-  use util,     only: paropen, ptime
-  use wien2k,   only: errflg, errclr, gtfnam
-  use gener,    only: br2
-  use clio,     only: croak
+  use param,     only: unit_def, unit_vector, unit_in, unit_out, unit_struct, &
+       &               wien2wannier_version, Lmax2, Nrad, Nrf
+  use w2w,       only: Nmat, unit_nnkp, unit_amn, unit_mmn, unit_ene, &
+       &               unit_fermi
+  use const,     only: R8, BUFSZ
+  use struct,    only: init_struct
+  use xa,        only: init_xa
+  use xa3,       only: init_xa3
+  use bessel,    only: init_bessel
+  use Amn_Mmn,   only: c, init_Amn_Mmn
+  use pairs,     only: kp, kpb, bqx,bqy,bqz, bqx1,bqy1,bqz1, init_pairs
+  use util,      only: paropen, ptime
+  use wien2k,    only: errflg, errclr, gtfnam
+  use gener,     only: br2
+  use clio,      only: croak
+  use structmod, only: struct_t, struct_read
 
   !! procedure includes
   use read_vec_m
@@ -262,4 +263,4 @@ end program wf
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-26 16:22:44 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-26 16:29:46 assman@faepop71.tu-graz.ac.at>
