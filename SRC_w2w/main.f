@@ -3,7 +3,7 @@
 !!!    Main program ‘w2w’
 !!!
 !!! Copyright 2010-2012 Jan Kuneš, Philipp Wissgott
-!!!           2013-2015 Elias Assmann
+!!!           2013-2016 Elias Assmann
 
 !!/--- Files expected in ‘def’ ---
 !!  5 inwf	'old'	  'formatted'
@@ -20,48 +20,55 @@
 !!\---
 
 program wf
-  use param,     only: unit_def, unit_vector, unit_fermi, unit_in, unit_ene,&
-       &               unit_struct, unit_nnkp, unit_amn, unit_mmn, unit_out,&
-       &               wien2wannier_version
-  use const,     only: R8, BUFSZ
-  use xa,        only: init_xa
-  use xa3,       only: init_xa3
-  use bessel,    only: init_bessel
-  use Amn_Mmn,   only: c, lmax2, Nmat, Nrad, Nrf, init_Mmn
-  use ams,       only: init_ams
-  use pairs,     only: kp, kpb, bqx,bqy,bqz, bqx1,bqy1,bqz1, init_pairs
-  use util,      only: paropen
-  use wien2k,    only: errflg, errclr, gtfnam
-  use gener,     only: br1, br2
-  use structmod, only: struct_t, struct_read
+  use param,    only: unit_def, unit_vector, unit_in, unit_out, &
+       &              wien2wannier_version, Lmax2, Nrad, Nrf
+  use w2w,      only: Nmat, unit_nnkp, unit_amn, unit_mmn, unit_ene, &
+       &              unit_fermi
+  use const,    only: R8, BUFSZ
+  use struct,   only: aa,bb,cc, irel, alpha, Nat, lattic, title, init_struct
+  use xa,       only: init_xa
+  use xa3,      only: init_xa3
+  use bessel,   only: init_bessel
+  use Amn_Mmn,  only: c, init_Amn_Mmn
+  use pairs,    only: kp, kpb, bqx,bqy,bqz, bqx1,bqy1,bqz1, init_pairs
+  use util,     only: paropen, ptime
+  use wien2k,   only: errflg, errclr, gtfnam
+  use gener,    only: br2
+  use clio,     only: croak
+
+  !! procedure includes
+  use read_vec_m
+  use gaunt2_m
+  use latgen_m
+  use planew_m
+  use l2mmn_m
+  use l2amn_m
 
   implicit none
 
   character(len=    3)  :: mode
   character(len=   11)  :: status,form
-  character(len=   67)  :: errmsg
   character(len=BUFSZ)  :: deffn, errfn, aline
-  character(len=BUFSZ)  :: fname, vecfn, enefn
+  character(len=BUFSZ)  :: fname, vecfn, enefn, iomsg
 
   logical :: Mmn, Amn
   integer :: centeratom(300)
-  integer :: iloop, i, ia, ii, ind, info, ios, iproc, irecl, iunit, j, l, m
+  integer :: iloop, i, ia, ii, ind, ios, iproc, irecl, iunit, j, l, m
   integer :: ljmax, nproj, maxx,maxy,maxz, maxg, n, n_pair, nen
-  integer :: nemin, nemax, Nb, Nk, nntot, bx,by,bz, kkk
+  integer :: nemin, nemax, Nb, Nk, nntot, bx,by,bz, kkk, iostat
 
-  real(r8) :: t1, t2, t3, x1, x2
+  real(r8) :: x1, x2
   real(r8) :: efermi
 
   type(struct_t) :: stru
 
 !-----------------------------------------------------------------------
 
-  call init_ams
   call gtfnam(deffn,errfn,iproc)
   call errflg(errfn,'Error in W2W')
-  open(unit_def, FILE=deffn, STATUS='old', ERR=910)
+  open(unit_def, FILE=deffn, STATUS='old')
   def: do
-     read(unit_def, *, END=20, ERR=960) iunit, fname, status, form, irecl
+     read(unit_def, *, END=20) iunit, fname, status, form, irecl
 
      select case (iunit)
      case (unit_vector)
@@ -69,12 +76,16 @@ program wf
      case (50)
         enefn=fname
      case default
-        open(iunit, FILE=fname, STATUS=status, FORM=form, ERR=920)
+        open(iunit, FILE=fname, STATUS=status, FORM=form, &
+             IOSTAT=iostat, IOMSG=iomsg)
+
+        if(iostat /= 0) call croak('error while processing def file `' &
+             // trim(deffn) // "': " // trim(iomsg))
      end select
   end do def
 20 close(unit_def)
 
-  write(unit_out, '("W2W ", A /)'), wien2wannier_version
+  write(unit_out, '("W2W ", A /)') wien2wannier_version
 
 !!!.....READ STRUCT
   call struct_read(unit_struct, stru)
@@ -108,13 +119,14 @@ program wf
   nnkpt: do
      read(unit_nnkp,'(a80)',end=114) aline
      if(index(aline,'begin kpoints').ne.0) then
-        read(unit_nnkp,*,err=913) n
-        if (n/=Nk) goto 941
+        read(unit_nnkp,*) n
+        if (n/=Nk) call croak('inconsistent numbers of k-points between&
+             & nnkp and energy files')
         cycle nnkpt
      endif
 
      if(index(aline,'begin nnkpts').ne.0) then
-        read(unit_nnkp,*,err=914) nntot
+        read(unit_nnkp,*) nntot
         n_pair=Nk*nntot
         call init_pairs(n_pair)
         do i=1,N_pair
@@ -144,7 +156,7 @@ program wf
   Nb=nemax-nemin+1
   CALL init_xa3(Nb,nmat,Nk+1)
   CALL init_xa(LMAX2,NMAT,NRAD,Nb)
-  CALL init_mmn(Nb,n_pair,nproj)
+  CALL init_Amn_Mmn(Nb,n_pair,nproj)
 
   read(unit_fermi, *) efermi
 
@@ -154,20 +166,19 @@ program wf
      call paropen(unit_vector, vecfn, iproc, iloop, &
           STATUS='old', FORM='unformatted')
 
-     CALL read_vec(nemin,nemax,kkk,maxx,maxy,maxz,efermi)
+     call read_vec(nemin,nemax,kkk,maxx,maxy,maxz,efermi)
 
      CLOSE(unit_vector)
   end do vectorfiles
 
-  if(kkk /= Nk) goto 942
-
-  C(:,:,:) = dcmplx(0d0,0d0)
+  if(kkk /= Nk) call croak('inconsistent numbers of k-points between&
+       & vector and energy files')
 
   read_proj: IF (AMN) THEN
      DO I=1,NPROJ
-        READ(unit_in,*,err=925,end=926)N
+        READ(unit_in,*) N
         DO J=1,N
-           READ(unit_in,*,err=925,end=926)IA,L,M,X1,X2
+           read(unit_in,*) IA,L,M,X1,X2
            ind=L*(L+1)+M+1
            C(I,ind,IA)=X1 + (0,1)*X2
            CENTERATOM(I)=IA
@@ -189,23 +200,26 @@ program wf
 
   call init_bessel(LMAX2,LJMAX,NRAD,NRF)
   call gaunt2
-  WRITE(unit_out,800)
-  WRITE(unit_out,805)  stru%title
+
+  WRITE(unit_out, "(////,30X,50(1H-),/,33X,'S T R U C T U R A L   ', &
+         & 'I N F O R M A T I O N',/,30X,50(1H-),//)")
+  WRITE(unit_out, "(3X,'SUBSTANCE',20X,'= ',A80,/)") stru%title
+
   if (amn) then
-     write(unit_amn,806) stru%title
-     write(unit_amn,807) NEMAX-NEMIN+1,Nk,NPROJ
+     write(unit_amn,'(A20)')  stru%title
+     write(unit_amn,'(3I12)') NEmax-NEmin+1, Nk, Nproj
   endif
   if (mmn) then
-     write(unit_mmn,806) stru%title
-     write(unit_mmn,807) NEMAX-NEMIN+1,Nk,NNTOT
+     write(unit_mmn,'(A20)')  stru%title
+     write(unit_mmn,'(3I12)') NEmax-NEmin+1, Nk, Nntot
   endif
 
-  WRITE(unit_out,810)  stru%lattic
-  WRITE(unit_out,820)  stru%a
-  WRITE(unit_out,840)  stru%Nneq
-  WRITE(unit_out,850)  stru%mode
+  WRITE(unit_out, "(3X,'LATTICE',22X,'= ',A4)")                  stru%lattic
+  WRITE(unit_out, "(3X,'LATTICE CONSTANTS ARE',8X,'= ',3F12.7)") stru%a
+  WRITE(unit_out, "(3X,'NUMBER OF ATOMS IN UNITCELL  = ',I3)")   stru%Nneq
+  WRITE(unit_out, "(3X,'MODE OF CALCULATION IS',7X,'= ',A4)")    stru%mode
 
-  CALL LATGEN
+  call latgen
   !     rotate boundary vectors
   do i=1,N_pair
      bx=bqx1(i); by=bqy1(i); bz=bqz1(i)
@@ -217,88 +231,29 @@ program wf
   !.....CALCULATE CHARGE DENSITY CLM(R) IN SPHERES,  PARTIAL CHARGES
 
   ! l2mmn, l2amn need vector file to be open
-  call paropen(unit_vector, vecfn, iproc, 1, STATUS='old', FORM='unformatted')
+  call paropen(unit_vector, vecfn, iproc, 1, &
+       &       STATUS='old', FORM='unformatted')
 
   if (MMN) then
-     call cputim(t1)
+     call ptime(unit_out)
      call l2mmn(Nb,Nk,NNTOT,LJMAX)
-     call cputim(t2)
+     call ptime('l2mmn')
      !JXZ: MAXG is not pre-defined
      MAXG = 0
      write(unit_out,*)'MXG=',MAXG
      call planew(Nb,Nk,NNTOT,maxx+1,maxy+1,maxz+1)
-     call cputim(t3)
-     write(unit_out,*)'CPU l2mmn:',t2-t1
-     write(unit_out,*)'CPU planew:',t3-t2
+     call ptime('planew')
   endif
 
   if (AMN) then
-     call cputim(t1)
+     call ptime(unit_out)
      call l2amn(Nb,NPROJ,Nk)
-     call cputim(t2)
-     write(unit_out,*)'CPU l2amn:',t2-t1
+     call ptime('l2amn')
   endif
 
-  CALL ERRCLR(ERRFN)
-  STOP 'W2W END'
-
-!!!        error handling
-!!!
-910 INFO = 1
-
-!!!        def file couldn't be opened
-!!!
-  WRITE (ERRMSG,9000) DEFFN
-  CALL OUTERR('w2w',ERRMSG)
-  GOTO 999
-920 INFO = 2
-
-!!!        file FNAME couldn't be opened
-!!!
-  WRITE (ERRMSG,9010) IUNIT
-  CALL OUTERR('w2w',ERRMSG)
-  WRITE (ERRMSG,9020) FNAME
-  CALL OUTERR('w2w',ERRMSG)
-  WRITE (ERRMSG,9030) STATUS, FORM
-  CALL OUTERR('w2w',ERRMSG)
-  GOTO 999
-925 WRITE(*,*)'error reading projection',I
-  GOTO 999
-926 WRITE(*,*)'too few projections'
-960 info = 7
-913 call outerr('w2w', 'error reading begin kpoints')
-  goto 999
-914 call outerr('w2w', 'error reading begin nnkpts')
-  goto 999
-941 call outerr('w2w', 'inconsistent numbers of k-points between nnkp and energy files')
-  goto 999
-942 call outerr('w2w', 'inconsistent numbers of k-points between vector and energy files')
-  goto 999
-
-!!!        Error reading file 'lapw2.def'
-!!!
-  WRITE (ERRMSG,9040) FNAME
-  CALL OUTERR('w2w',ERRMSG)
-  GOTO 999
-999 STOP 'w2w - Error'
-  !
-  !
-800 FORMAT(////,30X,50(1H-),/,33X,'S T R U C T U R A L   ', &
-         & 'I N F O R M A T I O N',/,30X,50(1H-),//)
-805 FORMAT(3X,'SUBSTANCE',20X,'= ',A80,/)
-806 FORMAT(A20)
-807 FORMAT(3I12)
-810 FORMAT(3X,'LATTICE',22X,'= ',A4)
-820 FORMAT(3X,'LATTICE CONSTANTS ARE',8X,'= ',3F12.7)
-840 FORMAT(3X,'NUMBER OF ATOMS IN UNITCELL  = ',I3)
-850 FORMAT(3X,'MODE OF CALCULATION IS',7X,'= ',A4)
-9000 FORMAT('can''t open definition file ',A40)
-9010 FORMAT('can''t open unit: ',I2)
-9020 FORMAT('       filename: ',A50)
-9030 FORMAT('         status: ',A,'  form: ',A)
-9040 FORMAT('Error reading file: ',A47)
-
-END program wf
+  call ERRCLR(ERRFN)
+  print "('W2W END')"
+end program wf
 
 
 !!/---
@@ -307,4 +262,4 @@ END program wf
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-04 18:39:17 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-26 16:22:44 assman@faepop71.tu-graz.ac.at>

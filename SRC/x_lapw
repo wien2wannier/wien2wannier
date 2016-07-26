@@ -2222,7 +2222,7 @@ theend
    endif
 breaksw
 
-### w2w stuff ###
+### wien2wannier stuff ###
 case w2w:
 set exe = w2w$cmplx$para
 set suf
@@ -2255,12 +2255,12 @@ cat <<EOF >$def
   6,'$file.outputwf$updn',   'unknown','formatted',  0
   7,'$file.amn$w90updn',     'unknown','formatted',  0
   8,'$file.mmn$w90updn',     'unknown','formatted',  0
-  9,'${scratch}$file.vector$sc$hf$soupdn', 'unknown','unformatted',9000
- 10,'$file.nnkp',	     'old',    'formatted',  0
+ 10,'${scratch}$file.vector$sc$hf$soupdn','old','unformatted',0
+ 11,'$file.nnkp',	     'old',    'formatted',  0
  12,'$file.eig$updn',	     'unknown','formatted',  0
  18,'$file.vsp$updn',        'old',    'formatted',  0
  20,'$file.struct',   	     'old',    'formatted',  0
- 50,'$file.energy$sc$hf$soupdn', 'old', 'formatted',  0
+ 50,'$file.energy$sc$hf$soupdn', 'old', 'formatted', 0
  51,'$file.fermi$updn'       'old',    'formatted',  0
 EOF
 breaksw
@@ -2271,12 +2271,12 @@ set soupdn=$updn
 if ( $so == so ) set soupdn=
 if ( $para == para ) set dopara=1
 cat <<EOF >$def
-  5,'$file.inwplot',          'old',     'formatted',          0
+  5,'$file.inwplot$updn',     'old',     'formatted',          0
   6,'$file.outputwplot$updn', 'unknown', 'formatted',          0
-  7,'$file.grid',             'unknown', 'formatted',          0
-  8,'$file.struct',           'old',     'formatted',          0
+  7,'$file.grid$updn',        'unknown', 'formatted',          0
  10,'${scratch}$file.vector$sc$hf$so$updn','old','unformatted',0
  18,'$file.vsp$updn',         'old',     'formatted',          0
+ 20,'$file.struct',   	      'old',     'formatted',          0
  21,'$file.psink$updn',       'unknown', 'formatted',          0
  22,'$file.psiarg$updn',      'unknown', 'formatted',          0
  31,'$file.inwf$updn',        'unknown', 'formatted',          0
@@ -2809,4 +2809,4 @@ if (-e $running) rm $running
 exit(1)
 
 
-## Time-stamp: <2016-02-09 11:44:25 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-07-19 17:11:26 assman@faepop71.tu-graz.ac.at>

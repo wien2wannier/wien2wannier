@@ -11,7 +11,7 @@ program convert_hamiltonian
   use wien2k,    only: gtfnam, errflg, errclr
   use kpoints,   only: get_kmesh_klist
   use clio,      only: croak
-  use const,     only: DPk, PI, BUFSZ
+  use const,     only: DPk, TAU, BUFSZ
   use structmod, only: struct_t, struct_read
 
   implicit none
@@ -72,7 +72,7 @@ program convert_hamiltonian
   do ik = 1,size(kpts,1)
      Hk = 0
      do ir = 1,nrpts
-        rdotk = 2*PI*dot_product(kpts(ik,:), rvec(ir,:))
+        rdotk = TAU*dot_product(kpts(ik,:), rvec(ir,:))
         ee = exp((0,1)*rdotk) / rweights(ir)
 
         Hk(:,:) = Hk(:,:) + ee*Hr(ir,:,:)
@@ -94,4 +94,4 @@ end program convert_hamiltonian
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2016-07-06 16:18:50 assman@faepop71.tu-graz.ac.at>

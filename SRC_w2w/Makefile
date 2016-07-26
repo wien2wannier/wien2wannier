@@ -4,6 +4,8 @@
 ###    make complex ... generate executable for the complex-valued version
 ###    make all     ... generate both the above
 ###    make clean   ... delete unnecessary files
+###
+### Copyright 2013-2016 Elias Assmann
 
 # FC ........... compiler name
 # FOPT ......... optimization flags
@@ -51,7 +53,7 @@ O_DIR := lib
 R_DIR := libr
 C_DIR := libc
 
-###############################################################################
+#############################################################################
 
 FFLAGS+= $(FGEN) $(FOPT) -I$(O_DIR)
 R_EXEC = $(DESTDIR)/$(R_EXECNAME)
@@ -60,7 +62,7 @@ C_EXEC = $(DESTDIR)/$(C_EXECNAME)
 ## site-specific configuration may overwrite the above
 -include ../make.sys
 
-#..............................................................................
+#............................................................................
 #
 #  convenience rules
 #
@@ -81,14 +83,6 @@ distclean: clean
 
 .PHONY: real complex all clean distclean
 
-#........................................................................
-#
-#  Object files common to both REAL and COMPLEX version
-#  (i.e., these are the same for REAL and COMPLEX)
-#
-OBJS = util_w2w.o dvbes1.o inverss.o outerr.o ph.o inth.o rotate.o	\
-       sphbes.o ylm.o mknam.o cputim.o
-
 # Comment about ‘cputim.o’: ‘siteconfig’ will copy one of the
 # ‘cputim_*.[fc]’ to ‘cputim.[fc]; the pattern rules below will then
 # make ‘cputim.o’
@@ -100,7 +94,7 @@ OBJS = util_w2w.o dvbes1.o inverss.o outerr.o ph.o inth.o rotate.o	\
 #  The two versions go to different directories so we can keep both
 #  versions around.
 #
-R_OBJS = modules.o almgen.o l2amn.o planew.o
+R_OBJS = modules_rc.o
 C_OBJS = $(R_OBJS)
 
 #........................................................................
@@ -109,20 +103,31 @@ C_OBJS = $(R_OBJS)
 #
 #  We must exclude those objects that are already named in R_OBJS
 #
-RC_OBJS = $(filter-out $(R_OBJS), $(mod_users))
+RC_OBJS = $(filter-out $(R_OBJS), $(modrc_users))
+
+#........................................................................
+#
+#  Object files common to both REAL and COMPLEX version
+#  (i.e., these are the same for REAL and COMPLEX)
+#
+OBJS = $(filter-out $(R_OBJS) $(RC_OBJS) cputim_%, \
+	$(patsubst %.F, %.o, $(wildcard *.F)) \
+	$(patsubst %.f, %.o, $(wildcard *.f)) \
+	cputim.o)
 
 #........................................................................
 #
 #  Dependency information for object files
 #
-mod_users = abc.o almgen.o atpar.o diracout.o dergl.o gaunt1.o		\
-	    gaunt2.o harmon.o main.o latgen.o l2amn.o l2mmn.o		\
-	    outwin.o rint13.o inouh.o planew.o read_vec.o radint.o	\
-	    rout.o rotdef.o
 
-util_users = abc.o atpar.o dergl.o dvbes1.o harmon.o inouh.o inth.o	\
-	     inverss.o latgen.o main.o modules.o outwin.o ph.o		\
-	     read_vec.o rint13.o rotate.o rotdef.o rout.o sphbes.o ylm.o
+## util_w2w.F:   utilities used in SRC_w2w, SRC_wplot, SRC_trig
+util_users   = mod_w2w.o modules.o modules_rc.o main.o
+## mod_w2w.f:    modules and procedures shared by SRC_w2w and SRC_wplot
+modw2w_users = modules.o modules_rc.o main.o
+## modules.f:    modules and procedures for SRC_w2w
+mod_users    = modules_rc.o main.o
+## modules_rc.f: modules and procedures for SRC_w2w -- real/complex
+modrc_users  = main.o
 
 #........................................................................
 #
@@ -165,15 +170,25 @@ $(C_DIR)/%.o: %.[fF] Makefile
 #  Dependencies
 #
 
-# Dependencies on ‘modules.o’; we know these files must have
-# real/complex versions
-$(foreach o, $(mod_users), $(R_DIR)/$o): $(R_DIR)/modules.o
-$(foreach o, $(mod_users), $(C_DIR)/$o): $(C_DIR)/modules.o
-
-# Dependencies on ‘w2w_util.o’; these files might have real/complex
-# versions, or not
+## Dependencies on ‘util_w2w.o’; these files might have real/complex
+## versions, or not
 $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
 	$(foreach o, $(util_users), $d/$o)): $(O_DIR)/util_w2w.o
 
+## Dependencies on ‘mod_w2w.o’; these files might have real/complex
+## versions, or not
+$(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
+	$(foreach o, $(modw2w_users), $d/$o)): $(O_DIR)/mod_w2w.o
 
-## Time-stamp: <2016-04-08 17:50:08 assman@faepop36.tu-graz.ac.at>
+## Dependencies on ‘modules.o’; these files might have real/complex
+## versions, or not
+$(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
+	$(foreach o, $(mod_users), $d/$o)): $(O_DIR)/modules.o
+
+## Dependencies on ‘modules_rc.o’; we know these files must have
+## real/complex versions
+$(foreach o, $(modrc_users), $(R_DIR)/$o): $(R_DIR)/modules_rc.o
+$(foreach o, $(modrc_users), $(C_DIR)/$o): $(C_DIR)/modules_rc.o
+
+
+## Time-stamp: <2016-07-21 15:17:00 assman@faepop71.tu-graz.ac.at>

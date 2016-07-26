@@ -14,7 +14,7 @@
 
 PROGRAM rephase
   use util,  only: line_count
-  use const, only: DPk, PI
+  use const, only: DPk, TAU
 
   implicit none
   character(50) seedname
@@ -177,7 +177,7 @@ PROGRAM rephase
               !set positive entries
               if (phases(j1,(j2-1)*10+j3).gt.2.5d-1) then
                  !integer conversion to index of phase mesh
-                 iphases(pcounttmp) = mod(int(phases(j1,(j2-1)*10+j3)*100d0),int(pi*100d0)) + 1
+                 iphases(pcounttmp) = mod(int(phases(j1,(j2-1)*10+j3)*50),int(TAU*50)) + 1
                  pcounttmp = pcounttmp + 1
               endif
            enddo
@@ -242,4 +242,4 @@ END PROGRAM rephase
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>
+!! Time-stamp: <2016-07-06 16:18:30 assman@faepop71.tu-graz.ac.at>
