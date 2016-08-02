@@ -27,7 +27,7 @@ module param
   public
 
   character(*), parameter, private :: &
-       rev_str = "$version: v1.0.0-207-gd6c131d$"
+       rev_str = "$version: v1.0.0-208-gbb851e9$"
   character(*), parameter, public  :: &
        wien2wannier_version = rev_str(11 : len (rev_str)-1)
 
@@ -407,7 +407,7 @@ subroutine diracout(stru, jatom, V, eh, nqk, val, slo, nodes)
   nuc=I
   write(unit_out,*)'nuc=',nuc
   if (nuc <= 0) then
-     dfl = sqrt(nqk*nqk - stru%Z(jatom)**2 / dvc**2))
+     dfl = sqrt(nqk*nqk - stru%Z(jatom)**2 / dvc**2)
   else
      dfl=nqk*nqk
      do i=1,nuc
@@ -840,4 +840,4 @@ end module     Ylm_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-08-02 14:10:55 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-02 14:52:58 assman@faepop71.tu-graz.ac.at>
