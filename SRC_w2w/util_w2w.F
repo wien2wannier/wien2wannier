@@ -344,7 +344,7 @@ contains
        if( iostat < 0 ) ioEndFlag = .TRUE.
     end do
     rewind(fid)
-  END FUNCTION line_count
+  end function line_count
 
   subroutine paropen(unit, file, iproc, iloop, iostat, status, form)
     integer,      intent(in)            :: unit
@@ -993,6 +993,7 @@ module structmod
      character(len= 4) :: lattic       ! lattice type
      integer           :: Nneq, Nat    ! number of noneq. and total atoms
      character(len= 4) :: mode         ! ‘RELA’ or ‘NREL’
+     logical           :: rel          ! rel.?
      real(DPk)         :: a(3)         ! lattice constants
      real(DPk)         :: alpha(3)     ! angles
      real(DPk)         :: gbas(3,3)    ! reciprocal lattice vectors
@@ -1002,27 +1003,35 @@ module structmod
      real(DPk)         :: stru2frac(3,3)!‘struct’ to “fractional” coords.
      logical           :: ortho, prim  ! orthogonal axes?  primitive latt.?
      real(DPk)         :: vol          ! u.c. volume
-     integer, allocatable, dimension(:,:,:) &
-          &            :: rsym, ksym   ! symmetry operations (3×3×N — can be
-                                       ! different!) as ‘outputkgen’
-     real(DPk), allocatable, dimension(:,:) &
-          &            :: rtrans       ! translational part of symmetries
-                                       ! (3×N)
 
+     ! Rotational part of the symmetries in R-space and k-space
+     integer,   allocatable :: rsym(:,:,:), ksym(:,:,:)
+     ! Translational part of the symmetries in R-space
+     real(DPk), allocatable :: rtrans(:,:)
+     ! Symmetry transformations that transform the position of one
+     ! atom to the corresponding position of an equivalent atom
+     integer,   allocatable :: rotij(:,:,:)
+     real(DPk), allocatable :: transij(:,:)
+
+     real(DPk),         allocatable :: Z(:)     ! atomic number
+     character(len=10), allocatable :: aname(:) ! atom name
      ! positions (3 × Nat); local rotation matrices (3 × 3 × Nneq)
      real(DPk),         allocatable :: pos(:,:), locrot(:,:,:)
+     ! multiplicity, ‘isplit’ parameter
+     integer,           allocatable :: mult(:), isplit(:)
      ! neq2at(ineq) is the atom numer corresponding to ineq
-     integer,           allocatable :: mult(:), isplit(:), npt(:), neq2at(:)
+     integer,           allocatable :: neq2at(:)
      ! at2neq(iat)%p is an array of the ‘ineq’s corresponding to iat
      type(intptr),      allocatable :: at2neq(:)
-     character(len=10), allocatable :: aname(:)
-     real(DPk),         allocatable :: r0(:), rmt(:), Z(:)
+     ! radial mesh: first point, log. step, muffin-tin radius; #points
+     real(DPk),         allocatable :: R0(:), dx(:), RMT(:)
+     integer,           allocatable :: Npt(:)
   end type struct_t
 contains
   subroutine struct_read_unit(lun, stru)
     use const, only: TAU, SQ3, ORTHO_TEST
     use clio,  only: croak
-    use util,  only: inverse3x3
+    use util,  only: inverse3x3, lowercase
 
     integer,        intent(in)  :: lun
     type(struct_t), intent(out) :: stru
@@ -1041,12 +1050,23 @@ contains
     read(lun, '(13X, A)')     stru%mode
     read(lun, '(6F10.6)')     stru%a, stru%alpha
 
+    relativ: select case(lowercase(stru%mode))
+    case ('rela')
+       stru%rel = .true.
+    case ('nrel')
+       stru%rel = .false.
+    case default
+       call croak('MODE should be ‘RELA’ or ‘NREL’, not ‘' &
+            //trim(stru%mode)//'’')
+    end select relativ
+
     where (abs(stru%alpha) < 1e-5) stru%alpha = 90
 
     N = stru%Nneq
-    allocate(stru%mult(N), stru%isplit(N), stru%aname (N), &
-         &   stru%npt (N), stru%at2neq(N), stru%Z     (N), &
-         &   stru%r0  (N), stru%rmt   (N), stru%locrot(3,3,N))
+    allocate(stru%mult(N), stru%isplit(N), stru%aname(N), &
+         &   stru%Z   (N), stru%at2neq(N), stru%RMT  (N), &
+         &   stru%R0  (N), stru%Npt   (N), stru%dx   (N), &
+         &   stru%locrot(3,3,N))
 
     countat: do iat = 1, stru%Nneq
        read(lun,*) ! first position
@@ -1056,16 +1076,25 @@ contains
           read(lun,*)
        end do
        read(lun, '(A, 5X, I5, 5X, F10.8, 5X, F10.5, 5X, F5.2)') &
-            stru%aname(iat), stru%npt(iat), stru%r0(iat), stru%rmt(iat), &
+            stru%aname(iat), stru%Npt(iat), stru%R0(iat), stru%RMT(iat), &
             stru%Z(iat)
        read(lun,'(20X, 3F10.7)') stru%locrot(1, :, iat)
        read(lun,'(20X, 3F10.7)') stru%locrot(2, :, iat)
        read(lun,'(20X, 3F10.7)') stru%locrot(3, :, iat)
     end do countat
 
+    ! The logarithmic step is given by the minimal (R0) and maximal
+    ! (RMT) radii, and the number of intervals
+    stru%dx  = log(stru%RMT / stru%R0) / (stru%Npt-1)
+    ! Now we re-set RMT from the inverse of the above — in tests with
+    ! typical numbers, the difference is minute (~ 10^-15), but it
+    ! seems to be Wien2k convention to do this
+    stru%rmt = stru%R0 * exp(stru%dx * (stru%Npt-1))
+
     stru%Nat = sum(stru%mult)
     N = stru%Nat
-    allocate(stru%pos(3, N), stru%neq2at(N))
+    allocate( stru%pos(3, N), stru%neq2at(N), &
+         &    stru%rotij(3, 3, N), stru%transij(3, N))
 
     N=0
     do iat = 1, stru%Nneq
@@ -1236,7 +1265,10 @@ contains
     ! make_ksym() needs gbas and friends
     call read_rsym()
     call make_ksym()
+    call rotdef()
+
   contains
+
     subroutine read_rsym()
 !!! This is from SRC_kgen (main.f, addinv.f)
       integer :: Nrsym, i, id
@@ -1298,7 +1330,106 @@ contains
          end do
       end if
     end subroutine make_ksym
-  end subroutine struct_read_unit
+
+    subroutine rotdef
+      !     The matrices  rotij(3,3,index)  transform the position of an
+      !     atom to its corresponding position of an equivalent atom.
+      use const,     only: R8
+      use util,      only: string
+
+      implicit none
+
+      real(R8) ::   x(3), x1(3)
+      integer  ::   i, m, idx, jdx, jatom, Ncount
+
+      real(R8), parameter :: &
+           TOL=1e-7_R8, TOL2=1.5_R8*TOL, ONE=1_R8, HALF=0.5_R8
+      integer, parameter :: &
+           xy(2) = (/1, 2/), xz(2) = (/1, 3/), yz(2) = (/2, 3/)
+
+      idx=0
+      ncount=0
+
+      Nneq: do jatom = 1,stru%Nneq
+         jdx = idx+1
+         mult: do m = 1,stru%mult(jatom)
+            idx = idx+1
+
+            sym: do i = 1,size(stru%rsym, 3)
+               x = matmul(transpose(stru%rsym(:,:, i)), stru%pos(:, jdx))
+               x = x + stru%rtrans(:, i)
+
+               x1 = mod(abs(x - stru%pos(:, idx))+TOL, ONE) - TOL
+
+               if(maxval(abs(x1)) < TOL2) then
+                  Ncount = Ncount+1
+                  stru%transij(:, idx) = stru%rtrans(:, i)
+                  stru%rotij(:,:, idx) = stru%rsym(:,:, i)
+                  cycle mult
+               end if
+
+               ! check positions for centered lattices
+               B: if (stru%lattic == 'B') then
+                  x1 = mod(x1 + HALF+TOL, ONE) - TOL
+
+                  if(maxval(abs(x1)) < TOL2) then
+                     Ncount = Ncount+1
+
+                     stru%transij(:, idx) = stru%rtrans(:, i)
+                     stru%rotij(:,:, idx) = stru%rsym(:,:, i)
+                     cycle mult
+                  end if
+               end if B
+
+               FXY: if (stru%lattic == 'F' .or. stru%lattic == 'CXY') then
+                  x1(xy) = mod(x1(xy) + HALF+TOL, ONE) - TOL
+
+                  if(maxval(abs(X1)) < TOL2) then
+                     Ncount = Ncount+1
+                     stru%transij(:, idx) = stru%rtrans(:, i)
+                     stru%rotij(:,:, idx) = stru%rsym(:,:, i)
+                     cycle mult
+                  end if
+
+                  x1(xy) = mod(x1(xy) + HALF, ONE)
+               end if FXY
+
+               FXZ: if (stru%lattic == 'F' .or. stru%lattic == 'CXZ') then
+                  x1(xz) = mod(x1(xz) + HALF+TOL, ONE) - TOL
+
+                  if(maxval(abs(x1)) < TOL2) then
+                     Ncount = Ncount+1
+                     stru%transij(:, idx)=stru%rtrans(:, i)
+                     stru%rotij(:,:, idx)=stru%rsym(:,:, i)
+                     cycle mult
+                  end if
+                  x1(xz)=mod(x1(xz)+HALF, ONE)
+               end if FXZ
+
+               FYZ: if(stru%lattic == 'F' .or. stru%lattic == 'CYZ') then
+                  x1(yz)=mod(x1(yz) + HALF+TOL, ONE) - TOL
+
+                  if(maxval(abs(x1)) < TOL2) then
+                     Ncount = Ncount+1
+                     stru%transij(:,idx) = stru%rtrans(:, i)
+                     stru%rotij(:,:,idx) = stru%rsym(:,:, i)
+                     cycle mult
+                  end if
+               end if FYZ
+            end do sym
+
+            call croak("error in ROTDEF: no symmetry operation found for &
+                 &atoms "//trim(string(jatom))//" and "//trim(string(idx))  &
+                 &//", positions "//trim(string(stru%pos(:, jdx)))//" and " &
+                 &//trim(string(stru%pos(:, idx))))
+         end do mult
+      end do Nneq
+
+      if (Ncount /= idx) call croak('error in ROTDEF: &
+           &ROTIJ not defined for all atoms of basis.  NCOUNT = ' &
+           &// trim(string(Ncount)))
+    end subroutine rotdef
+end subroutine struct_read_unit
 
   subroutine struct_read_fname(fname, stru)
     use util, only: newunit
@@ -2047,4 +2178,4 @@ end module reallocate
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-26 14:17:51 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-02 13:27:58 assman@faepop71.tu-graz.ac.at>

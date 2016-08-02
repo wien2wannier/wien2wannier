@@ -26,7 +26,6 @@ program wf_r
        &           idx_wann, iproc
 
   !! procedure includes
-  use locdef_m
   use main_m
 
   implicit none
@@ -71,4 +70,4 @@ end program wf_r
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-20 15:03:40 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-07-26 16:53:02 assman@faepop71.tu-graz.ac.at>

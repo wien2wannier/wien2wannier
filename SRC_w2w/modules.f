@@ -16,8 +16,6 @@
 !!
 !! bessel:  rj(:,:), ri_mat(:,:), init_bessel()
 !!
-!! gener:   BR1(3,3), BR2(3,3)
-!!
 !! loabc:   alo(0:LOmax, Nloat, Nrf)
 !!
 !! lolog:   n_rad(0:lmax2), ilo(0:lomax), loor(0:lomax), lapw(0:lmax2),
@@ -28,11 +26,6 @@
 !!
 !! radfu:   RF1(Nrad,0:Lmax2,nrf), RF2(Nrad,0:Lmax2,Nrf)
 !!
-!! struct:  init_struct(), nat, iord, lattic, cform, title, irel, rel,
-!!          AA,BB,CC, VOL, pia(3), alpha(3), aname(:), R0(:), DX(:),
-!!          RMT(:), zz(:), mult(:), jrj(:), v(:), pos(:,:), trans(:,:),
-!!          transij(:,:), rotloc(:,:,:), rotij(:,:,:), iz(:,:,:)
-!!
 !! w2w:     unit_amn=7,  unit_mmn  =8, unit_nnkp=11, unit_eig=12,
 !!          unit_ene=50, unit_fermi=51, iBlock=128, NMAT, NDIF
 !!
@@ -41,8 +34,8 @@
 !!
 !! Procedure modules:
 !!
-!!    abc_m, atpar_m, gaunt1_m, gaunt2_m, harmon_m, latgen_m,
-!!    outwin_m, radint_m, rint13_m, rotate_m, rotdef_m
+!!    abc_m, atpar_m, gaunt1_m, gaunt2_m, harmon_m, outwin_m,
+!!    radint_m, rint13_m
 !!
 !!\===============================================
 
@@ -56,7 +49,7 @@ module w2w
   ! Optimize IBLOCK for your hardware (32-255)
   integer, parameter :: iBlock=128
 
-  integer :: NMAT=0, NDIF=0
+  integer :: NMAT=0
 end module w2w
 
 
@@ -78,101 +71,6 @@ contains
     YR=0
   end subroutine init_assleg
 end module assleg
-
-
-module struct
-  use const, only: R8
-  implicit none
-  private :: R8
-
-  public; save
-
-  logical                    :: rel
-  real(R8)                   :: AA,BB,CC,VOL,pia(3),alpha(3)
-  real(R8),allocatable       :: R0(:),DX(:),RMT(:),zz(:),rotloc(:,:,:),v(:)
-  real(R8),allocatable       :: trans(:,:)
-  real(R8),allocatable       :: pos(:,:)
-  real(R8),allocatable       :: rotij(:,:,:),transij(:,:)
-  character(4)               :: lattic,irel,cform
-  character(80)              :: title
-  character(10), allocatable :: aname(:)
-  integer                    :: nat,iord
-  integer,allocatable        :: mult(:),jrj(:)
-  integer,allocatable        :: iz(:,:,:)
-
- contains
-  subroutine init_struct
-    use param,      only: unit_struct, unit_out
-    use w2w,        only: Ndif
-    use reallocate, only: realloc
-    use const,      only: R8
-
-    implicit none
-
-    integer  :: ios, inum, isplit, iatnr
-    real(R8) :: test
-    integer  :: index, i, j, j1, j2, m, jatom
-
-    parameter (test=1.e-5_R8)
-
-    read (unit_struct,1000) title
-    read (unit_struct,1010) lattic,nat,cform,irel
-    REL=.true.
-    if(IREL.eq.'NREL') REL=.false.
-    allocate(aname(nat),mult(nat),jrj(nat),r0(nat),dx(nat),rmt(nat))
-    allocate(zz(nat),rotloc(3,3,nat),v(nat))
-    v=0.0d0
-    allocate (pos(3,48*nat))
-    read (unit_struct,1020) aa,bb,cc,alpha(1),alpha(2),alpha(3)
-    if(abs(ALPHA(1)).lt.test) ALPHA(1)=90
-    if(abs(ALPHA(2)).lt.test) ALPHA(2)=90
-    if(abs(ALPHA(3)).lt.test) ALPHA(3)=90
-    INDEX=0
-    do jatom=1,NAT
-     INDEX=INDEX+1
-     read(unit_struct,1030,iostat=ios) &
-          iatnr, (pos(j,index),j=1,3), mult(jatom), isplit
-     if(ios /= 0) then
-      write(unit_out,*) iatnr,(pos(j,index),j=1,3),mult(jatom)
-      write(unit_out,*) 'ERROR IN STRUCT FILE READ'
-      stop
-      endif
-      if (mult(jatom) .eq. 0) then
-       write (unit_out,6000) jatom, index, mult(jatom)
-       stop
-       endif
-       do m=1,mult(jatom)-1
-        index=index+1
-        read(unit_struct,1031)iatnr,(pos(j,index),j=1,3)
-       enddo
-       read(unit_struct,1050) aname(jatom),jrj(jatom),r0(jatom),rmt(jatom), &
-            zz(jatom)
-       dx(jatom)=log(rmt(jatom)/r0(jatom)) / (jrj(jatom)-1)
-       rmt(jatom)=r0(jatom)*exp( dx(jatom)*(jrj(jatom)-1) )
-       read(unit_struct,1051) ((rotloc(i,j,jatom),i=1,3),j=1,3)
-    enddo
-    ndif=index
-    call realloc(pos, (/ 3, ndif /))
-    allocate(rotij(3,3,ndif),transij(3,ndif))
-    read(unit_struct,1151)iord
-    allocate(iz(3,3,iord),trans(3,iord))
-    do j=1,iord
-       read(unit_struct,1101)((iz(j1,j2,j),j1=1,3),trans(j2,j),j2=1,3),inum
-    enddo
-
-1000 format(A80)
-1010 format(A4,23X,I3,1x,a4,/,13X,A4,18X,A4)
-1020 format(6F10.7,10X,F10.7)
-1030 format(4X,I4,4X,F10.7,3X,F10.7,3X,F10.7,/,15X,I2,17X,I2)
-1031 format(4X,I4,4X,F10.7,3X,F10.7,3X,F10.7)
-1050 format(A10,5X,I5,5X,F10.9,5X,F10.5,5X,F10.5)
-1051 format(20X,3F10.8)
-1101 format(3(3I2,F11.8/),I8)
-1151 format(I4)
-6000 format(///,3X,'ERROR IN LAPW0 : MULT(JATOM)=0 ...', &
-          /, 20X,'JATOM=',I3,3X,'INDEX=',I3,3X,'MULT=',I3)
-  end subroutine init_struct
-end module struct
 
 
 module bessel
@@ -238,13 +136,12 @@ module Amn_Mmn
   complex(C16), allocatable :: overlap(:,:,:), c(:,:,:)
 
 contains
-  subroutine init_Amn_Mmn(nbands,npair,nproj)
+  subroutine init_Amn_Mmn(Nbands, Npair, Nproj, Nat)
     use param, only: Lmax2
-    use w2w,   only: Ndif
 
-    integer, intent(in) :: nbands,npair,nproj
+    integer, intent(in) :: Nbands, Npair, Nproj, Nat
 
-    allocate(overlap(nbands,nbands,npair), c(nproj,(LMAX2+1)*(LMAX2+1),ndif))
+    allocate( overlap(Nbands, Nbands, Npair), c(Nproj, (LMAX2+1)**2, Nat) )
 
     overlap = 0; c = 0
   end subroutine init_Amn_Mmn
@@ -278,17 +175,6 @@ module lolog
   integer, public :: Nlo, Nlov, Nlon, n_rad(0:lmax2), ilo(0:lomax)
   logical, public :: loor(0:lomax), lapw(0:lmax2)
 end module lolog
-
-
-module gener
-  use const, only: R8
-
-  implicit none
-  private; save
-
-  ! transformation between u.c. and cartesian coordinates
-  real(R8), public :: BR1(3,3), BR2(3,3)
-end module gener
 
 
 module atspdt
@@ -329,32 +215,33 @@ end module radfu
 
 !---------------------------  Procedure modules  ---------------------------
 module     abc_m; contains
-subroutine abc(l,jatom,pei,pi12lo,pe12lo,jlo,lapw)
+subroutine abc(l, rmt, pei, pi12lo, pe12lo, jlo, lapw)
   use param,  only: unit_out, Nrf
-  use struct, only: RMT
   use loabc,  only: alo
   use atspdt, only: P, DP
   use const,  only: R8
 
   implicit none
 
-  integer,  intent(in) :: l, jatom, jlo
-  real(R8), intent(in) :: pei, pi12lo, pe12lo
+  integer,  intent(in) :: l, jlo
+  real(R8), intent(in) :: rmt, pei, pi12lo, pe12lo
   logical,  intent(in) :: lapw
 
-  integer  :: irf, jrf
+  integer  :: irf
   real(R8) :: xac, xbc, clo, alonorm
-  !---------------------------------------------------------------------
-  !
+
+  character(len=*), parameter :: &
+       fmt_alo = "('LO COEFFICIENT: l,A,B,C  ',i2,5X,6F12.5)"
+
   do irf=1,nrf
      alo(l,jlo,irf)=0.d0
   end do
   if (lapw) then
      irf=2+jlo
      xac=p(l,irf)*dp(l,2)-dp(l,irf)*p(l,2)
-     xac=xac*rmt(jatom)*rmt(jatom)
+     xac= xac * rmt**2
      xbc=p(l,irf)*dp(l,1)-dp(l,irf)*p(l,1)
-     xbc=-xbc*rmt(jatom)*rmt(jatom)
+     xbc= -xbc * rmt**2
      clo=xac*(xac+2.0D0*pi12lo)+xbc* &
           (xbc*pei+2.0D0*pe12lo)+1.0D0
      clo=1.0D0/sqrt(clo)
@@ -363,7 +250,7 @@ subroutine abc(l,jatom,pei,pi12lo,pe12lo,jlo,lapw)
      alo(l,jlo,1)=clo*xac
      alo(l,jlo,2)=clo*xbc
      alo(l,jlo,irf)=clo
-     write(unit_out,10) l, alo(l,jlo,1), alo(l,jlo,2), alo(l,jlo,irf)
+     write(unit_out, fmt_alo) l, alo(l,jlo,1), alo(l,jlo,2), alo(l,jlo,irf)
   else
      if (jlo.eq.1) then
         alonorm=sqrt(1.d0+(P(l,1)/P(l,2))**2 * PEI)
@@ -375,49 +262,46 @@ subroutine abc(l,jatom,pei,pi12lo,pe12lo,jlo,lapw)
         alo(l,jlo,1)=1.d0/xac
         alo(l,jlo,1+jlo)=xbc/xac
      end if
-     write (unit_out,10)l,(alo(l,jlo,jrf),jrf=1,nrf)
+     write (unit_out, fmt_alo) l, alo(l, jlo, :)
   end if
-10 format ('LO COEFFICIENT: l,A,B,C  ',i2,5X,6F12.5)
   return
 end subroutine abc
 end module     abc_m
 
 
 module     outwin_m; contains
-subroutine outwin(REL,V,RNOT,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
+subroutine outwin(stru, jatom, V, EH, FL, VAL, SLO, Nodes)
   !         Integration der skalarrel. Schroedingergleichung
   !
   !    Rydberg Einheiten
 
-  use param, only: Nrad
-  use const, only: clight, R8
-  use uhelp, only: A, B
+  use param,     only: Nrad
+  use const,     only: clight, R8
+  use uhelp,     only: A, B
+  use structmod, only: struct_t
 
   implicit none
 
-  real(R8) :: EH, fl, Z, V(Nrad), Rnot, dh, val, slo
-  integer  :: jri, nodes
-  logical  :: rel
-
   !  Input:
+  !    stru  struct type
+  !    jatom number of the atom
   !    EH    Energie in Hartree
   !    FL    Drehimpuls
-  !    Z     Kernladung
   !    V     rad.sym. Potential in Hartree
-  !    RNOT  erster radialer Netzpunkt
-  !    DH    log. Schrittweite
-  !    JRI   Anzahl radialer Netzpunkte
-  intent(in)  :: EH, fl, Z, V, Rnot, dh, jri
+  type(struct_t), intent(in) :: stru
+  real(R8),       intent(in) :: EH, fl, V(Nrad)
+  integer,        intent(in) :: jatom
 
   !  Output:
   !    VAL,SLO:  Wellenfunktion und Steigung am Kugelrand
   !    Nodes:    Anzahl Knoten
-  intent(out) :: val, slo, nodes
+  real(R8), intent(out) :: val, slo
+  integer,  intent(out) :: nodes
 
   real(R8) :: D(2,3), Rnet(Nrad), C, E
   real(R8) :: zz, fllp1, s, sf, f0, aa, r, drdi, dg1,dg2,dg3, df1, df2, df3
   real(R8) :: phi, u, x, y, det, b1,b2
-  integer  :: iiij, k
+  integer  :: i, k
 
   real(R8), parameter :: H83 = 8/3._R8
   real(R8), parameter :: R83SQ = 64/9._R8
@@ -429,30 +313,30 @@ subroutine outwin(REL,V,RNOT,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
   ! Hartree in Ryd
   E = 2*EH
 
-  do iiij=1,JRI
-     RNET(iiij)=RNOT*(exp(DH*(iiij-1)))
+  do i = 1,stru%Npt(jatom)
+     Rnet(i) = stru%R0(jatom) * exp(stru%dx(jatom) * (i-1))
   end do
 
   Nodes = 0
-  ZZ = Z + Z
+  ZZ = 2*stru%Z(jatom)
 
-  C = merge(2*clight, 1e10_R8, rel)
+  C = merge(2*clight, 1e10_R8, stru%rel)
 
   FLLP1 = FL*(FL + 1)
 
-  IF (Z .LT. 0.9D0) THEN
+  if (stru%Z(jatom) .lt. 0.9D0) then
      S = FL+1.d0
      SF = FL
      F0 = FL/C
-  ELSE
+  else
      AA = ZZ/C
      S = DSQRT(FLLP1 + 1.D0 - AA*AA)
      SF = S
      F0 = G0*(S - 1.D0)/AA
-  ENDIF
+  endif
   do K = 1,3
      R = RNET(K)
-     DRDI = DH*R
+     DRDI = stru%dx(jatom)*R
      A(K) = (R**S)*G0
      B(K) = (R**SF)*F0
      D(1,K) = DRDI*A(K)*S/R
@@ -465,9 +349,9 @@ subroutine outwin(REL,V,RNOT,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
   DF1 = D(2,1)
   DF2 = D(2,2)
   DF3 = D(2,3)
-  do K = 4, JRI
+  do K = 4, stru%Npt(jatom)
      R = RNET(K)
-     DRDI = DH*R
+     DRDI = stru%dx(jatom)*R
 
      !       Faktor zwei vor V wegen Hartree-Rydberg !
      PHI = (E - 2.d0*V(K)/R)*DRDI/C
@@ -479,7 +363,7 @@ subroutine outwin(REL,V,RNOT,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
      B2 = B(K-1)*H83 + R1*DF1 + R2*DF2 + R3*DF3
      A(K) = (B1*(H83-X) + B2*U)/DET
      B(K) = (B2*(H83+X) - B1*Y)/DET
-     IF (A(K)*A(K-1) .LT. 0D0) Nodes = Nodes + 1
+     if (A(K)*A(K-1) .lt. 0D0) Nodes = Nodes + 1
      DG1 = DG2
      DG2 = DG3
      DG3 = U*B(K) - X*A(K)
@@ -488,73 +372,72 @@ subroutine outwin(REL,V,RNOT,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
      DF3 = X*B(K) - Y*A(K)
   end do
 
-  do iiij=1,JRI
-     B(iiij)=B(iiij)*c/2.d0
-  end do
-  !
-  VAL = A(JRI)/RNET(JRI)
-  SLO = DG3/(DH*RNET(JRI))
-  SLO = (SLO-VAL)/RNET(JRI)
+  B(1:stru%Npt(jatom))=B(1:stru%Npt(jatom))*c/2
+
+  VAL = A(stru%Npt(jatom))  / RNET(stru%Npt(jatom))
+  SLO = DG3/(stru%dx(jatom) * RNET(stru%Npt(jatom)))
+  SLO = (SLO-VAL) / RNET(stru%Npt(jatom))
 end subroutine outwin
 end module outwin_m
 
 
 module     rint13_m; contains
-subroutine rint13(A,B,X,Y,S,JATOM)
+subroutine rint13(stru, jatom, A, B, X, Y, S)
   !     PERFORM RADIAL INTEGRALS REQUIRED BY BHDK13
   !                            D.D.KOELLING
 
-  use param,  only: Nrad
-  use struct, only: rel, dx, jrj, R0
-  use const,  only: clight, R8
+  use param,     only: Nrad
+  use const,     only: clight, R8
+  use structmod, only: struct_t
 
   implicit none
 
-  integer,  intent(in)  :: jatom
-  real(R8), intent(in)  :: A(Nrad), B(Nrad), X(Nrad), Y(Nrad)
-  real(R8), intent(out) :: S
+  type(struct_t), intent(in)  :: stru
+  integer,        intent(in)  :: jatom
+  real(R8),       intent(in)  :: A(Nrad), B(Nrad), X(Nrad), Y(Nrad)
+  real(R8),       intent(out) :: S
 
   integer  :: j, j1
   real(R8) :: d, cin, r,r1, z2,z4, p1,p2
 
-  cin = merge(1/clight**2, 1e-22_R8, rel)
+  cin = merge(1/clight**2, 1e-22_R8, stru%rel)
 
-  D=EXP(DX(JATOM))
+  D=exp(stru%DX(JATOM))
 
-  J=3-MOD(JRJ(JATOM),2)
+  J=3-mod(stru%Npt(JATOM),2)
   J1=J-1
-  R=R0(JATOM)*(D**(J-1))
+  R=stru%R0(JATOM)*(D**(J-1))
   R1=R/D
   Z4=0
   Z2=0
 10 Z4=Z4+R*(A(J)*X(J)+CIN*B(J)*Y(J))
   R=R*D
   J=J+1
-  IF(J.GE.JRJ(JATOM)) GOTO 20
+  if(J >= stru%Npt(JATOM)) goto 20
   Z2=Z2+R*(A(J)*X(J)+CIN*B(J)*Y(J))
   R=R*D
   J=J+1
-  GOTO 10
-20 P1=R0(JATOM)*(A(1)*X(1)+CIN*B(1)*Y(1))
+  goto 10
+20 P1=stru%R0(JATOM)*(A(1)*X(1)+CIN*B(1)*Y(1))
   P2=R1*(A(J1)*X(J1)+CIN*B(J1)*Y(J1))
   S=2*Z2+4*Z4+R*(A(J)*X(J)+CIN*B(J)*Y(J))+P2
-  S=(DX(JATOM)*S+P1)/3.0D0
-  IF(J1.GT.1) S=S+0.5D0*DX(JATOM)*(P1+P2)
+  S=(stru%DX(JATOM)*S+P1)/3.0D0
+  if(J1.gt.1) S=S+0.5D0*stru%DX(JATOM)*(P1+P2)
 end subroutine rint13
 end module     rint13_m
 
 
 module     atpar_m; contains
-subroutine atpar(JATOM, itape, jtape)
+subroutine atpar(stru, jatom, itape, jtape)
 !!! calculate radial functions for atoms JATOM
 
-  use param,  only: unit_out, Nrad, Nloat, lomax, Lmax2
-  use struct, only: JRJ, mult, Nat, aname, R0, dx, zz, rel
-  use lolog,  only: nlo,nlov,nlon,loor,ilo,lapw,n_rad
-  use atspdt, only: P, DP
-  use const,  only: R8, clight
-  use uhelp,  only: A, B
-  use radfu,  only: RF1, RF2
+  use param,      only: unit_out, Nrad, Nloat, lomax, Lmax2
+  use structmod,  only: struct_t
+  use lolog,      only: nlo,nlov,nlon,loor,ilo,lapw,n_rad
+  use atspdt,     only: P, DP
+  use const,      only: R8, clight
+  use uhelp,      only: A, B
+  use radfu,      only: RF1, RF2
 
   !! procedure includes
   use diracout_m
@@ -565,7 +448,8 @@ subroutine atpar(JATOM, itape, jtape)
 
   implicit none
 
-  integer, intent(in) :: jatom, itape, jtape
+  type(struct_t), intent(in) :: stru
+  integer,        intent(in) :: jatom, itape, jtape
 
   real(R8) :: VR(Nrad), AE(Nrad), BE(Nrad)
   logical  :: rlo(1:nloat, 0:lomax)
@@ -579,11 +463,11 @@ subroutine atpar(JATOM, itape, jtape)
   read(jtape, '(3X)')
   read(jtape, '(15X,I3//)') i ! i is not used, but apparently necessary for
   read(jtape, '(/)')          ! correct reading
-  read(jtape, '(3X,4E19.12)') VR(1 : JRJ(jatom))
+  read(jtape, '(3X,4E19.12)') VR(1 : stru%Npt(jatom))
   read(jtape, '(/)')
   read(jtape, '(///)')
 
-  VR(1:JRJ(jatom)) = VR(1:JRJ(jatom)) / 2
+  VR(1:stru%Npt(jatom)) = VR(1:stru%Npt(jatom)) / 2
 
   write(unit_out,*)'ATPAR'
   nlo=0
@@ -595,11 +479,11 @@ subroutine atpar(JATOM, itape, jtape)
   atoms: do I=1,JATOM
      read(itape)E
      read(itape)elo
-     if(i.eq.jatom) then
+     if(i == jatom) then
         do l=0,lmax2
            lapw(l)=.true.
-           if(e(l).gt.150.) then
-              e(l)=e(l)-200.d+0
+           if(e(l) > 150) then
+              e(l)=e(l)-200
               lapw(l)=.false.
            endif
         enddo
@@ -608,38 +492,38 @@ subroutine atpar(JATOM, itape, jtape)
         loor(l)=.false.
         do k=1,nloat
            rlo(k,l)=.false.
-           if (i.eq.jatom) then
-              if (elo(l,k).lt.(995.d+0)) then
+           if (i == jatom) then
+              if (elo(l,k) < 995) then
                  ilo(l)=ilo(l)+1
-                 nlo=nlo+((2*l+1))*mult(i)
-                 if(.not.lapw(l).and.k.eq.1) cycle
-                 if(k.eq.nloat) then
+                 nlo = nlo + (2*l+1) * stru%mult(i)
+                 if(.not. lapw(l).and.k == 1) cycle
+                 if(k == nloat) then
                     rlo(ilo(l),l)=.true.
                     cycle
                  endif
                  loor(l)=.true.
               endif
            else
-              if (elo(l,k).lt.(995.d+0)) nlov=nlov+((2*l+1))*mult(i)
+              if (elo(l,k) < 995) nlov = nlov + (2*l+1)*stru%mult(i)
            endif
         end do
      end do LOs
   end do atoms
 
-  if(jatom /= nat) then
-     do I=JATOM+1,NAT
+  if(jatom /= stru%Nneq) then
+     do I=JATOM+1,stru%Nneq
         read(itape) EMIST
         read(itape) EMIST
         do l=0,lomax
            do k=1,nloat
-              if (emist(l,k).lt.(995.0D+0))  &
-                   nlon=nlon+((2*l+1))*mult(i)
+              if (emist(l,k) < 995)  &
+                   nlon = nlon + (2*l+1)*stru%mult(i)
            end do
         end do
      end do
   end if
 
-  write(unit_out, "(/10X,'ATOMIC PARAMETERS FOR ',A10/)") ANAME(JATOM)
+  write(unit_out, "(/10X,'ATOMIC PARAMETERS FOR ',A10/)") stru%aname(JATOM)
   write(unit_out, "(10X,' ENERGY PARAMETERS ARE',7F7.2)") E
   write(unit_out, "(/11X,1HL,5X,4HU(R),10X, 5HU'(R),9X,5HDU/DE,8X,6HDU'/DE,6X,7HNORM-U')")
 
@@ -652,11 +536,11 @@ subroutine atpar(JATOM, itape, jtape)
      !     DELE IS THE UPWARD AND DOWNWARD ENERGY SHIFT IN HARTREES
 
      E1=EI-DELE
-     call OUTWIN(REL,VR,R0(JATOM),DX(JATOM),JRJ(JATOM),E1,            &
-          FL,UVB,DUVB,NODEL,ZZ(jatom))
-     call RINT13(A,B,A,B,OVLP,JATOM)
+     ! outwin() sets A(:), B(:)!
+     call outwin(stru, jatom, Vr, E1, FL, UVB, DUVB, NODEL)
+     call rint13(stru, jatom, A, B, A, B, OVLP)
      TRX=1.0D0/sqrt(OVLP)
-     IMAX=JRJ(JATOM)
+     IMAX=stru%Npt(JATOM)
      do M=1,IMAX
         AE(M)=TRX*A(M)
         BE(M)=TRX*B(M)
@@ -664,42 +548,38 @@ subroutine atpar(JATOM, itape, jtape)
      UVB=TRX*UVB
      DUVB=TRX*DUVB
      E1=EI+DELE
-     call OUTWIN(REL,VR,R0(JATOM),DX(JATOM),JRJ(JATOM),E1,            &
-          FL,UVE,DUVE,NODE,ZZ(jatom))
-     call RINT13(A,B,A,B,OVLP,JATOM)
+     call outwin(stru, jatom, Vr, E1, FL, UVE, DUVE, NODE)
+     call rint13(stru, jatom, A, B, A, B, OVLP)
      TRX=1.0d0/sqrt(OVLP)
      UVE=DELEI*(TRX*UVE-UVB)
      DUVE=DELEI*(TRX*DUVE-DUVB)
-     IMAX=JRJ(JATOM)
+     IMAX=stru%Npt(JATOM)
      do M=1,IMAX
         AE(M)=DELEI*(TRX*A(M)-AE(M))
         BE(M)=DELEI*(TRX*B(M)-BE(M))
      end do
-     !
-     !     CALCULATE FUNCTION AT EI
-     !
-     call OUTWIN(REL,VR(1),R0(JATOM),DX(JATOM),JRJ(JATOM),EI,         &
-          FL,UV,DUV,NODES,ZZ(jatom))
-     call RINT13(A,B,A,B,OVLP,JATOM)
+
+     !     Calculate function at EI
+     call outwin(stru, jatom, Vr, EI, FL, UV, DUV, NODES)
+     call rint13(stru, jatom, A, B, A, B, OVLP)
      TRX=1.0d0/sqrt(OVLP)
      P(l,1)=TRX*UV
      DP(l,1)=TRX*DUV
-     IMAX=JRJ(JATOM)
+     IMAX=stru%Npt(JATOM)
      do M=1,IMAX
         A(M)=TRX*A(M)
         B(M)=TRX*B(M)
      end do
-     !
-     !     INSURE ORTHOGONALIZATION
-     !
-     call RINT13(A,B,AE,BE,CROSS,JATOM)
+
+     !     Ensure orthogonalization
+     call rint13(stru, jatom, A, B, AE, BE, CROSS)
      TRY=-CROSS
-     IMAX=JRJ(JATOM)
+     IMAX=stru%Npt(JATOM)
      do M=1,IMAX
         AE(M)=(AE(M)+TRY*A(M))
         BE(M)=(BE(M)+TRY*B(M))
      end do
-     IMAX=JRJ(JATOM)
+     IMAX=stru%Npt(JATOM)
      do I=1,IMAX
         RF1(I,l,1)=A(I)
         RF2(I,l,1)=B(I)
@@ -708,7 +588,7 @@ subroutine atpar(JATOM, itape, jtape)
      end do
      P(l,2)=UVE+TRY*P(l,1)
      DP(l,2)=DUVE+TRY*DP(l,1)
-     call RINT13(AE,BE,AE,BE,PEI(l),JATOM)
+     call RINT13(stru, jatom, AE, BE, AE, BE, PEI(l))
      write(unit_out, "(10X,I2,5E14.6,5X,3I2)") &
           L,P(l,1),DP(l,1),P(l,2),DP(l,2)
   end do lloop
@@ -729,37 +609,35 @@ subroutine atpar(JATOM, itape, jtape)
            if(rlo(jlo,l)) then
               ei=elo(l,nloat)/2.d0
               kappa=l
-              call diracout(rel,vr(1),r0(jatom),dx(jatom),jrj(jatom),    &
-                   &        ei,kappa,uv,duv,nodes,zz(jatom))
-              call dergl(a,b,r0(jatom),dx(jatom),jrj(jatom))
-              do m = 1, jrj(jatom)
-                 r_m = r0(jatom)*exp(dx(jatom)*(m-1))
+              call diracout(stru, jatom, Vr, ei, kappa, uv, duv, nodes)
+              call dergl(stru, jatom, a, b)
+              do m = 1, stru%Npt(jatom)
+                 r_m = stru%R0(jatom) * exp(stru%dx(jatom) * (m-1))
                  b(m) = b(m)*r_m/(2.d0*clight+(elo(l,jlo)- &
                       2.d0*vr(m)/r_m)/(2.d0*clight))
                  b(m)=b(m)*clight
               enddo
            else
-              call outwin(rel,vr(1),r0(jatom),dx(jatom),jrj(jatom),   &
-                   ei,fl,uv,duv,nodes,zz(jatom))
+              call outwin(stru, jatom, Vr, ei, fl, uv, duv, nodes)
            endif
 
-           call RINT13(A,B,A,B,OVLP,JATOM)
+           call RINT13(stru, jatom, A, B, A, B, OVLP)
            TRX=1.0d0/sqrt(OVLP)
            P(l,irf)=TRX*UV
            DP(l,irf)=TRX*DUV
-           IMAX=JRJ(JATOM)
+           IMAX=stru%Npt(JATOM)
            n_rad(l)=irf
            do M=1,IMAX
               rf1(M,l,irf)=TRX*A(M)
               rf2(M,l,irf)=TRX*B(M)
            end do
 
-           call RINT13(rf1(1,l,1),rf2(1,l,1), &
-                rf1(1,l,irf),rf2(1,l,irf),pi12lo,JATOM)
-           call RINT13(rf1(1,l,2),rf2(1,l,2), &
-                rf1(1,l,irf),rf2(1,l,irf),pe12lo,JATOM)
+           call RINT13(stru, jatom, rf1(1,l,1), rf2(1,l,1), &
+                &      rf1(1,l,irf), rf2(1,l,irf), pi12lo)
+           call RINT13(stru, jatom, rf1(1,l,2), rf2(1,l,2), &
+                &      rf1(1,l,irf), rf2(1,l,irf), pe12lo)
         end if
-        call abc (l,jatom,pei(l),pi12lo,pe12lo,jlo,lapw(l))
+        call abc (l, stru%RMT(jatom), pei(l), pi12lo, pe12lo, jlo, lapw(l))
      end do iloloop
   end do loloop
 
@@ -784,7 +662,7 @@ real(R8) pure function gaunt1(LP,L,LS,MP,M,MS)
 !     ..................................................................
 !
 !        GAUNT computes the integral of
-!           CONJG(Y(LP,MP))*Y(L,M)*Y(LS,MS) for LP+L+LS .LE. 23
+!           CONJG(Y(LP,MP))*Y(L,M)*Y(LS,MS) for LP+L+LS  <=  23
 !        using gaussian quadrature with N=12 as given by
 !           M. Abramowitz and I.A. Stegun,
 !           'Handbook of Mathematical Functions',
@@ -881,7 +759,7 @@ subroutine gaunt2
      !
      !        recurse upward in M
      !
-     if (abs(STH) .ge. SNULL) P(L,M1) = (C1L*P(L,M)-LM2*P(L1,M))/STH
+     if (abs(STH)  >=  SNULL) P(L,M1) = (C1L*P(L,M)-LM2*P(L1,M))/STH
 30   continue
      I = I + 1
      IDWN = IDWN - 1
@@ -898,16 +776,16 @@ subroutine gaunt2
      SGNM = -SGNM
      if (M - L < 0) goto 20
      if (M - L ==0) goto 30
-     if (L .le. LOMAX) goto 10
+     if (L <= LOMAX) goto 10
   end do
 end subroutine gaunt2
 end module gaunt2_m
 
 
 module     harmon_m; contains
-subroutine harmon(N,X,Y,Z,LMAX2,F,DF,RI)
-  use const, only: R8
-  use gener, only: br1
+subroutine harmon(stru, jatom, N, X, Y, Z, Lmax2, F, DF)
+  use const,     only: R8
+  use structmod, only: struct_t
 
   !! procedure includes
   use dvbes1_m
@@ -915,20 +793,21 @@ subroutine harmon(N,X,Y,Z,LMAX2,F,DF,RI)
 
   implicit none
 
-  integer,  intent(in)  :: N, Lmax2
-  real(R8), intent(in)  :: X(N),Y(N),Z(N), RI
-  real(R8), intent(out) :: F(LMAX2+1,N), DF(LMAX2+1,N)
+  type(struct_t), intent(in)  :: stru
+  integer,        intent(in)  :: N, Lmax2, jatom
+  real(R8),       intent(in)  :: X(N), Y(N), Z(N)
+  real(R8),       intent(out) :: F(Lmax2+1,N), DF(Lmax2+1,N)
 
   real(R8) :: A(3), xm, xa
   integer  :: LMX, i, j
 
-  LMX=LMAX2+1
+  LMX=Lmax2+1
   do I=1,N
-     A(:)=X(I)*BR1(1,:)+Y(I)*BR1(1,:)+Z(I)*BR1(1,:)
+     A = matmul(stru%gbas, (/X(I), Y(I), Z(I)/))
 
-     XM=sqrt(A(1)**2 + A(2)**2 + A(3)**2)
-     XA=RI*XM
-     call SPHBES(LMAX2, XA, F(:,I))
+     XM = sqrt(sum(A**2))
+     XA = stru%RMT(jatom) * XM
+     call SPHBES(Lmax2, XA, F(:,I))
      call DVBES1(F(:,I), DF(:,I), XA, LMX)
      do J=1,LMX
         DF(J,I)=XM*DF(J,I)
@@ -939,13 +818,13 @@ end module harmon_m
 
 
 module     radint_m; contains
-subroutine radint(JATOM,LJMAX,BM)
-  use param,  only: Lmax2, Nrad
-  use struct, only: jrj, R0, dx
-  use bessel, only: rj, ri_mat
-  use lolog,  only: n_rad
-  use const,  only: R8
-  use radfu,  only: RF1, RF2
+subroutine radint(stru, jatom, ljmax, bm)
+  use param,     only: Lmax2, Nrad
+  use bessel,    only: rj, ri_mat
+  use lolog,     only: n_rad
+  use const,     only: R8
+  use radfu,     only: RF1, RF2
+  use structmod, only: struct_t
 
   !! procedure includes
   use sphbes_m
@@ -953,14 +832,15 @@ subroutine radint(JATOM,LJMAX,BM)
 
   implicit none
 
-  integer,  intent(in) :: jatom, LJmax
-  real(R8), intent(in) :: bm
+  type(struct_t), intent(in) :: stru
+  integer,        intent(in) :: jatom, LJmax
+  real(R8),       intent(in) :: bm
 
   real(R8) :: A(Nrad), B(Nrad), X(Nrad), Y(Nrad), RX
   integer  :: L_index,l1,l2,lj, R_index, i, if1,if2
 
-  do  I=1,JRJ(JATOM)
-     RX=R0(JATOM)*exp(DX(JATOM)*(i-1))*BM
+  do  I=1,stru%Npt(JATOM)
+     RX=stru%R0(JATOM)*exp(stru%dx(JATOM)*(i-1))*BM
      call sphbes(LJMAX+1,RX,rj(:,I))
   enddo
   L_index=0
@@ -977,14 +857,13 @@ subroutine radint(JATOM,LJMAX,BM)
            do IF1=1,n_rad(l1)
               do IF2=1,n_rad(l2)
                  R_index=R_index+1
-                 do  I=1,JRJ(JATOM)
+                 do  I=1,stru%Npt(JATOM)
                     A(i)=rf1(i,l1,if1)*rj(lj,i)
                     B(i)=rf2(i,l1,if1)*rj(lj,i)
                     X(i)=rf1(i,l2,if2)
                     Y(i)=rf2(i,l2,if2)
                  enddo
-                 call RINT13(A,B,X,Y, &
-                      ri_mat(r_index,l_index),JATOM)
+                 call RINT13(stru, jatom, A,B, X,Y, ri_mat(r_index,l_index))
 
               end do
            end do
@@ -995,449 +874,10 @@ end subroutine radint
 end module radint_m
 
 
-module     rotate_m; contains
-subroutine rotate(VECTOR,ROTMAT,ROTVEC)
-  !     ROTATE PERFORMS A ROTATION OF THE VECTOR FROM THE GENERAL
-  !     CARTESIAN COORDINATION SYSTEM INTO THE  LOCAL ONE  OF THE
-  !     JATOM-TH SPHERE.
-  !     THIS SUBROUTINE IS ONLY REQUIRED FOR NONSYMMORPHIC CASES.
-
-  use const, only: R8
-
-  implicit none
-
-  real(R8)    :: VECTOR(3),ROTVEC(3),ROTMAT(3,3)
-  intent(in)  :: vector, rotmat
-  intent(out) :: rotvec
-
-  integer  :: jcoord, j
-  real(R8) :: dotpro
-
-  do JCOORD=1,3
-     DOTPRO=0
-     do J=1,3
-        DOTPRO=DOTPRO + VECTOR(J)*ROTMAT(JCOORD,J)
-     end do
-     ROTVEC(JCOORD)=DOTPRO
-  end do
-end subroutine rotate
-end module     rotate_m
-
-
-module     rotdef_m; contains
-subroutine rotdef
-  !
-  !     THE MATRICES  ROTIJ(3,3,INDEX)  TRANSFORM THE POSITION OF AN
-  !     ATOM TO ITS CORRESPONDING POSITION OF AN EQUIVALENT ATOM.
-  !
-  use const,  only: R8
-  use struct, only: Nat, mult, iord, iz, pos, trans, transij, rotij, lattic
-  use clio,   only: croak
-  use util,   only: string
-
-  implicit none
-
-  real(R8)    x(3),x1(3),toler,toler2,one
-  INTEGER   i,m,index,index1,jatom,ncount
-  DATA TOLER/1.D-7/,ONE/1.D0/
-  toler2=1.5d0*toler
-  INDEX=0
-  NCOUNT=0
-  DO JATOM=1,NAT
-     INDEX1=INDEX+1
-     DO M=1,MULT(JATOM)
-        INDEX=INDEX+1
-        DO I=1,IORD
-           x(1:3)=0.d0
-           x=MATMUL(TRANSPOSE(iz(1:3,1:3,i)),pos(1:3,index1))
-           x(1:3)=x(1:3)+trans(1:3,i)
-           x1(1:3)=MOD(ABS(X(1:3)-POS(1:3,INDEX))+toler,one)-toler
-!           WRITE(*,*) 'JATOM,INDEX,I',JATOM,INDEX,I
-!           WRITE(*,*) ABS(X1(1:3)),toler
-           IF(MAXVAL(ABS(X1)) < TOLER2) THEN
-              NCOUNT=NCOUNT+1
-              TRANSIJ(1:3,INDEX)=TRANS(1:3,I)
-              ROTIJ(1:3,1:3,INDEX)=IZ(1:3,1:3,I)
-              GOTO 30
-           END IF
-           !....check positions for centered lattices
-           if(lattic(1:1) == 'B') then
-              x1(1:3)=mod(x1(1:3)+0.5d0+toler,one)-toler
-              IF(MAXVAL(ABS(X1)) < TOLER2) THEN
-                 NCOUNT=NCOUNT+1
-                 TRANSIJ(1:3,INDEX)=TRANS(1:3,I)
-                 ROTIJ(1:3,1:3,INDEX)=IZ(1:3,1:3,I)
-                 GOTO 30
-              END IF
-           endif
-           if(lattic(1:1) == 'F' .or. lattic(1:3) == 'CXY') then
-              x1(1:2)=mod(x1(1:2)+0.5d0+toler,one)-toler
-              IF(MAXVAL(ABS(X1)) < TOLER2) THEN
-                 NCOUNT=NCOUNT+1
-                 TRANSIJ(1:3,INDEX)=TRANS(1:3,I)
-                 ROTIJ(1:3,1:3,INDEX)=IZ(1:3,1:3,I)
-                 GOTO 30
-              END IF
-              x1(1:2)=mod(x1(1:2)+0.5d0,one)
-           endif
-           if(lattic(1:1) == 'F' .or. lattic(1:3) == 'CXZ') then
-              x1(1)=mod(x1(1)+0.5d0+toler,one)-toler
-              x1(3)=mod(x1(3)+0.5d0+toler,one)-toler
-              IF(MAXVAL(ABS(X1)) < TOLER2) THEN
-                 NCOUNT=NCOUNT+1
-                 TRANSIJ(1:3,INDEX)=TRANS(1:3,I)
-                 ROTIJ(1:3,1:3,INDEX)=IZ(1:3,1:3,I)
-                 GOTO 30
-              END IF
-              x1(1)=mod(x1(1)+0.5d0,one)
-              x1(3)=mod(x1(3)+0.5d0,one)
-           endif
-           if(lattic(1:1) == 'F' .or. lattic(1:3) == 'CYZ') then
-              x1(2:3)=mod(x1(2:3)+0.5d0+toler,one)-toler
-              IF(MAXVAL(ABS(X1)) < TOLER2) THEN
-                 NCOUNT=NCOUNT+1
-                 TRANSIJ(1:3,INDEX)=TRANS(1:3,I)
-                 ROTIJ(1:3,1:3,INDEX)=IZ(1:3,1:3,I)
-                 GOTO 30
-              END IF
-           end if
-        ENDDO
-
-        call croak("error in ROTDEF: no symmetry operation found &
-             &for atoms "//trim(string(jatom))//" and "//trim(string(index))&
-             &//", positions "//trim(string(POS(:, index1)))//" and " &
-             &//trim(string(POS(:, INDEX))))
-30      CONTINUE
-     ENDDO
-  ENDDO
-
-  if (NCOUNT /= INDEX) call croak('error in ROTDEF: &
-       &ROTIJ not defined for all atoms of basis.  NCOUNT = ' &
-       &// trim(string(Ncount)))
-end subroutine rotdef
-end module     rotdef_m
-
-
-module     latgen_m; contains
-subroutine latgen
-!
-!     LATGEN GENERATES TWO BRAVAIS MATRICES, DEFINES THE VOLUME OF
-!     THE UNIT CELL AND CALLS ROTDEF
-!     BR1(3,3)  : TRANSFORMS INTEGER RECIPROCAL LATTICE VECTORS AS
-!                 GIVEN IN THE VECTORLIST OF LAPW1  ( GENERATED IN
-!                 COORS, TRANSFORMED IN BASISO, AND WRITTEN OUT IN
-!                 WFTAPE) INTO CARTESIAN SYSTEM
-!     BR2(3,3) :  TRANSFORMS A RECIPROCAL LATTICE VECTOR OF A SPE-
-!                 CIAL COORDINATE SYSTEM ( IN UNITS OF 2 PI / A )
-!                 TO CARTESIAN SYSTEM
-  use param,  only: unit_out
-  use struct, only: alpha, aa, bb, cc, lattic, pia, vol
-  use gener,  only: br1, br2
-  use const,  only: R8, TAU
-  use clio,   only: croak
-
-  !! procedure includes
-  use rotdef_m
-
-  implicit none
-
-  logical  :: ORTHO
-  integer  :: i, j
-  real(R8) :: rvfac, sinab,sinbc, cosab,cosbc,cosac, wurzel
-
-  real(R8), parameter :: sqrt3=sqrt(3._R8)
-
-  !---------------------------------------------------------------------
-  !
-  ALPHA(1)=ALPHA(1)*TAU/360
-  ALPHA(2)=ALPHA(2)*TAU/360
-  ALPHA(3)=ALPHA(3)*TAU/360
-  PIA(1)=TAU/AA
-  PIA(2)=TAU/BB
-  PIA(3)=TAU/CC
-  IF(LATTIC(1:1).EQ.'H') GOTO 10
-  IF(LATTIC(1:1).EQ.'S') GOTO 20
-  IF(LATTIC(1:1).EQ.'P') GOTO 20
-  IF(LATTIC(1:1).EQ.'F') GOTO 30
-  IF(LATTIC(1:1).EQ.'B') GOTO 40
-  IF(LATTIC(1:1).EQ.'C') GOTO 50
-  IF(LATTIC(1:1).EQ.'R') GOTO 60
-
-  call croak('error in LATGEN: bad lattice type `'//trim(lattic)//"'")
-
-  !.....HEXAGONAL LATTICE
-10 CONTINUE
-  BR1(1,1)=2.D0/SQRT3*PIA(1)
-  BR1(1,2)=1.D0/SQRT3*PIA(1)
-  BR1(1,3)=0.0D0
-  BR1(2,1)=0.0D0
-  BR1(2,2)=PIA(2)
-  BR1(2,3)=0.0D0
-  BR1(3,1)=0.0D0
-  BR1(3,2)=0.0D0
-  BR1(3,3)=PIA(3)
-  !
-  BR2(1,1)=1.D0
-  BR2(1,2)=0.D0
-  BR2(1,3)=0.D0
-  BR2(2,1)=0.0D0
-  BR2(2,2)=1.D0
-  BR2(2,3)=0.0D0
-  BR2(3,1)=0.0D0
-  BR2(3,2)=0.0D0
-  BR2(3,3)=1.D0
-  !
-  RVFAC=2.D0/SQRT(3.D0)
-  ORTHO=.FALSE.
-  GOTO 100
-  !
-  !.....RHOMBOHEDRAL CASE
-60 BR1(1,1)=1.D0/SQRT(3.D0)*PIA(1)
-  BR1(1,2)=1.D0/SQRT(3.D0)*PIA(1)
-  BR1(1,3)=-2.d0/sqrt(3.d0)*PIA(1)
-  BR1(2,1)=-1.0d0*PIA(2)
-  BR1(2,2)=1.0d0*PIA(2)
-  BR1(2,3)=0.0d0*PIA(2)
-  BR1(3,1)=1.0d0*PIA(3)
-  BR1(3,2)=1.0d0*PIA(3)
-  BR1(3,3)=1.0d0*PIA(3)
-  !
-  BR2(1,1)=1.D0
-  BR2(1,2)=0.D0
-  BR2(1,3)=0.D0
-  BR2(2,1)=0.0D0
-  BR2(2,2)=1.D0
-  BR2(2,3)=0.0D0
-  BR2(3,1)=0.0D0
-  BR2(3,2)=0.0D0
-  BR2(3,3)=1.D0
-  !
-  RVFAC=6.D0/SQRT(3.D0)
-  ORTHO=.FALSE.
-  GOTO 100
-  !
-  !.....PRIMITIVE LATTICE
-  !
-20 CONTINUE
-  SINBC=SIN(ALPHA(1))
-  COSAB=COS(ALPHA(3))
-  COSAC=COS(ALPHA(2))
-  COSBC=COS(ALPHA(1))
-  WURZEL=SQRT(SINBC**2-COSAC**2-COSAB**2+2*COSBC*COSAC*COSAB)
-  !
-  BR1(1,1)= SINBC/WURZEL*PIA(1)
-  BR1(1,2)= (-COSAB+COSBC*COSAC)/(SINBC*WURZEL)*PIA(2)
-  BR1(1,3)= (COSBC*COSAB-COSAC)/(SINBC*WURZEL)*PIA(3)
-  BR1(2,1)= 0.0
-  BR1(2,2)= PIA(2)/SINBC
-  BR1(2,3)= -PIA(3)*COSBC/SINBC
-  BR1(3,1)= 0.0
-  BR1(3,2)= 0.0
-  BR1(3,3)= PIA(3)
-  !
-  BR2(1,1)=1.D0
-  BR2(1,2)=0.D0
-  BR2(1,3)=0.D0
-  BR2(2,1)=0.0D0
-  BR2(2,2)=1.D0
-  BR2(2,3)=0.0D0
-  BR2(3,1)=0.0D0
-  BR2(3,2)=0.0D0
-  BR2(3,3)=1.D0
-  !
-  RVFAC= 1.d0/WURZEL
-  ORTHO=.TRUE.
-  if(abs(alpha(1)-TAU/4).gt.0.0001) ortho=.false.
-  if(abs(alpha(2)-TAU/4).gt.0.0001) ortho=.false.
-  if(abs(alpha(3)-TAU/4).gt.0.0001) ortho=.false.
-  !
-  GOTO 100
-  !
-  !.....FC LATTICE
-30 CONTINUE
-  BR1(1,1)=PIA(1)
-  BR1(1,2)=0.0D0
-  BR1(1,3)=0.0D0
-  BR1(2,1)=0.0D0
-  BR1(2,2)=PIA(2)
-  BR1(2,3)=0.0D0
-  BR1(3,2)=0.0D0
-  BR1(3,1)=0.0D0
-  BR1(3,3)=PIA(3)
-  !
-  !     definitions according to column, rows convention for BR2
-  !
-  BR2(1,1)=-1.D0
-  BR2(1,2)= 1.D0
-  BR2(1,3)= 1.D0
-  BR2(2,1)= 1.D0
-  BR2(2,2)=-1.D0
-  BR2(2,3)= 1.D0
-  BR2(3,1)= 1.D0
-  BR2(3,2)= 1.D0
-  BR2(3,3)=-1.D0
-  !
-  RVFAC=4.D0
-  ORTHO=.TRUE.
-  GOTO 100
-  !
-  !.....BC LATTICE
-40 CONTINUE
-  BR1(1,1)=PIA(1)
-  BR1(1,2)=0.0D0
-  BR1(1,3)=0.0D0
-  BR1(2,1)=0.0D0
-  BR1(2,2)=PIA(2)
-  BR1(2,3)=0.0D0
-  BR1(3,1)=0.0D0
-  BR1(3,2)=0.0D0
-  BR1(3,3)=PIA(3)
-  !
-  BR2(1,1)= 0.0D0
-  BR2(1,2)= 1.D0
-  BR2(1,3)= 1.D0
-  BR2(2,1)= 1.D0
-  BR2(2,2)= 0.0D0
-  BR2(2,3)= 1.D0
-  BR2(3,1)= 1.D0
-  BR2(3,2)= 1.D0
-  BR2(3,3)= 0.0D0
-  !
-  RVFAC=2.D0
-  ORTHO=.TRUE.
-  GOTO 100
-  !
-50 CONTINUE
-  IF(LATTIC(2:3).EQ.'XZ') GOTO 51
-  IF(LATTIC(2:3).EQ.'YZ') GOTO 52
-  !.....CXY LATTICE
-  BR1(1,1)=PIA(1)
-  BR1(1,2)=0.0D0
-  BR1(1,3)=0.0D0
-  BR1(2,1)=0.0D0
-  BR1(2,2)=PIA(2)
-  BR1(2,3)=0.0D0
-  BR1(3,1)=0.0D0
-  BR1(3,2)=0.0D0
-  BR1(3,3)=PIA(3)
-  !
-  BR2(1,1)= 1.D0
-  BR2(1,2)= 1.D0
-  BR2(1,3)= 0.0D0
-  BR2(2,1)=-1.D0
-  BR2(2,2)= 1.D0
-  BR2(2,3)= 0.0D0
-  BR2(3,1)= 0.0D0
-  BR2(3,2)= 0.0D0
-  BR2(3,3)= 1.D0
-  !
-  RVFAC=2.D0
-  ORTHO=.TRUE.
-  GOTO 100
-  !
-  !.....CXZ CASE (CXZ LATTICE BUILD UP)
-51 CONTINUE
-  !.....CXZ ORTHOROMBIC CASE
-  if(abs(ALPHA(3)-TAU/4).lt.0.0001) then
-     BR1(1,1)=PIA(1)
-     BR1(1,2)=0.0D0
-     BR1(1,3)=0.0D0
-     BR1(2,1)=0.0D0
-     BR1(2,2)=PIA(2)
-     BR1(2,3)=0.0D0
-     BR1(3,1)=0.0D0
-     BR1(3,2)=0.0D0
-     BR1(3,3)=PIA(3)
-     !
-     BR2(1,1)= 1.D0
-     BR2(1,2)= 0.0
-     BR2(1,3)= 1.D0
-     BR2(2,1)= 0.0
-     BR2(2,2)= 1.D0
-     BR2(2,3)= 0.0
-     BR2(3,1)=-1.D0
-     BR2(3,2)= 0.0
-     BR2(3,3)= 1.D0
-     !
-     RVFAC=2.0
-     ORTHO=.TRUE.
-     GOTO 100
-  ELSE
-     !.....CXZ MONOCLINIC CASE
-     write(*,*) '  gamma not equal 90'
-     SINAB=SIN(ALPHA(3))
-     COSAB=COS(ALPHA(3))
-     !
-     BR1(1,1)= PIA(1)/SINAB
-     BR1(1,2)= -PIA(2)*COSAB/SINAB
-     BR1(1,3)= 0.0
-     BR1(2,1)= 0.0
-     BR1(2,2)= PIA(2)
-     BR1(2,3)= 0.0
-     BR1(3,1)= 0.0
-     BR1(3,2)= 0.0
-     BR1(3,3)= PIA(3)
-     !
-     BR2(1,1)= 1.D0
-     BR2(1,2)= 0.D0
-     BR2(1,3)= 1.D0
-     BR2(2,1)= 0.0
-     BR2(2,2)= 1.D0
-     BR2(2,3)= 0.0
-     BR2(3,1)=-1.D0
-     BR2(3,2)= 0.0
-     BR2(3,3)= 1.D0
-     !
-     RVFAC=2.0/SINAB
-     ORTHO=.FALSE.
-     GOTO 100
-  ENDIF
-  !
-  !.....CYZ CASE (CYZ LATTICE BUILD UP)
-52 CONTINUE
-  BR1(1,1)=PIA(1)
-  BR1(1,2)=0.0D0
-  BR1(1,3)=0.0D0
-  BR1(2,1)=0.0D0
-  BR1(2,2)=PIA(2)
-  BR1(2,3)=0.0D0
-  BR1(3,1)=0.0D0
-  BR1(3,2)=0.0D0
-  BR1(3,3)=PIA(3)
-  !
-  BR2(1,1)= 1.D0
-  BR2(1,2)= 0.0
-  BR2(1,3)= 0.0
-  BR2(2,1)= 0.0
-  BR2(2,2)= 1.D0
-  BR2(2,3)= 1.D0
-  BR2(3,1)= 0.0
-  BR2(3,2)=-1.D0
-  BR2(3,3)= 1.D0
-  !
-  RVFAC=2.0
-  ORTHO=.TRUE.
-  GOTO 100
-  !
-  !.....DEFINE VOLUME OF UNIT CELL
-100 CONTINUE
-  write(unit_out,*)' BR1,  BR2'
-  do i=1,3
-     write(unit_out,654)(br1(i,j),j=1,3),(br2(i,j),j=1,3)
-654  format(3f10.5,3x,3f10.5)
-  enddo
-  VOL=AA*BB*CC/RVFAC
-  !
-  !.....DEFINE ROTATION MATRICES IN NONSYMMORPHIC CASE
-  call ROTDEF
-end subroutine latgen
-end module     latgen_m
-
-
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-26 14:16:05 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-02 13:22:26 assman@faepop71.tu-graz.ac.at>

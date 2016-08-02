@@ -25,7 +25,6 @@ program wf
   use w2w,       only: Nmat, unit_nnkp, unit_amn, unit_mmn, unit_ene, &
        &               unit_fermi
   use const,     only: R8, BUFSZ
-  use struct,    only: init_struct
   use xa,        only: init_xa
   use xa3,       only: init_xa3
   use bessel,    only: init_bessel
@@ -33,14 +32,12 @@ program wf
   use pairs,     only: kp, kpb, bqx,bqy,bqz, bqx1,bqy1,bqz1, init_pairs
   use util,      only: paropen, ptime
   use wien2k,    only: errflg, errclr, gtfnam
-  use gener,     only: br2
   use clio,      only: croak
   use structmod, only: struct_t, struct_read
 
   !! procedure includes
   use read_vec_m
   use gaunt2_m
-  use latgen_m
   use planew_m
   use l2mmn_m
   use l2amn_m
@@ -56,7 +53,7 @@ program wf
   integer :: centeratom(300)
   integer :: iloop, i, ia, ii, ind, ios, iproc, irecl, iunit, j, l, m
   integer :: ljmax, nproj, maxx,maxy,maxz, maxg, n, n_pair, nen
-  integer :: nemin, nemax, Nb, Nk, nntot, bx,by,bz, kkk, iostat
+  integer :: nemin, nemax, Nb, Nk, nntot, kkk, iostat
 
   real(r8) :: x1, x2
   real(r8) :: efermi
@@ -69,7 +66,7 @@ program wf
   call errflg(errfn,'Error in W2W')
   open(unit_def, FILE=deffn, STATUS='old')
   def: do
-     read(unit_def, *, END=20) iunit, fname, status, form, irecl
+     read(unit_def, *, end=20) iunit, fname, status, form, irecl
 
      select case (iunit)
      case (unit_vector)
@@ -99,21 +96,21 @@ program wf
   enefile: do iloop=1,max(iproc,1)
      call paropen(unit_ene, ENEFN, iproc, iloop, STATUS='old')
 
-     header: DO I=1,stru%Nneq
-        READ(unit_ene,*)
-        READ(unit_ene,*)
-     END DO header
-     kpts: DO
-        READ(unit_ene,'(67X, 2i6)', IOSTAT=ios) N, NEn
-        IF (ios /= 0) EXIT kpts
+     header: do I=1,stru%Nneq
+        read(unit_ene,*)
+        read(unit_ene,*)
+     end do header
+     kpts: do
+        read(unit_ene,'(67X, 2i6)', IOSTAT=ios) N, NEn
+        if (ios /= 0) exit kpts
         Nk=Nk+1
-        nmat=MAX(n,nmat)
-        DO ii=1,nen
-           READ(unit_ene,*)
-        ENDDO
-     END DO kpts
+        nmat=max(n,nmat)
+        do ii=1,nen
+           read(unit_ene,*)
+        enddo
+     end do kpts
 
-     CLOSE(unit_ene)
+     close(unit_ene)
   end do enefile
 
 !!!.....READ INPUT AND POTE
@@ -144,20 +141,20 @@ program wf
 
   MMN=.true.
   AMN=.true.
-  READ(unit_in,*)MODE
-  IF (MODE.eq.'MMN') AMN=.false.
-  IF (MODE.eq.'AMN') MMN=.false.
+  read(unit_in,*)MODE
+  if (MODE.eq.'MMN') AMN=.false.
+  if (MODE.eq.'AMN') MMN=.false.
   write(unit_out,*)'MODE='
   if (MMN) write(unit_out,*)'MMN'
   if (AMN) write(unit_out,*)'AMN'
-  READ(unit_in,*)NEMIN,NEMAX
+  read(unit_in,*)NEMIN,NEMAX
   if (nemax.lt.nemin) stop 'nemin > nemax'
-  READ(unit_in,*)LJMAX,NPROJ
+  read(unit_in,*)LJMAX,NPROJ
   write(unit_out,*)'nemin,nemax:',nemin,nemax
   Nb=nemax-nemin+1
-  CALL init_xa3(Nb,nmat,Nk+1)
-  CALL init_xa(LMAX2,NMAT,NRAD,Nb)
-  CALL init_Amn_Mmn(Nb,n_pair,nproj)
+  call init_xa3(Nb,nmat,Nk+1)
+  call init_xa(LMAX2,NMAT,NRAD,Nb)
+  call init_Amn_Mmn(Nb, N_pair, Nproj, stru%Nat)
 
   read(unit_fermi, *) efermi
 
@@ -167,44 +164,44 @@ program wf
      call paropen(unit_vector, vecfn, iproc, iloop, &
           STATUS='old', FORM='unformatted')
 
-     call read_vec(nemin,nemax,kkk,maxx,maxy,maxz,efermi)
+     call read_vec(NEmin, NEmax, stru%Nneq, kkk, maxx, maxy, maxz, Efermi)
 
-     CLOSE(unit_vector)
+     close(unit_vector)
   end do vectorfiles
 
   if(kkk /= Nk) call croak('inconsistent numbers of k-points between&
        & vector and energy files')
 
-  read_proj: IF (AMN) THEN
-     DO I=1,NPROJ
-        READ(unit_in,*) N
-        DO J=1,N
+  read_proj: if (AMN) then
+     do I=1,NPROJ
+        read(unit_in,*) N
+        do J=1,N
            read(unit_in,*) IA,L,M,X1,X2
            ind=L*(L+1)+M+1
            C(I,ind,IA)=X1 + (0,1)*X2
            CENTERATOM(I)=IA
-        ENDDO
-     ENDDO
+        enddo
+     enddo
 
      write(unit_out,*)'initial orbital projections'
-     DO I=1,nproj
+     do I=1,nproj
         write(unit_out,*)'orbital #',I,'centered at atom',CENTERATOM(I)
         ind=0
-        DO L=0,3
-           DO M=-L,L
+        do L=0,3
+           do M=-L,L
               ind=ind+1
               write(unit_out,*)L,M,C(I,ind,CENTERATOM(I))
-           ENDDO
-        ENDDO
-     ENDDO
-  ENDIF read_proj
+           enddo
+        enddo
+     enddo
+  endif read_proj
 
   call init_bessel(LMAX2,LJMAX,NRAD,NRF)
   call gaunt2
 
-  WRITE(unit_out, "(////,30X,50(1H-),/,33X,'S T R U C T U R A L   ', &
+  write(unit_out, "(////,30X,50(1H-),/,33X,'S T R U C T U R A L   ', &
          & 'I N F O R M A T I O N',/,30X,50(1H-),//)")
-  WRITE(unit_out, "(3X,'SUBSTANCE',20X,'= ',A80,/)") stru%title
+  write(unit_out, "(3X,'SUBSTANCE',20X,'= ',A80,/)") stru%title
 
   if (amn) then
      write(unit_amn,'(A20)')  stru%title
@@ -215,20 +212,28 @@ program wf
      write(unit_mmn,'(3I12)') NEmax-NEmin+1, Nk, Nntot
   endif
 
-  WRITE(unit_out, "(3X,'LATTICE',22X,'= ',A4)")                  stru%lattic
-  WRITE(unit_out, "(3X,'LATTICE CONSTANTS ARE',8X,'= ',3F12.7)") stru%a
-  WRITE(unit_out, "(3X,'NUMBER OF ATOMS IN UNITCELL  = ',I3)")   stru%Nneq
-  WRITE(unit_out, "(3X,'MODE OF CALCULATION IS',7X,'= ',A4)")    stru%mode
+  write(unit_out, "(3X,'LATTICE',22X,'= ',A4)")                  stru%lattic
+  write(unit_out, "(3X,'LATTICE CONSTANTS ARE',8X,'= ',3F12.7)") stru%a
+  write(unit_out, "(3X,'NUMBER OF ATOMS IN UNITCELL  = ',I3)")   stru%Nneq
+  write(unit_out, "(3X,'MODE OF CALCULATION IS',7X,'= ',A4)")    stru%mode
 
-  call latgen
+  write(unit_out,*)' gbas,  stru2frac'
+  do i=1,3
+     write(unit_out, '(3f10.5,3x,3f10.5)') &
+          stru%gbas(i,:), stru%stru2frac(i,:)
+  end do
+
   !     rotate boundary vectors
   do i=1,N_pair
-     bx=bqx1(i); by=bqy1(i); bz=bqz1(i)
-     bqx(i) = int(bx*br2(1,1) + by*br2(1,2) + bz*br2(1,3))
-     bqy(i) = int(bx*br2(2,1) + by*br2(2,2) + bz*br2(2,3))
-     bqz(i) = int(bx*br2(3,1) + by*br2(3,2) + bz*br2(3,3))
+     ! FIXME: should this be using nint()?
+     bqx(i) = int(dot_product(stru%stru2frac(1,:), &
+          &       (/bqx1(i), bqy1(i), bqz1(i)/)))
+     bqy(i) = int(dot_product(stru%stru2frac(2,:), &
+          &       (/bqx1(i), bqy1(i), bqz1(i)/)))
+     bqz(i) = int(dot_product(stru%stru2frac(3,:), &
+          &       (/bqx1(i), bqy1(i), bqz1(i)/)))
   enddo
-  write(unit_out,*)' alpha test',(stru%alpha(i),i=1,3)
+
   !.....CALCULATE CHARGE DENSITY CLM(R) IN SPHERES,  PARTIAL CHARGES
 
   ! l2mmn, l2amn need vector file to be open
@@ -237,18 +242,18 @@ program wf
 
   if (MMN) then
      call ptime(unit_out)
-     call l2mmn(Nb,Nk,NNTOT,LJMAX)
+     call l2mmn(stru, Nb, Nk, NNTOT, LJMAX)
      call ptime('l2mmn')
      !JXZ: MAXG is not pre-defined
      MAXG = 0
      write(unit_out,*)'MXG=',MAXG
-     call planew(Nb,Nk,NNTOT,maxx+1,maxy+1,maxz+1)
+     call planew(stru, Nb, Nk, Nntot, maxx+1, maxy+1, maxz+1)
      call ptime('planew')
   endif
 
   if (AMN) then
      call ptime(unit_out)
-     call l2amn(Nb,NPROJ,Nk)
+     call l2amn(stru, Nb, Nproj, Nk)
      call ptime('l2amn')
   endif
 
@@ -263,4 +268,4 @@ end program wf
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-26 16:29:46 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-02 14:01:06 assman@faepop71.tu-graz.ac.at>
