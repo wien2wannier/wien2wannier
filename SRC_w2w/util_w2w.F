@@ -381,7 +381,6 @@ contains
 !!! We would like to use the NEWUNIT keyword to open(), but many
 !!! compilers do not support that yet.  Workaround from
 !!! <http://fortranwiki.org/fortran/show/newunit>:
-!!!
   ! This is a simple function to search for an available unit.
   ! LUN_MIN and LUN_MAX define the range of possible LUNs to check.
   ! The UNIT value is returned by the function, and also by the optional
@@ -406,7 +405,6 @@ contains
     if (present(unit)) unit=newunit
   end function newunit
 end module util
-
 
 !---------------  Helper procedures for command line interface --------------
 module clio
@@ -1431,18 +1429,27 @@ contains
     end subroutine rotdef
 end subroutine struct_read_unit
 
-  subroutine struct_read_fname(fname, stru)
-    use util, only: newunit
+subroutine struct_read_fname(fname, stru)
+  use util, only: newunit
 
-    character(*),   intent(in)  :: fname
-    type(struct_t), intent(out) :: stru
+  character(*),   intent(in)  :: fname
+  type(struct_t), intent(out) :: stru
 
-    integer :: lun
+  integer :: lun
 
-    open(unit=newunit(lun), file=fname, status='old')
-    call struct_read_unit(lun, stru)
-    close(lun)
-  end subroutine struct_read_fname
+  open(unit=newunit(lun), file=fname, status='old')
+  call struct_read_unit(lun, stru)
+  close(lun)
+end subroutine struct_read_fname
+
+subroutine struct_read_argstr(arg, stru)
+  use clio, only: argstr
+
+  type(argstr),   intent(in)  :: arg
+  type(struct_t), intent(out) :: stru
+
+  call struct_read_fname(arg%s, stru)
+end subroutine struct_read_argstr
 end module structmod
 
 
@@ -1474,6 +1481,7 @@ module inwfmod
   end type inwf_t
 
 contains
+
   subroutine inwf_read_unit(lun, inwf)
     use clio,  only: croak
     use util,  only: uppercase
@@ -2182,4 +2190,4 @@ end module reallocate
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-08-02 17:17:18 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-04 13:58:27 assman@faepop71.tu-graz.ac.at>
