@@ -711,7 +711,7 @@ subroutine auggen(rel,stru,whpsi)
   character(5),   intent(in) :: WHPSI
 
   logical   :: large, rlo(1:nloat,0:lomax)
-  integer   :: i, j, k, l, m, jatom, jlo, jrf, irf, nodes, kappa
+  integer   :: i, k, l, m, jatom, jlo, jrf, irf, nodes, kappa
   real(DPk) :: cfac, RMT2, rnorm, uve, duve, uv, uvb, duvb, duv
   real(DPk) :: dele, delei, fl, ei, e1, cross, clight, r_m
   real(DPk) :: pi12lo, pe12lo, xac, xbc, xcc, alonorm
@@ -2246,4 +2246,4 @@ end module     trans_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-08-04 09:49:16 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-04 10:56:32 assman@faepop71.tu-graz.ac.at>

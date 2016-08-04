@@ -31,6 +31,7 @@ subroutine main()
   use clio,      only: croak, carp
   use Wannier90, only: chk_t, chk_read
   use structmod, only: struct_t, struct_read
+  use inwfmod,   only: inwf_t, inwf_read
   use param,     only: NRF, NLOAt, LOmax, Nrad, wien2wannier_version, &
        &               unit_in, unit_out, unit_struct, unit_vector
   use wplot,     only: unit_inwf, unit_psink, unit_psiarg, unit_chk, &
@@ -66,6 +67,7 @@ subroutine main()
 
   type(struct_t)   :: stru
   type(chk_t)      :: chk
+  type(inwf_t)     :: inwf
 
 #ifndef _COMPLEX_
   real(DPk),    allocatable :: CF(:)
@@ -90,7 +92,7 @@ subroutine main()
   integer :: i, ie, ieabs, ierr, iG, ik, il, il1, imax, index, index1, irf
   integer :: iseig, iloop
   integer :: j, j2, j3, jneq, jmult, k, kkk, kkkabs, l, latom, lm, m, mu
-  integer :: Nb, NE, NEmax, NEmin, Nmatk, Nmat, Nmt, Npw
+  integer :: Nb, NE, Nmatk, Nmat, Nmt, Npw
   integer :: NP(3), Nskip
 
   real(DPK) :: ROT0(3,3), R(3), FK(3), phsav, prefac
@@ -153,9 +155,12 @@ subroutine main()
 
 !     << read in wave function selection (and file handling) >>
   read (unit_in,*) iseig, rotate
-  read(unit_inwf,*)
-  read(unit_inwf,*)nemin,nemax
-  nb=nemax-nemin+1
+
+  call inwf_read(unit_inwf, inwf)
+  close(unit_inwf)
+
+  Nb = inwf%bmax - inwf%bmin + 1
+
   allocate(uu(nb))
   if (idx_wann.gt.0) then
      iseig = idx_wann
@@ -210,7 +215,6 @@ subroutine main()
   endif
 
   rewind(unit_in)               ! for grdgen()
-  close(unit_inwf)
 
 ! ###################################
 ! # PART II : structural processing #
@@ -575,31 +579,30 @@ subroutine main()
            FK(:) = TAU * FK(:)
         endif
 
-!       << load spherical Bessel functions and their derivatives >>
+! << load spherical Bessel functions and their derivatives >>
 ! -----------------------------------------------------------------
 ! FJ (l,:,Rmt) :      j_l(|K+k|*r) at r = Rmt_a for all PW's K+k
 ! DFJ(l,:,Rmt) : d/dr j_l(|K+k|*r) at r = Rmt_a for all PW's K+k
 ! -----------------------------------------------------------------
         call BESSEL(NPW,NMATK,BK,NMT,RAD,LMAX7,FJ,DFJ)
-!
-!       << read in individual eigen states >>
 
+! << read in individual eigen states >>
         COEF=0
         do I=1,NE
            read(unit_vector,IOSTAT=IERR) IE,E,IEABS
            read(unit_vector) (CF(IK),IK=1,NMATK)
-           if (ie>=nemin .and. ie<=nemax) then
+           if (ie >= inwf%bmin .and. ie <= inwf%bmax) then
               do ik=1,nmatk
-                 COEF(ik)=COEF(ik)+uu(ie-nemin+1)*cf(ik)
+                 coef(ik) = coef(ik) + uu(ie-inwf%bmin+1) * cf(ik)
               end do
            end if
         end do
-!
-!         << normalize the eigen functions properly >>
-        COEF = PREFAC*COEF
-!
-!         << set up the eigen state's augmentation coefficients >>
-!         << ALM, BLM, and CLM for each atom in the unit cell   >>
+
+        ! << normalize the eigen functions properly >>
+        coef = prefac*coef
+
+! << set up the eigen state's augmentation coefficients >>
+! << ALM, BLM, and CLM for each atom in the unit cell   >>
 ! ----------------------------------------------------------------------------
 ! in the muffin thin sphere around R + R_a one has:
 !
@@ -765,4 +768,4 @@ end module main_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-08-04 09:41:11 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-04 10:57:15 assman@faepop71.tu-graz.ac.at>
