@@ -61,11 +61,11 @@ subroutine main()
   character( 5)    :: whpsi
   character(10)    :: bname
 
-  logical      :: LARGE
-  complex(DPk) :: ALMSUM
+  logical          :: LARGE
+  complex(DPk)     :: ALMSUM
 
-  type(struct_t) :: stru
-  type(chk_t)    :: chk
+  type(struct_t)   :: stru
+  type(chk_t)      :: chk
 
 #ifndef _COMPLEX_
   real(DPk),    allocatable :: CF(:)
@@ -240,7 +240,7 @@ subroutine main()
   call latgen(stru)
 
   rmt  = stru%rmt
-  dx   = log(stru%rmt / stru%r0) / real(stru%npt-1, DPk)
+  dx   = log(stru%rmt / stru%r0) / (stru%npt-1)
 
   ! FIXME: Nrad could be replaced by max(stru%npt)
   if (any(stru%Npt > Nrad)) call croak('NRAD too small')
@@ -248,7 +248,7 @@ subroutine main()
   NMT = 0
   atoms: do jneq=1,stru%Nneq
      do i=1, stru%Npt(jneq)
-        RM(i, jneq) = stru%r0(jneq) * exp( real(i-1, DPk) * dx(jneq) )
+        RM(i, jneq) = stru%r0(jneq) * exp( (i-1) * dx(jneq) )
      end do
 
      RMT(jneq) = RM(stru%Npt(jneq), jneq)
@@ -765,4 +765,4 @@ end module main_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-21 14:39:29 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-04 09:41:11 assman@faepop71.tu-graz.ac.at>

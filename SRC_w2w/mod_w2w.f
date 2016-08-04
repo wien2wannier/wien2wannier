@@ -27,7 +27,7 @@ module param
   public
 
   character(*), parameter, private :: &
-       rev_str = "$version: v1.0.0-200-g67b09d9$"
+       rev_str = "$version: v1.0.0-212-gc51bb1e$"
   character(*), parameter, public  :: &
        wien2wannier_version = rev_str(11 : len (rev_str)-1)
 
@@ -63,23 +63,23 @@ end module uhelp
 module     dergl_m; contains
 !rschmid
 !     Calculate the first derivate of f_l.
-subroutine dergl(g_l,der1,rnot,dx,mesh)
-  use param, only: Nrad
-  use const, only: R8
+subroutine dergl(stru, jatom, g_l, der1)
+  use param,     only: Nrad
+  use const,     only: R8
+  use structmod, only: struct_t
 
   implicit none
 
-  real(R8) :: g_l(nrad), der1(nrad), dx, rnot
-  integer  :: mesh
-
-  intent(in)  :: g_l, dx, rnot, mesh
-  intent(out) :: der1
+  type(struct_t), intent(in)  :: stru
+  integer,        intent(in)  :: jatom
+  real(R8),       intent(in)  :: g_l(nrad)
+  real(R8),       intent(out) :: der1(nrad)
 
   real(R8) :: f_l(nrad), dfldi(nrad), r(nrad), rad
   integer  :: j,i
 
-  do i=1,mesh
-     r(i) = rnot*exp(dx*(i-1))
+  do i = 1,stru%Npt(jatom)
+     r(i) = stru%R0(jatom) * exp(stru%dx(jatom) * (i-1))
      f_l(i) = g_l(i)/r(i)
   enddo
 
@@ -101,58 +101,58 @@ subroutine dergl(g_l,der1,rnot,dx,mesh)
                  / 60
 
   RAD=R(1)
-  DER1(1)=dfldi(1)/RAD/DX
+  DER1(1)=dfldi(1)/RAD/stru%dx(jatom)
   RAD=R(2)
-  DER1(2)=dfldi(2)/RAD/DX
+  DER1(2)=dfldi(2)/RAD/stru%dx(jatom)
   RAD=R(3)
-  DER1(3)=dfldi(3)/RAD/DX
+  DER1(3)=dfldi(3)/RAD/stru%dx(jatom)
   !rschmid
   !  Use symmetric 7-point formula to generate the first derivative at
   !  all intermediate mesh points.
   !rschmid
 
-  do J=4,MESH-3
+  do J=4,stru%Npt(jatom)-3
      dfldi(J) = (        f_l(J+3) - f_l(J-3)    &
                  -  9 * (f_l(J+2) - f_l(J-2))   &
                  + 45 * (f_l(J+1) - f_l(J-1)) ) &
                  / 60
      RAD=R(J)
-     DER1(J)=dfldi(J)/RAD/DX
+     DER1(J)=dfldi(J)/RAD/stru%dx(jatom)
   end do
 !rschmid
 !  Use unsymmetric 6-point formulae for the second derivative at the
 !  last 3 mesh points.
 !rschmid
-  dfldi(MESH-2) = - (    3*f_l(MESH  ) &
-                     -  30*f_l(MESH-1) &
-                     -  20*f_l(MESH-2) &
-                     +  60*f_l(MESH-3) &
-                     -  15*f_l(MESH-4)   &
-                     +   2*f_l(MESH-5) ) &
-                     / 60
-  RAD=R(MESH-2)
-  DER1(MESH-2)=dfldi(MESH-2)/RAD/DX
+  dfldi(stru%Npt(jatom)-2) = - (    3*f_l(stru%Npt(jatom)  )   &
+                                -  30*f_l(stru%Npt(jatom)-1)   &
+                                -  20*f_l(stru%Npt(jatom)-2)   &
+                                +  60*f_l(stru%Npt(jatom)-3)   &
+                                -  15*f_l(stru%Npt(jatom)-4)   &
+                                +   2*f_l(stru%Npt(jatom)-5) ) &
+                                / 60
+  RAD=R(stru%Npt(jatom)-2)
+  DER1(stru%Npt(jatom)-2)=dfldi(stru%Npt(jatom)-2)/RAD/stru%dx(jatom)
 
-  dfldi(MESH-1) = - (-  12*f_l(MESH  ) &
-                     -  65*f_l(MESH-1) &
-                     + 120*f_l(MESH-2) &
-                     -  60*f_l(MESH-3)   &
-                     +  20*f_l(MESH-4)   &
-                     -   3*f_l(MESH-5) ) &
-                     / 60
-  RAD=R(MESH-1)
-  DER1(MESH-1)=dfldi(MESH-1)/RAD/DX
+  dfldi(stru%Npt(jatom)-1) = - (-  12*f_l(stru%Npt(jatom)  )   &
+                                -  65*f_l(stru%Npt(jatom)-1)   &
+                                + 120*f_l(stru%Npt(jatom)-2)   &
+                                -  60*f_l(stru%Npt(jatom)-3)   &
+                                +  20*f_l(stru%Npt(jatom)-4)   &
+                                -   3*f_l(stru%Npt(jatom)-5) ) &
+                                / 60
+  RAD=R(stru%Npt(jatom)-1)
+  DER1(stru%Npt(jatom)-1)=dfldi(stru%Npt(jatom)-1)/RAD/stru%dx(jatom)
 
-  dfldi(MESH  ) = - (- 137*f_l(MESH  ) &
-                     + 300*f_l(MESH-1) &
-                     - 300*f_l(MESH-2) &
-                     + 200*f_l(MESH-3) &
-                     -  75*f_l(MESH-4) &
-                     +  12*f_l(MESH-5) ) &
-                     / 60
+  dfldi(stru%Npt(jatom)  ) = - (- 137*f_l(stru%Npt(jatom)  )   &
+                                + 300*f_l(stru%Npt(jatom)-1)   &
+                                - 300*f_l(stru%Npt(jatom)-2)   &
+                                + 200*f_l(stru%Npt(jatom)-3)   &
+                                -  75*f_l(stru%Npt(jatom)-4)   &
+                                +  12*f_l(stru%Npt(jatom)-5) ) &
+                                / 60
 
-  RAD=R(MESH)
-  DER1(MESH)=dfldi(MESH)/RAD/DX
+  RAD=R(stru%Npt(jatom))
+  DER1(stru%Npt(jatom)) = dfldi(stru%Npt(jatom))/RAD/stru%dx(jatom)
 end subroutine dergl
 end module     dergl_m
 
@@ -312,13 +312,14 @@ end module     inth_m
 
 module     diracout_m; contains
 !!! Integration of Dirac equation
-subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
-  use param, only: unit_out, Nrad
-  use const, only: clight, R8
-  ! dp    =  large component of the solution of the dirac equation
-  ! dq    =  small component of the solution
-  use uhelp, only: dp => A, dq => B
-  use PS1,   only: dep, deq, db, dvc, dsal, dk, dm
+subroutine diracout(stru, jatom, V, eh, nqk, val, slo, nodes)
+  use param,     only: unit_out, Nrad
+  use const,     only: clight, R8
+  ! dp    = large component of the solution of the dirac equation
+  ! dq    = small component of the solution
+  use uhelp,     only: dp => A, dq => B
+  use PS1,       only: dep, deq, db, dvc, dsal, dk, dm
+  use structmod, only: struct_t
 
   !! procedure includes
   use inth_m
@@ -327,17 +328,15 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
   implicit none
 
   !  Input:
-  !    rel    switch for relativ. - nonrelativ. calculation
+  !    stru   structure data type
   !    V      rad.sym. potential in Hartree, V = potential*r
-  !    Rnot   first radial meshpoint
-  !    dstep  log. step
   !    Nmax   number of radial meshpoints
   !    EH     energy in hartree
   !    Nqk    relativistic quantum number kappa
   !    Z      charge of nucleus
-  real(R8), intent(in)  :: V(Nrad), Rnot, dstep, EH, Z
-  logical,  intent(in)  :: rel
-  integer,  intent(in)  :: Nmax, Nqk
+  type(struct_t), intent(in) :: stru
+  real(R8),       intent(in) :: V(Nrad), EH
+  integer,        intent(in) :: jatom, Nqk
 
   !  Output:
   !    val,slo:  Wellenfunktion und Steigung am Kugelrand
@@ -374,11 +373,11 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
   !rschmid
   !   Set up radial mesh.
   !rschmid
-  do i=1,nmax
-     DR(i)=RNOT*(exp(DSTEP*(i-1.d0)))
+  do i=1,stru%Npt(jatom)
+     DR(i)=stru%R0(jatom) * (exp(stru%dx(jatom) * (i-1.d0)))
   enddo
 
-  if (rel) then
+  if (stru%rel) then
      dvc = clight
   else
      dvc = 1e10_R8
@@ -386,9 +385,9 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
   dsal = 2*dvc
   db = eh/dvc
   dk = nqk
-  dm=dstep*dkoef
+  dm = stru%dx(jatom) * dkoef
 
-  do i=1,nmax
+  do i=1,stru%Npt(jatom)
      dv(i) = v(i)/dr(i)
   enddo
   !rschmid
@@ -396,20 +395,24 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
   !rschmid
 
   !jk   finite size of the nucleus
-  rnuc=2.2677e-05_R8*(atom_mass(int(z))**(1/3._R8))
-  write(unit_out,*)'amass, r0:',atom_mass(int(z)),rnuc
-  do i=1,nmax
-     d1=rnot*exp(DSTEP*(i-1.d0))
-     if (d1 >= rnuc) exit
+
+  ! Shouldn't we use nint() here instead of int()?  OTOH, all of
+  ! Wien2k does it this way …
+  Rnuc = 2.2677e-05_R8 * atom_mass(int(stru%Z(jatom)))**(1/3._R8)
+  write(unit_out,*) 'amass, r0:', atom_mass(int(stru%Z(jatom))), Rnuc
+  do i = 1, stru%Npt(jatom)
+     d1 = stru%R0(jatom) * exp(stru%dx(jatom) * (i-1.d0))
+     if (d1 >= Rnuc) exit
   end do
   nuc=I
   write(unit_out,*)'nuc=',nuc
   if (nuc <= 0) then
-     dfl = sqrt(nqk*nqk-z*z/(dvc*dvc))
+     dfl = sqrt(nqk*nqk - stru%Z(jatom)**2 / dvc**2)
   else
      dfl=nqk*nqk
      do i=1,nuc
-        dv(i)=dv(i)+z/dr(i)+z*((dr(i)/dr(nuc))**2-3)/(2*dr(nuc))
+        dv(i) = dv(i) + stru%Z(jatom)/dr(i) + &
+             &  stru%Z(jatom) * ((dr(i)/dr(nuc))**2 - 3) / (2*dr(nuc))
      end do
   end if
   dq1 = nqk/iabs(nqk)
@@ -417,7 +420,7 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
   !rschmid
   !  Determine expansion of the potential at the origin.
   !rschmid
-  call inouh(dp,dq,dr,dq1,dfl,dv(1),Z,TEST,nuc)
+  call inouh(dp, dq, dr, dq1, dfl, dv(1), stru%Z(jatom), TEST, nuc)
 
   !rschmid
   !  Set up boundary conditions using a small r expansion.
@@ -443,7 +446,7 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
   !    Perform outward integration of dirac equation
   !rschmid
 
-  do i = unit_out, nmax
+  do i = unit_out, stru%Npt(jatom)
      dp(i) = dp(i-1)
      dq(i) = dq(i-1)
      call inth (dp(i),dq(i),dv(i),dr(i))
@@ -455,9 +458,9 @@ subroutine diracout(rel,v,rnot,dstep,nmax,eh,nqk,val,slo,nodes,z)
   enddo
 
 
-  val = dp(nmax)/dr(nmax)
-  slo = dep(5)/(dstep*dr(nmax))/dvc*2.d0
-  slo = (slo-val)/dr(nmax)
+  val = dp(stru%Npt(jatom)) / dr(stru%Npt(jatom))
+  slo = dep(5) / (stru%dx(jatom) * dr(stru%Npt(jatom))) / dvc*2
+  slo = (slo-val) / dr(stru%Npt(jatom))
 end subroutine diracout
 end module     diracout_m
 
@@ -837,4 +840,4 @@ end module     Ylm_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-26 14:14:03 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-04 09:44:17 assman@faepop71.tu-graz.ac.at>

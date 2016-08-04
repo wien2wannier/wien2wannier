@@ -711,8 +711,8 @@ subroutine auggen(rel,stru,whpsi)
   character(5),   intent(in) :: WHPSI
 
   logical   :: large, rlo(1:nloat,0:lomax)
-  integer   :: i, j, k, l, m, jatom, jlo, jrf, imax, irf, nodes, kappa
-  real(DPk) :: cfac, znuc1, RMT2, rnorm, uve, duve, uv, uvb, duvb, duv
+  integer   :: i, j, k, l, m, jatom, jlo, jrf, irf, nodes, kappa
+  real(DPk) :: cfac, RMT2, rnorm, uve, duve, uv, uvb, duvb, duv
   real(DPk) :: dele, delei, fl, ei, e1, cross, clight, r_m
   real(DPk) :: pi12lo, pe12lo, xac, xbc, xcc, alonorm
   real(DPk) :: E(0:LMAX7), ELO(0:LOMAX,NLOAT), PEI(0:LMAX7)
@@ -725,7 +725,7 @@ subroutine auggen(rel,stru,whpsi)
   LARGE = WHPSI .eq. 'LARGE'
   if(LARGE) CFAC = 1.0D0
 
-  !     << skip header of *.vsp file >>
+  ! << skip header of *.vsp file >>
   read(unit_vsp,1000)
 
   write(unit_out,2000)
@@ -733,20 +733,17 @@ subroutine auggen(rel,stru,whpsi)
   ALO = 0
   ILO = 0
   do JATOM=1,STRU%NNEQ
-     IMAX = stru%Npt(JATOM)
-     ZNUC1 = stru%Z(JATOM)
      RMT2 = RMT(JATOM)*RMT(JATOM)
      write(unit_out,2010)JATOM,RMT(JATOM)
 
-     !       << read atomic potential r * V(r) and convert into Rydberg >>
+     ! << read atomic potential r * V(r) and convert into Rydberg >>
      read(unit_vsp,1010)
-     read(unit_vsp,1020)(VR(J),J=1,IMAX)
+     read(unit_vsp,1020) VR(1 : stru%Npt(jatom))
      read(unit_vsp,1030)
-     do J=1,IMAX
-        VR(J) = 0.5D0 * VR(J)
-     end do
 
-     !       << read augmentation energies and check for local orbitals >>
+     VR(1 : stru%Npt(jatom)) = VR(1 : stru%Npt(jatom)) / 2
+
+     ! << read augmentation energies and check for local orbitals >>
      read(unit_vector) E
      read(unit_vector) ELO
      do L=0,LMAX7
@@ -783,35 +780,35 @@ subroutine auggen(rel,stru,whpsi)
         EI=E(L)/2.0d0
         !         << compute d/dE u_l(r,E) by finite differences >>
         E1=EI-DELE
-        call OUTWIN(REL,VR,RM(1,JATOM),DX(JATOM),IMAX,E1, &
-             FL,UVB,DUVB,NODES,ZNUC1)
+        call OUTWIN(REL,VR,RM(1,JATOM),DX(JATOM),stru%Npt(jatom),E1, &
+             FL,UVB,DUVB,NODES,stru%Z(jatom))
         call RINT13(REL,A,B,A,B,RNORM,JATOM, stru)
         RNORM = 1.0D0/sqrt(RNORM)
-        do M=1,IMAX
+        do M=1,stru%Npt(jatom)
            AE(M) = RNORM * A(M)
            BE(M) = RNORM * B(M)
         end do
         UVB  = RNORM * UVB
         DUVB = RNORM * DUVB
         E1=EI+DELE
-        call OUTWIN(REL,VR,RM(1,JATOM),DX(JATOM),IMAX,E1, &
-             FL,UVE,DUVE,NODES,ZNUC1)
+        call OUTWIN(REL,VR,RM(1,JATOM),DX(JATOM),stru%Npt(jatom),E1, &
+             FL,UVE,DUVE,NODES,stru%Z(jatom))
         call RINT13(REL,A,B,A,B,RNORM,JATOM, stru)
         RNORM = 1.0D0/sqrt(RNORM)
         UVE  = DELEI*(RNORM*UVE -UVB )
         DUVE = DELEI*(RNORM*DUVE-DUVB)
-        do M=1,IMAX
+        do M=1,stru%Npt(jatom)
            AE(M) = DELEI*(RNORM*A(M)-AE(M))
            BE(M) = DELEI*(RNORM*B(M)-BE(M))
         end do
         !
         !         << now compute u_l(r,E) >>
         !
-        call OUTWIN(REL,VR,RM(1,JATOM),DX(JATOM),IMAX,EI, &
-             FL,UV,DUV,NODES,ZNUC1)
+        call OUTWIN(REL,VR,RM(1,JATOM),DX(JATOM),stru%Npt(jatom),EI, &
+             FL,UV,DUV,NODES,stru%Z(jatom))
         call RINT13(REL,A,B,A,B,RNORM,JATOM, stru)
         RNORM = 1.0D0/sqrt(RNORM)
-        do M=1,IMAX
+        do M=1,stru%Npt(jatom)
            A(M) = RNORM*A(M)
            B(M) = RNORM*B(M)
         end do
@@ -821,13 +818,13 @@ subroutine auggen(rel,stru,whpsi)
         !         << insure orthogonality of d/dE u_l(r,E) on u_l(r,E) >>
         !
         call RINT13(REL,A,B,AE,BE,CROSS,JATOM, stru)
-        do M=1,IMAX
+        do M=1,stru%Npt(jatom)
            AE(M) = (AE(M)-CROSS*A(M))
            BE(M) = (BE(M)-CROSS*B(M))
         end do
         P(L,2,JATOM) = UVE -CROSS*P(L,1,JATOM)
         DP(L,2,JATOM) = DUVE-CROSS*DP(L,1,JATOM)
-        do I=1,IMAX
+        do I=1,stru%Npt(jatom)
            RAD1(I,L,1) = A(I)
            RAD1(I,L,2) = AE(I)
            RAD2(I,L,1) = B(I)
@@ -850,22 +847,21 @@ subroutine auggen(rel,stru,whpsi)
               if(rlo(jlo,l)) then
                  ei=elo(l,nloat)/2.d0
                  kappa=l
-                 call diracout(rel,vr,RM(1,JATOM),dx(jatom),IMAX,    &
-                      ei,kappa,uv,duv,nodes,znuc1)
-                 call dergl(a,b,RM(1,jatom),dx(jatom),IMAX)
-                 do m=1,IMAX
+                 call diracout(stru, jatom, Vr, ei, kappa, uv, duv, nodes)
+                 call dergl(stru, jatom, a, b)
+                 do m=1,stru%Npt(jatom)
                     r_m=RM(1,JATOM)*exp(dx(jatom)*(m-1))
                     b(m)=b(m)*r_m/(2.d0*clight+(elo(l,jlo)- &
                          2.d0*vr(m)/r_m)/(2.d0*clight))
                     b(m)=b(m)*clight
                  enddo
               else
-                 call outwin(rel,vr,RM(1,JATOM),dx(jatom),IMAX,   &
-                      ei,fl,uv,duv,nodes,znuc1)
+                 call outwin(rel,vr,RM(1,JATOM),dx(jatom),stru%Npt(jatom),   &
+                      ei,fl,uv,duv,nodes,stru%Z(jatom))
               endif
               call RINT13(REL,A,B,A,B,RNORM,JATOM, stru)
               RNORM = 1.0d0/sqrt(RNORM)
-              do M=1,IMAX
+              do M=1,stru%Npt(jatom)
                  RAD1(M,L,irf) = RNORM*A(M)
                  RAD2(M,L,irf) = RNORM*B(M)
               enddo
@@ -907,19 +903,19 @@ subroutine auggen(rel,stru,whpsi)
      !
      !       << re-scale radial augmentation functions  >>
      !       << with VR just being a working array here >>
-     do I=1,IMAX
+     do I=1,stru%Npt(jatom)
         VR(I) = CFAC / RM(I,JATOM)
      end do
      do L=0,LMAX7
         if(LARGE)then
            do irf=1,nrf
-              do I=1,IMAX
+              do I=1,stru%Npt(jatom)
                  RRAD(I,L,irf,JATOM) = RAD1(I,L,irf) * VR(I)
               enddo
            enddo
         else
            do irf=1,nrf
-              do I=1,IMAX
+              do I=1,stru%Npt(jatom)
                  RRAD(I,L,irf,JATOM) = RAD2(I,L,irf) * VR(I)
               enddo
            enddo
@@ -2250,4 +2246,4 @@ end module     trans_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-26 14:22:20 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-04 09:49:16 assman@faepop71.tu-graz.ac.at>

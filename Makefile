@@ -9,7 +9,7 @@
 SHELL=/bin/bash
 
 ifndef VERSION
-   VERSION = $(lastword '$version: v1.0.0-200-g67b09d9$')
+   VERSION = $(lastword '$version: v1.0.0-212-gc51bb1e$')
 endif
 
 SIMPLE      := SRC_trig doc test
@@ -99,4 +99,4 @@ wien-dist: dist-tmp
 	rm -rf $(dist-dir) $(Morig)
 
 
-## Time-stamp: <2016-07-26 16:08:44 assman@faepop71.tu-graz.ac.at>
+## Time-stamp: <2016-07-26 16:15:18 assman@faepop71.tu-graz.ac.at>
