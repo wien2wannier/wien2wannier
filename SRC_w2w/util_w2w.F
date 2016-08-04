@@ -1460,17 +1460,17 @@ module inwfmod
   end interface inwf_read
 
   type proj
-     integer                                 :: NY
-     integer,      allocatable, dimension(:) :: iat, l, m
-     complex(DPk), allocatable, dimension(:) :: coeff
+     integer                   :: NY
+     integer,      allocatable :: iat(:), l(:), m(:)
+     complex(DPk), allocatable :: coeff(:)
   end type proj
 
   type inwf_t
      !! Structure to represent a ‘inwf’ file
-     character(len=4)    :: mode
-     logical             :: Mmn, Amn
-     integer             :: bmin, bmax, Nproj, LJmax
-     type(proj), pointer :: projections(:)
+     character(len=4)        :: mode
+     logical                 :: Mmn, Amn
+     integer                 :: bmin, bmax, Nproj, LJmax
+     type(proj), allocatable :: projections(:)
   end type inwf_t
 
 contains
@@ -1483,18 +1483,17 @@ contains
 
     integer             :: w, y, NY
     real(DPk)           :: re, im
-    type(proj), pointer :: p
 
     read(lun, *) inwf%mode
 
     select case (uppercase(inwf%mode))
     case('AMN')
-       inwf%amn = .true.
+       inwf%Amn = .true.
     case('MMN')
-       inwf%mmn = .true.
+       inwf%Mmn = .true.
     case('BOTH')
-       inwf%amn = .true.
-       inwf%mmn = .true.
+       inwf%Amn = .true.
+       inwf%Mmn = .true.
     case default
        call croak('unknown MODE in inwf, '//inwf%mode)
     end select
@@ -1509,13 +1508,18 @@ contains
        allocate(inwf%projections(inwf%Nproj))
        do w = 1, inwf%Nproj
           read(lun, *) NY
-          p => inwf%projections(w)
-          p%NY = NY
-          allocate(p%iat(NY), p%l(NY), p%m(NY), p%coeff(NY))
+          inwf%projections(w)%NY = NY
+          allocate( inwf%projections(w)%iat  (NY), &
+               &    inwf%projections(w)%l    (NY), &
+               &    inwf%projections(w)%m    (NY), &
+               &    inwf%projections(w)%coeff(NY))
 
           ylm: do y = 1,NY
-             read(lun, *) p%iat(y), p%l(y), p%m(y), re, im
-             p%coeff(y) = cmplx(re, im, DPk)
+             read(lun, *) inwf%projections(w)%iat(y), &
+                  &       inwf%projections(w)%l  (y), &
+                  &       inwf%projections(w)%m  (y), &
+                  re, im
+             inwf%projections(w)%coeff(y) = cmplx(re, im, DPk)
           end do ylm
        end do
     end if
@@ -2178,4 +2182,4 @@ end module reallocate
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-08-02 13:27:58 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-02 17:17:18 assman@faepop71.tu-graz.ac.at>

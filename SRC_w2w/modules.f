@@ -131,19 +131,17 @@ module Amn_Mmn
 
   implicit none
   private; save
-  public :: overlap, init_Amn_Mmn, c
+  public :: overlap, init_Amn_Mmn
 
-  complex(C16), allocatable :: overlap(:,:,:), c(:,:,:)
+  complex(C16), allocatable :: overlap(:,:,:)
 
 contains
-  subroutine init_Amn_Mmn(Nbands, Npair, Nproj, Nat)
-    use param, only: Lmax2
+  subroutine init_Amn_Mmn(Nbands, Npair)
+    integer, intent(in) :: Nbands, Npair
 
-    integer, intent(in) :: Nbands, Npair, Nproj, Nat
+    allocate( overlap(Nbands, Nbands, Npair) )
 
-    allocate( overlap(Nbands, Nbands, Npair), c(Nproj, (LMAX2+1)**2, Nat) )
-
-    overlap = 0; c = 0
+    overlap = 0
   end subroutine init_Amn_Mmn
 end module Amn_Mmn
 
@@ -539,11 +537,11 @@ subroutine atpar(stru, jatom, itape, jtape)
      ! outwin() sets A(:), B(:)!
      call outwin(stru, jatom, Vr, E1, FL, UVB, DUVB, NODEL)
      call rint13(stru, jatom, A, B, A, B, OVLP)
-     TRX=1.0D0/sqrt(OVLP)
-     IMAX=stru%Npt(JATOM)
-     do M=1,IMAX
-        AE(M)=TRX*A(M)
-        BE(M)=TRX*B(M)
+     trx =1 / sqrt(OVLP)
+     imax=stru%npt(jatom)
+     do m=1,imax
+        AE(m)=trx*A(m)
+        BE(m)=trx*B(m)
      end do
      UVB=TRX*UVB
      DUVB=TRX*DUVB
@@ -588,13 +586,12 @@ subroutine atpar(stru, jatom, itape, jtape)
      end do
      P(l,2)=UVE+TRY*P(l,1)
      DP(l,2)=DUVE+TRY*DP(l,1)
-     call RINT13(stru, jatom, AE, BE, AE, BE, PEI(l))
+     call rint13(stru, jatom, AE, BE, AE, BE, PEI(l))
      write(unit_out, "(10X,I2,5E14.6,5X,3I2)") &
           L,P(l,1),DP(l,1),P(l,2),DP(l,2)
   end do lloop
-!
+
 ! nun fur lo
-!
   loloop: do l=0,lomax
      irf=2
      iloloop: do jlo=1,ilo(l)
@@ -604,8 +601,8 @@ subroutine atpar(stru, jatom, itape, jtape)
            DELEI=0.25D0/DELE
            FL=L
            EI=elo(l,jlo)/2.d0
-           !
-           !     CALCULATE FUNCTION AT EI
+
+           ! Calculate function at EI
            if(rlo(jlo,l)) then
               ei=elo(l,nloat)/2.d0
               kappa=l
@@ -632,10 +629,10 @@ subroutine atpar(stru, jatom, itape, jtape)
               rf2(M,l,irf)=TRX*B(M)
            end do
 
-           call RINT13(stru, jatom, rf1(1,l,1), rf2(1,l,1), &
-                &      rf1(1,l,irf), rf2(1,l,irf), pi12lo)
+           call RINT13(stru, jatom, rf1(:,l,1), rf2(:,l,1), &
+                &      rf1(:,l,irf), rf2(:,l,irf), pi12lo)
            call RINT13(stru, jatom, rf1(1,l,2), rf2(1,l,2), &
-                &      rf1(1,l,irf), rf2(1,l,irf), pe12lo)
+                &      rf1(:,l,irf), rf2(:,l,irf), pe12lo)
         end if
         call abc (l, stru%RMT(jatom), pei(l), pi12lo, pe12lo, jlo, lapw(l))
      end do iloloop
@@ -880,4 +877,4 @@ end module radint_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-08-02 13:22:26 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-03 12:57:50 assman@faepop71.tu-graz.ac.at>

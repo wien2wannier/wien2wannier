@@ -28,12 +28,13 @@ program wf
   use xa,        only: init_xa
   use xa3,       only: init_xa3
   use bessel,    only: init_bessel
-  use Amn_Mmn,   only: c, init_Amn_Mmn
+  use Amn_Mmn,   only: init_Amn_Mmn
   use pairs,     only: kp, kpb, bqx,bqy,bqz, bqx1,bqy1,bqz1, init_pairs
   use util,      only: paropen, ptime
   use wien2k,    only: errflg, errclr, gtfnam
   use clio,      only: croak
   use structmod, only: struct_t, struct_read
+  use inwfmod,   only: inwf_t, inwf_read
 
   !! procedure includes
   use read_vec_m
@@ -44,18 +45,16 @@ program wf
 
   implicit none
 
-  character(len=    3)  :: mode
+  type(inwf_t) :: inwf
+
   character(len=   11)  :: status,form
   character(len=BUFSZ)  :: deffn, errfn, aline
   character(len=BUFSZ)  :: fname, vecfn, enefn, iomsg
 
-  logical :: Mmn, Amn
-  integer :: centeratom(300)
-  integer :: iloop, i, ia, ii, ind, ios, iproc, irecl, iunit, j, l, m
-  integer :: ljmax, nproj, maxx,maxy,maxz, maxg, n, n_pair, nen
-  integer :: nemin, nemax, Nb, Nk, nntot, kkk, iostat
+  integer :: iloop, i, j, ios, iproc, irecl, iunit
+  integer :: maxx,maxy,maxz, maxg, n, n_pair, nen
+  integer :: Nb, Nk, nntot, kkk, iostat
 
-  real(r8) :: x1, x2
   real(r8) :: efermi
 
   type(struct_t) :: stru
@@ -105,7 +104,7 @@ program wf
         if (ios /= 0) exit kpts
         Nk=Nk+1
         nmat=max(n,nmat)
-        do ii=1,nen
+        do i=1,NEn
            read(unit_ene,*)
         enddo
      end do kpts
@@ -139,22 +138,19 @@ program wf
   write(unit_out,*)'NNTOT=',NNTOT
   write(unit_out,*)'N_pair=',N_pair
 
-  MMN=.true.
-  AMN=.true.
-  read(unit_in,*)MODE
-  if (MODE.eq.'MMN') AMN=.false.
-  if (MODE.eq.'AMN') MMN=.false.
-  write(unit_out,*)'MODE='
-  if (MMN) write(unit_out,*)'MMN'
-  if (AMN) write(unit_out,*)'AMN'
-  read(unit_in,*)NEMIN,NEMAX
-  if (nemax.lt.nemin) stop 'nemin > nemax'
-  read(unit_in,*)LJMAX,NPROJ
-  write(unit_out,*)'nemin,nemax:',nemin,nemax
-  Nb=nemax-nemin+1
+  call inwf_read(unit_in, inwf)
+  Nb = inwf%bmax - inwf%bmin + 1
+
+  write(unit_out, "(' MODE=')", ADVANCE='no')
+  if (inwf%Mmn) write(unit_out, '(" Mmn")', ADVANCE='no')
+  if (inwf%Amn) write(unit_out, '(" Amn")', ADVANCE='no')
+  write(unit_out,*)
+  write(unit_out, '(" band window = [", I0, ", ", I0, "]")') &
+       inwf%bmin, inwf%bmax
+
   call init_xa3(Nb,nmat,Nk+1)
   call init_xa(LMAX2,NMAT,NRAD,Nb)
-  call init_Amn_Mmn(Nb, N_pair, Nproj, stru%Nat)
+  call init_Amn_Mmn(Nb, N_pair)
 
   read(unit_fermi, *) efermi
 
@@ -164,7 +160,8 @@ program wf
      call paropen(unit_vector, vecfn, iproc, iloop, &
           STATUS='old', FORM='unformatted')
 
-     call read_vec(NEmin, NEmax, stru%Nneq, kkk, maxx, maxy, maxz, Efermi)
+     call read_vec(inwf%Bmin, inwf%Bmax, stru%Nneq, &
+          &        kkk, maxx, maxy, maxz, Efermi)
 
      close(unit_vector)
   end do vectorfiles
@@ -172,44 +169,39 @@ program wf
   if(kkk /= Nk) call croak('inconsistent numbers of k-points between&
        & vector and energy files')
 
-  read_proj: if (AMN) then
-     do I=1,NPROJ
-        read(unit_in,*) N
-        do J=1,N
-           read(unit_in,*) IA,L,M,X1,X2
-           ind=L*(L+1)+M+1
-           C(I,ind,IA)=X1 + (0,1)*X2
-           CENTERATOM(I)=IA
-        enddo
-     enddo
+  read_proj: if (inwf%Amn) then
+     write(unit_out, *)
+     write(unit_out,*)'Initial orbital projections:'
 
-     write(unit_out,*)'initial orbital projections'
-     do I=1,nproj
-        write(unit_out,*)'orbital #',I,'centered at atom',CENTERATOM(I)
-        ind=0
-        do L=0,3
-           do M=-L,L
-              ind=ind+1
-              write(unit_out,*)L,M,C(I,ind,CENTERATOM(I))
-           enddo
+     do i=1,inwf%Nproj
+        write(unit_out, *)
+        if (i==1) then
+           write(unit_out, "(' atom  l  m    Re      Im')")
+           write(unit_out, "(' ', 28('-'))")
+        end if
+
+        do j=1, inwf%projections(i)%NY
+           write(unit_out, '(i5,2x,i1,1x,i2,"  (",f6.3,", ",f6.3,")"  )') &
+                inwf%projections(i)%iat(j), inwf%projections(i)%l    (j), &
+                inwf%projections(i)%m  (j), inwf%projections(i)%coeff(j)
         enddo
      enddo
   endif read_proj
 
-  call init_bessel(LMAX2,LJMAX,NRAD,NRF)
+  call init_bessel(Lmax2, inwf%LJmax, Nrad, Nrf)
   call gaunt2
 
   write(unit_out, "(////,30X,50(1H-),/,33X,'S T R U C T U R A L   ', &
          & 'I N F O R M A T I O N',/,30X,50(1H-),//)")
   write(unit_out, "(3X,'SUBSTANCE',20X,'= ',A80,/)") stru%title
 
-  if (amn) then
+  if (inwf%Amn) then
      write(unit_amn,'(A20)')  stru%title
-     write(unit_amn,'(3I12)') NEmax-NEmin+1, Nk, Nproj
+     write(unit_amn,'(3I12)') Nb, Nk, inwf%Nproj
   endif
-  if (mmn) then
+  if (inwf%Mmn) then
      write(unit_mmn,'(A20)')  stru%title
-     write(unit_mmn,'(3I12)') NEmax-NEmin+1, Nk, Nntot
+     write(unit_mmn,'(3I12)') Nb, Nk, Nntot
   endif
 
   write(unit_out, "(3X,'LATTICE',22X,'= ',A4)")                  stru%lattic
@@ -240,10 +232,11 @@ program wf
   call paropen(unit_vector, vecfn, iproc, 1, &
        &       STATUS='old', FORM='unformatted')
 
-  if (MMN) then
-     call ptime(unit_out)
-     call l2mmn(stru, Nb, Nk, NNTOT, LJMAX)
-     call ptime('l2mmn')
+  call ptime(unit_out)
+
+  if (inwf%Mmn) then
+     call l2mmn(stru, inwf, Nk, Nntot)
+     call ptime('l2Mmn')
      !JXZ: MAXG is not pre-defined
      MAXG = 0
      write(unit_out,*)'MXG=',MAXG
@@ -251,10 +244,10 @@ program wf
      call ptime('planew')
   endif
 
-  if (AMN) then
+  if (inwf%Amn) then
      call ptime(unit_out)
-     call l2amn(stru, Nb, Nproj, Nk)
-     call ptime('l2amn')
+     call l2amn(stru, inwf, Nk)
+     call ptime('l2Amn')
   endif
 
   call ERRCLR(ERRFN)
@@ -268,4 +261,4 @@ end program wf
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-08-02 14:01:06 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-03 17:47:20 assman@faepop71.tu-graz.ac.at>

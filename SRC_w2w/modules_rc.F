@@ -232,7 +232,7 @@ end module     almgen_m
 
 
 module     l2Mmn_m; contains
-subroutine l2Mmn(stru, NB, num_kpts, NNTOT, LJMAX)
+subroutine l2Mmn(stru, inwf, num_kpts, NNTOT)
   use const,     only: R8, C16, TAU
   use param,     only: unit_out, unit_vsp, unit_vector, NRF, Lmax2
   use xa,        only: bk
@@ -242,6 +242,7 @@ subroutine l2Mmn(stru, NB, num_kpts, NNTOT, LJMAX)
   use pairs,     only: kp, kpb, bqx, bqy, bqz
   use lolog,     only: n_rad
   use structmod, only: struct_t
+  use inwfmod,   only: inwf_t
 
   !! procedure includes
   use almgen_m
@@ -253,10 +254,11 @@ subroutine l2Mmn(stru, NB, num_kpts, NNTOT, LJMAX)
   implicit none
 
   type(struct_t), intent(in) :: stru
-  integer,        intent(in) :: Nb, num_kpts, NNtot, LJmax
+  type(inwf_t),   intent(in) :: inwf
+  integer,        intent(in) :: num_kpts, NNtot
 
   integer  :: pair_index, r_index, iscf, jatom, lfirst, itap, itape, jtape
-  integer  :: k1, k2, kkk
+  integer  :: k1, k2, kkk, Nb
   real(R8) :: tALM, tMeas1, tMeas2, t1, tt0, tt1, fac, bx, by, bz
   real(R8) :: KX1,KY1,KZ1     ! k-points in u.c. coordinates k and k+b
 
@@ -266,10 +268,13 @@ subroutine l2Mmn(stru, NB, num_kpts, NNTOT, LJMAX)
   complex(C16), allocatable :: alm(:,:,:,:),blm(:,:,:,:)
 
   real(R8) :: BM, tt2,tt3, t2, arg1, arg2, arg3
-  integer  :: index1,index2,indexj, irf1,irf2, lj, m1,m2,mj, mu, latom, l_index, l1, l2
+  integer  :: index1,index2,indexj, irf1,irf2, lj, m1,m2,mj, mu
+  integer  :: latom, l_index, l1, l2
 
   integer :: k1_prog_itvl
   k1_prog_itvl = min(max(num_kpts/10, 1), 100)
+
+  Nb = inwf%bmax - inwf%bmin + 1
 
   read(unit_vsp, '(50X,I2,//)') ISCF
   LFIRST=1
@@ -323,12 +328,12 @@ subroutine l2Mmn(stru, NB, num_kpts, NNTOT, LJMAX)
            BM = sqrt(sum(BK**2))
 
            ! compute radial intergrals <R(r)|j_(|b|*r)|R'(r)>
-           call radint(stru, jatom, ljmax, bm)
+           call radint(stru, jatom, inwf%LJmax, bm)
            ! computer Y_lm(b)
-           call YLM (BK,LJMAX,YLB)
+           call YLM (BK, inwf%LJmax, YLB)
 
            indexj=0
-           do LJ=0,LJMAX
+           do LJ = 0, inwf%LJmax
               do MJ=-LJ,LJ
                  indexj=indexj+1
                  YLB(indexj)=conjg(YLB(indexj))*(0,1)**LJ
@@ -345,7 +350,7 @@ subroutine l2Mmn(stru, NB, num_kpts, NNTOT, LJMAX)
               L_index=0
               l1loop: do L1=0,LMAX2
                  l2loop: do L2=0,LMAX2
-                    ljloop: do LJ = abs(L1-L2), min(L1+L2, LJMAX), 2
+                    ljloop: do LJ = abs(L1-L2), min(L1+L2, inwf%LJmax), 2
                        if (mod((L1+L2+LJ),2) == 1) cycle
                        if ((L1+L2-LJ) < 0         &
                             .or. (L1-L2+LJ) < 0   &
@@ -399,19 +404,19 @@ end module     l2Mmn_m
 
 
 module     l2Amn_m; contains
-subroutine l2Amn(stru, Nb, Nproj, num_kpts)
+subroutine l2Amn(stru, inwf, num_kpts)
   use param,     only: Lmax2, NRF, lomax, unit_vsp, unit_out, unit_vector
   use w2w,       only: Nmat, iblock, unit_amn
   use const,     only: R8, C16, TAU
   use xa,        only: BK, FJ, DFJ, PHS, BKrot, BKRloc
   use xa3,       only: A, XK,YK,ZK, GX,GY,GZ, BKX,BKY,BKZ, vecsz
-  use amn_mmn,   only: C
   use lolog,     only: nlo,nlov,nlon,loor,ilo,lapw
   use loabc,     only: alo
   use atspdt,    only: P, DP
   use const,     only: R8, C16
   use radfu,     only: RF1, RF2
   use structmod, only: struct_t
+  use inwfmod,   only: inwf_t
 
   !! procedure includes
   use rint13_m
@@ -422,23 +427,25 @@ subroutine l2Amn(stru, Nb, Nproj, num_kpts)
   implicit none
 
   type(struct_t), intent(in) :: stru
-  integer,        intent(in) :: NB, Nproj, num_kpts
+  type(inwf_t),   intent(in) :: inwf
+  integer,        intent(in) :: num_kpts
 
-  complex(C16) :: YL((LMAX2+1)**2)        ! list of spherical harmics
-  complex(C16) :: projection(NB,NPROJ,NUM_KPTS)
-  complex(C16) :: PHSHEL,CFAC
+  complex(C16) :: Yl((Lmax2+1)**2)        ! list of spherical harmics
+  complex(C16) :: projection(inwf%bmax-inwf%bmin+1, inwf%Nproj, num_kpts)
+  complex(C16) :: phshel,cfac
 
   real(R8)     :: h_al(iblock), h_bl(iblock)
-  complex(C16) :: h_yl  ( (LMAX2+1)**2, iblock)
-  complex(C16) :: h_alyl( (LMAX2+1)**2, iblock)
-  complex(C16) :: h_blyl( (LMAX2+1)**2, iblock)
-  complex(C16) :: alm   ( (LMAX2+1)**2, Nb, stru%Nat, Nrf )
+  complex(C16) :: h_yl  ( (Lmax2+1)**2, iblock)
+  complex(C16) :: h_alyl( (Lmax2+1)**2, iblock)
+  complex(C16) :: h_blyl( (Lmax2+1)**2, iblock)
+  complex(C16) :: Alm   ( (Lmax2+1)**2, inwf%bmax-inwf%bmin+1, stru%Nat, Nrf)
 
-  integer  :: i,ii,i3,l, m,mu,m1, num,num1,num2, n
-  integer  :: jatom,jlo,jneq, index, ibb,iscf,irf, lda,ldb,ldc, latom,lfirst
-  integer  :: kkk, max, itap,itape,jtape
-  real(R8) :: fac, arg, pi12lo
+  integer  :: i,ii,i3,l, m,mu,m1, n, ipr, ib, iY
+  integer  :: jatom,jlo,jneq, idx, ibb,iscf,irf, lda,ldb,ldc, latom,lfirst
+  integer  :: kkk, max, itap,itape,jtape, Nb
+  real(R8) :: fac, arg, pi12lo(0:Lmax2)
 
+  Nb = inwf%bmax-inwf%bmin+1
   projection = 0
 
   rewind(unit_vsp)
@@ -456,8 +463,15 @@ subroutine l2Amn(stru, Nb, Nproj, num_kpts)
      write(unit_out, '(7X,  "rotij", 10X, "transij")')
      write(unit_out, '(6X, 23("-"))')
 
+     pi12lo = 0
+     do l = 0,LOmax
+        if (loor(l)) call rint13(stru, jatom, rf1(:,l,1), rf2(:,l,1), &
+             &                   rf1(:,l,3), rf2(:,l,3), pi12lo(l))
+     end do
+
      kpoints: do KKK=1,NUM_KPTS
         N=vecsz(kkk)
+
         ! plane wave Q+k
         BKX(1:N) = XK(kkk) + GX(1:N, kkk)
         BKY(1:N) = YK(kkk) + GY(1:N, kkk)
@@ -500,17 +514,18 @@ subroutine l2Amn(stru, Nb, Nproj, num_kpts)
                  arg =  dot_product(bkrot, stru%pos(:, lfirst)) &
                       + dot_product((/bkx(i), bky(i), bkz(i)/), &
                       &             stru%transij(:,latom))
-                 phshel=exp((0,1)*(arg*TAU))
-                 INDEX=0
-                 do L=0,LMAX2
-                    MAX=2*L+1
-                    do M=1,MAX
-                       INDEX=INDEX+1
-                       h_yl(index,i3)=conjg(yl(index))*phshel
+                 phshel=exp((0,1)*arg*TAU)
+
+                 idx=0
+                 do l=0,Lmax2
+                    do m=1, 2*l+1
+                       idx=idx+1
+                       h_yl(idx,i3)=conjg(yl(idx))*phshel
                     enddo
                  enddo
               enddo
-              INDEX=0
+
+              IDX=0
               do L=0,LMAX2
                  i3=0
                  do i=ii,min(ii+iblock-1,N-(nlo+nlon+nlov))
@@ -520,17 +535,17 @@ subroutine l2Amn(stru, Nb, Nproj, num_kpts)
                        h_BL(i3)=FJ(L,I)*DP(L,1)-DFJ(L,I)*P(L,1)
                     else
                        h_AL(i3)=FJ(L,I)/P(L,1)/stru%RMT(jatom)**2
-                       h_BL(i3) = 0.d0
+                       h_BL(i3) = 0
                     endif
                  enddo
                  MAX=2*L+1
                  do M=1,MAX
-                    INDEX=INDEX+1
+                    IDX=IDX+1
                     i3=0
                     do i=ii,min(ii+iblock-1,N-(nlo+nlon+nlov))
                        i3=i3+1
-                       h_alyl(index,i3)=h_AL(i3)*h_YL(INDEX,i3)
-                       h_blyl(index,i3)=h_BL(i3)*h_YL(INDEX,i3)
+                       h_alyl(idx,i3)=h_AL(i3)*h_YL(idx,i3)
+                       h_blyl(idx,i3)=h_BL(i3)*h_YL(idx,i3)
                     enddo
                  enddo
               enddo
@@ -542,18 +557,19 @@ subroutine l2Amn(stru, Nb, Nproj, num_kpts)
 #endif
               ldc=lda
               ldb=nmat
+
 #ifndef _COMPLEX_
-              call dgemm('N','N',2*index,nb,ibb,1.d0, &
+              call dgemm('N','N',2*idx,nb,ibb,1.d0, &
                    h_alyl,lda,a(ii,1,kkk),ldb,1.d0, &
                    alm(1,1,mu,1),ldc)
-              call dgemm('N','N',2*index,nb,ibb,1.d0, &
+              call dgemm('N','N',2*idx,nb,ibb,1.d0, &
                    h_blyl,lda,a(ii,1,kkk),ldb,1.d0, &
                    alm(1,1,mu,2),ldc)
 #else
-              call zgemm('N','N',index,nb,ibb,(1.d0,0.d0), &
+              call zgemm('N','N',idx,nb,ibb,(1.d0,0.d0), &
                    h_alyl,lda,a(ii,1,kkk),ldb,(1.d0,0.d0), &
                    alm(1,1,mu,1),ldc)
-              call zgemm('N','N',index,nb,ibb,(1.d0,0.d0), &
+              call zgemm('N','N',idx,nb,ibb,(1.d0,0.d0), &
                    h_blyl,lda,a(ii,1,kkk),ldb,(1.d0,0.d0), &
                    alm(1,1,mu,2),ldc)
 #endif
@@ -578,34 +594,30 @@ subroutine l2Amn(stru, Nb, Nproj, num_kpts)
                                + dot_product((/bkx(i), bky(i), bkz(i)/),    &
                                &             stru%transij(:,latom))
 
-                          phshel=exp((0,1)*(arg*TAU))
-                          do NUM=1,NB
-                             PHS(NUM)=PHSHEL*A(I,NUM,kkk)
-                          enddo
-                          do M=-l,l
-                             index=l*(l+1)+m+1
-                             do NUM=1,NB
-                                do irf=1,nrf
-                                   ALM(index,num,mu,irf)=ALM(INDEX,num,mu,irf)+ &
-                                        ALo(l,jlo,irf)*dconjg(YL(INDEX))*PHS(NUM)
-                                enddo
-                             enddo
-                          enddo
-                       enddo
-                    enddo
-                 enddo
-              enddo
-           endif lo
+                          phshel=exp((0,1)*TAU*arg)
+                          PHS(:) = phshel * A(i,:,kkk)
+
+                          do m=-l,l
+                             idx=l*(l+1)+m+1
+                             do ib=1,Nb
+                                Alm(idx, ib, mu, :)=Alm(idx, ib, mu, :) + &
+                                     Alo(l, jlo, :) * conjg(Yl(idx))*phs(ib)
+                             end do
+                          end do
+                       end do
+                    end do
+                 end do
+              end do
+           end if lo
 !*********************************************************
-           INDEX=0
-           do L=0,LMAX2
-              MAX=2*L+1
-              CFAC=(0,1)**L
-              do M=1,MAX
-                 INDEX=INDEX+1
-                 do NUM=1,NB
-                    do irf=1,nrf
-                       ALM(INDEX,NUM,mu,irf)=ALM(INDEX,NUM,mu,irf)*FAC*CFAC
+           idx=0
+           do l=0,Lmax2
+              cfac = (0,1)**l
+              do m=1, 2*l+1
+                 idx=idx+1
+                 do ib=1,Nb
+                    do irf=1,Nrf
+                       Alm(idx,ib,mu,irf)=Alm(idx,ib,mu,irf)*fac*cfac
                     enddo
                  enddo
               enddo
@@ -613,25 +625,24 @@ subroutine l2Amn(stru, Nb, Nproj, num_kpts)
         enddo equiv1
 
         equiv2: do mu=1,stru%mult(jatom)
-           latom=lfirst-1+mu
-           do num=1,NB
-              INDEX=0
-              do L=0,LMAX2
-                 pi12lo=0.d0
-                 if (l <= lomax) then
-                    if (loor(l)) &
-                         call rint13(stru, jatom, rf1(1,l,1), rf2(1,l,1), &
-                         &           rf1(1,l,3), rf2(1,l,3), pi12lo)
-                 endif
-                 MAX=2*L+1
-                 do M=1,MAX
-                    INDEX=INDEX+1
-                    do NUM2=1,NPROJ
-                       projection(num,num2,kkk)=projection(num,num2,kkk) + &
-                            conjg(ALM(INDEX,num,mu,1))*C(NUM2,INDEX,LATOM) + &
-                            conjg(ALM(INDEX,num,mu,3))*C(NUM2,INDEX,LATOM) * &
-                            pi12lo
-                    enddo
+           latom = lfirst - 1 + mu
+
+           do ib = 1,Nb
+              do ipr = 1, inwf%Nproj
+                 do iY = 1, inwf%projections(ipr)%NY
+                    if (inwf%projections(ipr)%iat(iY) /= latom) &
+                         cycle
+                    l = inwf%projections(ipr)%l(iY)
+                    m = inwf%projections(ipr)%m(iY)
+                    ! idx is the compound index to Alm
+                    idx = l**2 + m + l + 1
+
+                    projection(ib, ipr, kkk) = projection(ib, ipr, kkk) &
+                         & + conjg(Alm(idx, ib, mu, 1))                 &
+                         &   * inwf%projections(ipr)%coeff(iY)          &
+                         & + conjg(Alm(idx, ib, mu, 3))                 &
+                         &   * inwf%projections(ipr)%coeff(iY)          &
+                         &   * pi12lo(l)
                  enddo
               enddo
            enddo
@@ -639,11 +650,11 @@ subroutine l2Amn(stru, Nb, Nproj, num_kpts)
      enddo kpoints
   enddo atoms
 
-  do KKK=1,NUM_KPTS
-     do num2=1,NPROJ
-        do num1=1,NB
+  do kkk = 1,num_kpts
+     do ipr = 1, inwf%Nproj
+        do ib = 1,Nb
            write(unit_amn, '(2i4,1x,i5,1x,2e18.5)') &
-                num1,num2, kkk, projection(num1,num2,KKK)
+                ib, ipr, kkk, projection(ib, ipr, KKK)
         enddo
      enddo
   enddo
@@ -907,4 +918,4 @@ end module read_vec_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-08-02 14:33:48 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-04 09:19:21 assman@faepop71.tu-graz.ac.at>
