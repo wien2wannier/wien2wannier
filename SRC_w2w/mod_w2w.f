@@ -27,7 +27,7 @@ module param
   public
 
   character(*), parameter, private :: &
-       rev_str = "$version: v1.0.0-211-g69cdecd$"
+       rev_str = "$version: v1.0.0-212-gc51bb1e$"
   character(*), parameter, public  :: &
        wien2wannier_version = rev_str(11 : len (rev_str)-1)
 
@@ -63,7 +63,7 @@ end module uhelp
 module     dergl_m; contains
 !rschmid
 !     Calculate the first derivate of f_l.
-subroutine dergl(stru, jatom, g_l,der1)
+subroutine dergl(stru, jatom, g_l, der1)
   use param,     only: Nrad
   use const,     only: R8
   use structmod, only: struct_t
@@ -840,4 +840,4 @@ end module     Ylm_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-08-02 14:52:58 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-04 09:44:17 assman@faepop71.tu-graz.ac.at>

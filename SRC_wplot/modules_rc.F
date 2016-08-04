@@ -61,11 +61,11 @@ subroutine main()
   character( 5)    :: whpsi
   character(10)    :: bname
 
-  logical      :: LARGE
-  complex(DPk) :: ALMSUM
+  logical          :: LARGE
+  complex(DPk)     :: ALMSUM
 
-  type(struct_t) :: stru
-  type(chk_t)    :: chk
+  type(struct_t)   :: stru
+  type(chk_t)      :: chk
 
 #ifndef _COMPLEX_
   real(DPk),    allocatable :: CF(:)
@@ -765,4 +765,4 @@ end module main_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-26 17:46:58 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-04 09:41:11 assman@faepop71.tu-graz.ac.at>
