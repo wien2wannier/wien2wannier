@@ -1062,11 +1062,11 @@ contains
 
     where (abs(stru%alpha) < 1e-5) stru%alpha = 90
 
-    N = stru%Nneq
-    allocate(stru%mult(N), stru%isplit(N), stru%aname(N), &
-         &   stru%Z   (N), stru%at2neq(N), stru%RMT  (N), &
-         &   stru%R0  (N), stru%Npt   (N), stru%dx   (N), &
-         &   stru%locrot(3,3,N))
+    allocate(stru%Z  (stru%Nneq), stru%mult  (    stru%Nneq), &
+         &   stru%RMT(stru%Nneq), stru%isplit(    stru%Nneq), &
+         &   stru%Npt(stru%Nneq), stru%at2neq(    stru%Nneq), &
+         &   stru%R0 (stru%Nneq), stru%aname (    stru%Nneq), &
+         &   stru%dx (stru%Nneq), stru%locrot(3,3,stru%Nneq))
 
     countat: do iat = 1, stru%Nneq
        read(lun,*) ! first position
@@ -1092,16 +1092,15 @@ contains
     stru%rmt = stru%R0 * exp(stru%dx * (stru%Npt-1))
 
     stru%Nat = sum(stru%mult)
-    N = stru%Nat
-    allocate( stru%pos(3, N), stru%neq2at(N), &
-         &    stru%rotij(3, 3, N), stru%transij(3, N))
+    allocate( stru%pos  (3,    stru%Nat), stru%transij(3, stru%Nat), &
+         &    stru%rotij(3, 3, stru%Nat), stru%neq2at (   stru%Nat))
 
     N=0
     do iat = 1, stru%Nneq
-       stru%neq2at(N+1:N+stru%mult(iat)) = iat
+       stru%neq2at(N+1 : N+stru%mult(iat)) = iat
 
        allocate(stru%at2neq(iat)%p(stru%mult(iat)))
-       stru%at2neq(iat)%p = iat
+       stru%at2neq(iat)%p = (/( ineq, ineq = N+1, N+stru%mult(iat) )/)
 
        N = N+stru%mult(iat)
     end do
@@ -2182,4 +2181,4 @@ end module reallocate
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-08-02 17:17:18 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-08 13:13:39 assman@faepop71.tu-graz.ac.at>
