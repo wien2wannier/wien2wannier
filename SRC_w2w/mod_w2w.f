@@ -15,7 +15,8 @@
 !!
 !! Procedure modules:
 !!
-!!    dergl_m, diracout_m, dvbes1_m, inouh_m, inth_m, sphbes_m, Ylm_m
+!!    dergl_m, diracout_m, dvbes1_m, inouh_m, inth_m, outwin_m,
+!!    sphbes_m, Ylm_m
 !!
 !!\===============================================
 
@@ -27,7 +28,7 @@ module param
   public
 
   character(*), parameter, private :: &
-       rev_str = "$version: v1.0.0-219-g525b583$"
+       rev_str = "$version: v1.0.0-219-g8600896$"
   character(*), parameter, public  :: &
        wien2wannier_version = rev_str(11 : len (rev_str)-1)
 
@@ -834,10 +835,121 @@ subroutine Ylm(V, lmax, Y)
 end subroutine Ylm
 end module     Ylm_m
 
+module     outwin_m; contains
+subroutine outwin(stru, jatom, V, EH, FL, VAL, SLO, Nodes)
+  !         Integration der skalarrel. Schroedingergleichung
+  !
+  !    Rydberg Einheiten
+
+  use param,     only: Nrad
+  use const,     only: clight, R8
+  use uhelp,     only: A, B
+  use structmod, only: struct_t
+
+  implicit none
+
+  !  Input:
+  !    stru  struct type
+  !    jatom number of the atom
+  !    EH    Energie in Hartree
+  !    FL    Drehimpuls
+  !    V     rad.sym. Potential in Hartree
+  type(struct_t), intent(in) :: stru
+  real(R8),       intent(in) :: EH, fl, V(Nrad)
+  integer,        intent(in) :: jatom
+
+  !  Output:
+  !    VAL,SLO:  Wellenfunktion und Steigung am Kugelrand
+  !    Nodes:    Anzahl Knoten
+  real(R8), intent(out) :: val, slo
+  integer,  intent(out) :: nodes
+
+  real(R8) :: D(2,3), Rnet(Nrad), C, E
+  real(R8) :: zz, fllp1, s, sf, f0, aa, r, drdi, dg1,dg2,dg3, df1, df2, df3
+  real(R8) :: phi, u, x, y, det, b1,b2
+  integer  :: i, k
+
+  real(R8), parameter :: H83 = 8/3._R8
+  real(R8), parameter :: R83SQ = 64/9._R8
+  real(R8), parameter :: R1 = 1/9._R8
+  real(R8), parameter :: R2 = -5*R1
+  real(R8), parameter :: R3 = 19*R1
+  real(R8), parameter :: G0 = 1
+
+  ! Hartree in Ryd
+  E = 2*EH
+
+  do i = 1,stru%Npt(jatom)
+     Rnet(i) = stru%R0(jatom) * exp(stru%dx(jatom) * (i-1))
+  end do
+
+  Nodes = 0
+  ZZ = 2*stru%Z(jatom)
+
+  C = merge(2*clight, 1e10_R8, stru%rel)
+
+  FLLP1 = FL*(FL + 1)
+
+  if (stru%Z(jatom) .lt. 0.9D0) then
+     S = FL+1.d0
+     SF = FL
+     F0 = FL/C
+  else
+     AA = ZZ/C
+     S = DSQRT(FLLP1 + 1.D0 - AA*AA)
+     SF = S
+     F0 = G0*(S - 1.D0)/AA
+  endif
+  do K = 1,3
+     R = RNET(K)
+     DRDI = stru%dx(jatom)*R
+     A(K) = (R**S)*G0
+     B(K) = (R**SF)*F0
+     D(1,K) = DRDI*A(K)*S/R
+     D(2,K) = DRDI*B(K)*SF/R
+  end do
+
+  DG1 = D(1,1)
+  DG2 = D(1,2)
+  DG3 = D(1,3)
+  DF1 = D(2,1)
+  DF2 = D(2,2)
+  DF3 = D(2,3)
+  do K = 4, stru%Npt(jatom)
+     R = RNET(K)
+     DRDI = stru%dx(jatom)*R
+
+     !       Faktor zwei vor V wegen Hartree-Rydberg !
+     PHI = (E - 2.d0*V(K)/R)*DRDI/C
+     U = DRDI*C + PHI
+     X = -DRDI/R
+     Y = -FLLP1*X*X/U + PHI
+     DET = R83SQ - X*X + U*Y
+     B1 = A(K-1)*H83 + R1*DG1 + R2*DG2 + R3*DG3
+     B2 = B(K-1)*H83 + R1*DF1 + R2*DF2 + R3*DF3
+     A(K) = (B1*(H83-X) + B2*U)/DET
+     B(K) = (B2*(H83+X) - B1*Y)/DET
+     if (A(K)*A(K-1) .lt. 0D0) Nodes = Nodes + 1
+     DG1 = DG2
+     DG2 = DG3
+     DG3 = U*B(K) - X*A(K)
+     DF1 = DF2
+     DF2 = DF3
+     DF3 = X*B(K) - Y*A(K)
+  end do
+
+  B(1:stru%Npt(jatom))=B(1:stru%Npt(jatom))*c/2
+
+  VAL = A(stru%Npt(jatom))  / RNET(stru%Npt(jatom))
+  SLO = DG3/(stru%dx(jatom) * RNET(stru%Npt(jatom)))
+  SLO = (SLO-VAL) / RNET(stru%Npt(jatom))
+end subroutine outwin
+end module outwin_m
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-08-04 09:44:17 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-05 13:58:55 assman@faepop71.tu-graz.ac.at>

@@ -1076,9 +1076,9 @@ contains
        read(lun, '(A, 5X, I5, 5X, F10.8, 5X, F10.5, 5X, F5.2)') &
             stru%aname(iat), stru%Npt(iat), stru%R0(iat), stru%RMT(iat), &
             stru%Z(iat)
-       read(lun,'(20X, 3F10.7)') stru%locrot(1, :, iat)
-       read(lun,'(20X, 3F10.7)') stru%locrot(2, :, iat)
-       read(lun,'(20X, 3F10.7)') stru%locrot(3, :, iat)
+       read(lun,'(20X, 3F10.7)') stru%locrot(:, 1, iat)
+       read(lun,'(20X, 3F10.7)') stru%locrot(:, 2, iat)
+       read(lun,'(20X, 3F10.7)') stru%locrot(:, 3, iat)
     end do countat
 
     ! The logarithmic step is given by the minimal (R0) and maximal
@@ -2189,4 +2189,4 @@ end module reallocate
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-08-08 12:20:51 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-09 16:01:54 assman@faepop71.tu-graz.ac.at>
