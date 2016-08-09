@@ -254,8 +254,7 @@ subroutine main()
      RMT(jneq) = RM(stru%Npt(jneq), jneq)
 
 
-     rotloc(:,:, sum(stru%mult(1:jneq-1))+1) = &
-          transpose(stru%locrot(:,:, jneq))
+     rotloc(:,:, sum(stru%mult(1:jneq-1))+1) = stru%locrot(:,:, jneq)
 
      do j=1,NMT
         if(RMT(jneq) == rad(j))then
@@ -765,4 +764,4 @@ end module main_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-08-04 09:41:11 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-09 13:33:23 assman@faepop71.tu-graz.ac.at>
