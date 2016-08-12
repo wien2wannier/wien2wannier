@@ -46,8 +46,8 @@ program write_win
   integer                           :: nkeys
 
   logical :: atoms_done=.false., uc_done=.false., proj_done=.false.
-  logical :: kmesh_done=.false., kpath_done=.false.
-  logical :: bandsplot_done=.false., guiding_done=.false., mpgrid_done=.false.
+  logical :: kmesh_done=.false., kpath_done=.false., mpgrid_done=.false.
+  logical :: bandsplot_done=.false., guiding_done=.false.
   logical :: write_kpath, bands_plot, guiding_centres
 
   type(struct_t) :: stru
@@ -482,4 +482,4 @@ end program write_win
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-03-01 17:12:18 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-08-12 10:58:00 assman@faepop71.tu-graz.ac.at>

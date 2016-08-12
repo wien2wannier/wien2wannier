@@ -94,13 +94,19 @@ klist=${klist:-$file.klist}
 band=${band:-$file.klist_band}
 win=${win:-$file.win}
 
-if [[ ! $fresh && -s $file.win ]]; then
-    tmpl=${tmpl:-$file.win}
-elif [[ -s $defwin ]]; then
-    tmpl=${tmpl:-$defwin}
+## Set/check template $tmpl
+if   [[ ${tmpl+x} ]]; then        # test if $tmpl is set
+    [[ -s $tmpl ]] || croak "template file \`$tmpl' not found"
+elif [[ $fresh || ! -s $file.win ]]; then
+    if [[ -s $defwin ]]; then
+        tmpl=$defwin
+    else
+        [[ $q ]] || warn "template file \`$defwin' not found," \
+                         "will use empty template"
+        tmpl=/dev/null
+    fi
 else
-    [[ $q ]] || warn "template file \`$defwin' not found, will use empty template"
-    tmpl=${tmpl:-/dev/null}
+    tmpl=$file.win
 fi
 
 if [[ $v ]]; then
@@ -134,4 +140,4 @@ else
 fi
 
 
-## Time-stamp: <2015-05-28 16:25:00 assman@faepop23.tu-graz.ac.at>
+## Time-stamp: <2016-08-12 10:49:16 assman@faepop71.tu-graz.ac.at>
