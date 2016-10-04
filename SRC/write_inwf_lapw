@@ -26,7 +26,7 @@ import numpy as np
 import re
 import traceback
 
-__version__ = "$version: v1.0.0-245-g93b3bf4$"
+__version__ = "$version: v1.0.0-246-g3766a18$"
 
 try:
     __version__ = re.search(":\s*(.*?)\s*\$", __version__).group(1)
@@ -961,4 +961,4 @@ if not args.batch and extant_inwf and not args.quiet:
         "' -- do not forget to change `win' file, if necessary +"
 
 
-## Time-stamp: <2016-05-30 10:58:41 assman@faepop71.tu-graz.ac.at>
+## Time-stamp: <2016-12-01 19:35:49 assman@faepop71.tu-graz.ac.at>

@@ -28,7 +28,7 @@ module param
   public
 
   character(*), parameter, private :: &
-       rev_str = "$version: v1.0.0-245-g93b3bf4$"
+       rev_str = "$version: v1.0.0-246-g3766a18$"
   character(*), parameter, public  :: &
        wien2wannier_version = rev_str(11 : len (rev_str)-1)
 
@@ -952,4 +952,4 @@ end module outwin_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-08-12 15:09:53 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-12-01 19:37:25 assman@faepop71.tu-graz.ac.at>

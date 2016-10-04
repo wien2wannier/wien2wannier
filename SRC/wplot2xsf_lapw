@@ -24,7 +24,7 @@ import math
 import glob
 import numpy as np
 
-__version__ = "$version: v1.0.0-245-g93b3bf4$"
+__version__ = "$version: v1.0.0-246-g3766a18$"
 
 try:
     __version__ = re.search(":\s*(.*?)\s*\$", __version__).group(1)
@@ -438,4 +438,4 @@ for i, N, psink, psiarg, xsf, wplot in \
     print>>xsf, "END_BLOCK_DATAGRID_3D"
 
 
-## Time-stamp: <2016-02-11 11:46:07 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-12-01 19:35:35 assman@faepop71.tu-graz.ac.at>
