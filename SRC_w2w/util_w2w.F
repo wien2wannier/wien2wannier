@@ -994,13 +994,13 @@ module structmod
      logical           :: rel          ! rel.?
      real(DPk)         :: a(3)         ! lattice constants
      real(DPk)         :: alpha(3)     ! angles
-     real(DPk)         :: gbas(3,3)    ! reciprocal lattice vectors
-     real(DPk)         :: brlat(3,3)   ! Bravais lattice (row is a vector)
-     real(DPk)         :: lat2car(3,3) ! lattice to cartesian transformation
-                                       ! (different from brlat in some cases)
-     real(DPk)         :: stru2frac(3,3)!‘struct’ to “fractional” coords.
      logical           :: ortho, prim  ! orthogonal axes?  primitive latt.?
      real(DPk)         :: vol          ! u.c. volume
+
+     ! primitive and conventional unit cells in direct and reciprocal space
+     real(DPk), dimension(3,3) :: conv_dir, conv_rec, prim_dir, prim_rec
+     ! ‘struct’ to “fractional” coordinates
+     integer,   dimension(3,3) :: stru2frac
 
      ! Rotational part of the symmetries in R-space and k-space
      integer,   allocatable :: rsym(:,:,:), ksym(:,:,:)
@@ -1035,10 +1035,6 @@ contains
     type(struct_t), intent(out) :: stru
 
     integer   :: iat, ineq, N
-    ! “Bravais lattice” and “lattice->cartesian” transformation
-    ! matrices [in some cases, the two are different], both for direct
-    ! and reciprocal space
-    real(DPk) :: br1_dir(3,3), br1_rec(3,3), br2_dir(3,3), br2_rec(3,3)
     ! abbreviations
     real(DPk) :: pia(3), alpha(3), cosab, cosac, cosbc, sinab, sinbc
     real(DPk) :: rvfac, wurzel
@@ -1132,16 +1128,17 @@ contains
     cosac = cos(alpha(2))
     cosbc = cos(alpha(1)); sinbc = sin(alpha(1))
 
-    br1_rec = 0; br1_dir = 0; br2_rec = 0; br2_dir = 0
+    stru%conv_rec = 0; stru%conv_dir = 0
+    stru%prim_rec = 0; stru%prim_dir = 0
 
     lattic: select case (stru%lattic(1:1))
     case ('H')
-       br1_rec(1,1) = pia(1)*2/SQ3
-       br1_rec(1,2) = pia(1)  /SQ3
-       br1_rec(2,2) = pia(2)
-       br1_rec(3,3) = pia(3)
+       stru%conv_rec(1,1) = pia(1)*2/SQ3
+       stru%conv_rec(1,2) = pia(1)  /SQ3
+       stru%conv_rec(2,2) = pia(2)
+       stru%conv_rec(3,3) = pia(3)
 
-       br2_rec = br1_rec
+       stru%prim_rec = stru%conv_rec
 
        rvfac = 2/SQ3
 
@@ -1151,14 +1148,14 @@ contains
     case ('S', 'P')             ! what's ‘S’??
        wurzel = sqrt(sinbc**2 - cosac**2 - cosab**2 + 2*cosbc*cosac*cosab)
 
-       br1_rec(1,1) = pia(1) * sinbc/wurzel
-       br1_rec(1,2) = pia(2) * (-cosab + cosbc*cosac)/(sinbc*wurzel)
-       br1_rec(1,3) = pia(3) * (-cosac + cosbc*cosab)/(sinbc*wurzel)
-       br1_rec(2,2) = pia(2) / sinbc
-       br1_rec(2,3) =-pia(3) * cosbc/sinbc
-       br1_rec(3,3) = pia(3)
+       stru%conv_rec(1,1) = pia(1) * sinbc/wurzel
+       stru%conv_rec(1,2) = pia(2) * (-cosab + cosbc*cosac)/(sinbc*wurzel)
+       stru%conv_rec(1,3) = pia(3) * (-cosac + cosbc*cosab)/(sinbc*wurzel)
+       stru%conv_rec(2,2) = pia(2) / sinbc
+       stru%conv_rec(2,3) =-pia(3) * cosbc/sinbc
+       stru%conv_rec(3,3) = pia(3)
 
-       br2_rec = br1_rec
+       stru%prim_rec = stru%conv_rec
 
        rvfac = 1/wurzel
 
@@ -1166,26 +1163,26 @@ contains
        stru%prim  = .true.
 
     case ('F')
-       br1_rec(1,1) = pia(1)
-       br1_rec(2,2) = pia(2)
-       br1_rec(3,3) = pia(3)
+       stru%conv_rec(1,1) = pia(1)
+       stru%conv_rec(2,2) = pia(2)
+       stru%conv_rec(3,3) = pia(3)
 
-       br2_rec(1,:) = pia(1) * (/-1, 1, 1 /)
-       br2_rec(2,:) = pia(2) * (/ 1,-1, 1 /)
-       br2_rec(3,:) = pia(3) * (/ 1, 1,-1 /)
+       stru%prim_rec(1,:) = pia(1) * (/-1, 1, 1 /)
+       stru%prim_rec(2,:) = pia(2) * (/ 1,-1, 1 /)
+       stru%prim_rec(3,:) = pia(3) * (/ 1, 1,-1 /)
 
        rvfac = 4
        stru%ortho = .true.
        stru%prim  = .false.
 
     case ('B')
-       br1_rec(1,1) = pia(1)
-       br1_rec(2,2) = pia(2)
-       br1_rec(3,3) = pia(3)
+       stru%conv_rec(1,1) = pia(1)
+       stru%conv_rec(2,2) = pia(2)
+       stru%conv_rec(3,3) = pia(3)
 
-       br2_rec(1,:) = pia(1) * (/ 0, 1, 1 /)
-       br2_rec(2,:) = pia(2) * (/ 1, 0, 1 /)
-       br2_rec(3,:) = pia(3) * (/ 1, 1, 0 /)
+       stru%prim_rec(1,:) = pia(1) * (/ 0, 1, 1 /)
+       stru%prim_rec(2,:) = pia(2) * (/ 1, 0, 1 /)
+       stru%prim_rec(3,:) = pia(3) * (/ 1, 1, 0 /)
 
        rvfac = 2
 
@@ -1193,11 +1190,11 @@ contains
        stru%prim  = .false.
 
     case ('R')
-       br1_rec(1, :) = pia(1) * (/  1, 1, -2 /)/SQ3
-       br1_rec(2, :) = pia(2) * (/ -1, 1,  0 /)
-       br1_rec(3, :) = pia(3)
+       stru%conv_rec(1, :) = pia(1) * (/  1, 1, -2 /)/SQ3
+       stru%conv_rec(2, :) = pia(2) * (/ -1, 1,  0 /)
+       stru%conv_rec(3, :) = pia(3)
 
-       br2_rec = br1_rec
+       stru%prim_rec = stru%conv_rec
 
        rvfac = 6/SQ3
 
@@ -1206,9 +1203,9 @@ contains
 
     case ('C')
        ! “defaults”, to be changed in nonorthogonal XZ-case
-       br1_rec(1,1) = pia(1)
-       br1_rec(2,2) = pia(2)
-       br1_rec(3,3) = pia(3)
+       stru%conv_rec(1,1) = pia(1)
+       stru%conv_rec(2,2) = pia(2)
+       stru%conv_rec(3,3) = pia(3)
 
        rvfac = 2
        stru%ortho = .true.      ! may be overridden for CXZ
@@ -1216,29 +1213,29 @@ contains
 
        C: select case (stru%lattic(2:3))
        case ('XY')
-          br2_rec(1,:) = pia(1) * (/ 1, 1, 0 /)
-          br2_rec(2,:) = pia(2) * (/-1, 1, 0 /)
-          br2_rec(3,:) = pia(3) * (/ 0, 0, 1 /)
+          stru%prim_rec(1,:) = pia(1) * (/ 1, 1, 0 /)
+          stru%prim_rec(2,:) = pia(2) * (/-1, 1, 0 /)
+          stru%prim_rec(3,:) = pia(3) * (/ 0, 0, 1 /)
 
        case ('YZ')
-          br2_rec(1,:) = pia(1) * (/ 1, 0, 0 /)
-          br2_rec(2,:) = pia(2) * (/ 0, 1, 1 /)
-          br2_rec(3,:) = pia(3) * (/ 0,-1, 1 /)
+          stru%prim_rec(1,:) = pia(1) * (/ 1, 0, 0 /)
+          stru%prim_rec(2,:) = pia(2) * (/ 0, 1, 1 /)
+          stru%prim_rec(3,:) = pia(3) * (/ 0,-1, 1 /)
 
        case ('XZ')
           ortho: if (abs(alpha(3) - TAU/4) <= ORTHO_TEST) then
-             br2_rec(1,:) = pia(1) * (/ 1, 0, 1 /)
-             br2_rec(2,:) = pia(2) * (/ 0, 1, 0 /)
-             br2_rec(3,:) = pia(3) * (/-1, 0, 1 /)
+             stru%prim_rec(1,:) = pia(1) * (/ 1, 0, 1 /)
+             stru%prim_rec(2,:) = pia(2) * (/ 0, 1, 0 /)
+             stru%prim_rec(3,:) = pia(3) * (/-1, 0, 1 /)
           else                  ! CXZ monoclinic case
-             br1_rec(1,1) = pia(1) / sinab
-             br1_rec(1,2) =-pia(2) / sinab * cosab
+             stru%conv_rec(1,1) = pia(1) / sinab
+             stru%conv_rec(1,2) =-pia(2) / sinab * cosab
 
-             br2_rec(1,1) = pia(1) / sinab
-             br2_rec(1,2) =-pia(2) / sinab * cosab
-             br2_rec(1,3) = pia(1) / sinab
-             br2_rec(2,:) = pia(2) * (/ 0, 1, 0 /)
-             br2_rec(3,:) = pia(3) * (/-1, 0, 1 /)
+             stru%prim_rec(1,1) = pia(1) / sinab
+             stru%prim_rec(1,2) =-pia(2) / sinab * cosab
+             stru%prim_rec(1,3) = pia(1) / sinab
+             stru%prim_rec(2,:) = pia(2) * (/ 0, 1, 0 /)
+             stru%prim_rec(3,:) = pia(3) * (/-1, 0, 1 /)
 
              rvfac = 2/sinab
              stru%ortho = .false.
@@ -1250,14 +1247,15 @@ contains
        call croak('unknown lattice type `' // trim(stru%lattic) // "'")
     end select lattic
 
-    call inverse3x3(br1_rec, br1_dir);
-    call inverse3x3(br2_rec, br2_dir);
+    call inverse3x3(stru%conv_rec, stru%conv_dir);
+    call inverse3x3(stru%prim_rec, stru%prim_dir);
+
+    stru%stru2frac = nint(matmul(stru%conv_dir, stru%prim_rec))
+
+    stru%conv_dir = TAU * stru%conv_dir
+    stru%prim_dir = TAU * stru%prim_dir
 
     stru%vol = product(stru%a) / rvfac
-    stru%gbas      = br2_rec
-    stru%lat2car   = br1_dir*TAU
-    stru%brlat     = br2_dir*TAU
-    stru%stru2frac = matmul(br1_dir, br2_rec)
 
     ! make_ksym() needs gbas and friends
     call read_rsym()
@@ -1321,9 +1319,9 @@ contains
       if (stru%ortho .or. stru%lattic=='CXZ') then
          ! FIXME: why the check for CXZ??  sdefl.f has it …
          do i=1,Nksym
-            a = matmul(matmul(stru%brlat, stru%ksym(:,:,i)), &
-                 &     stru%gbas)/TAU
-            stru%ksym(:,:,i) = nint(a)
+            stru%ksym(:,:,i) = nint(                             &
+                 matmul(matmul(stru%prim_dir, stru%ksym(:,:,i)), &
+                 &      stru%prim_rec) / TAU)
          end do
       end if
     end subroutine make_ksym
@@ -1565,7 +1563,7 @@ end module inwfmod
 
 !---------------- Reading ‘klist’ files            --------------------------
 module kpoints
-  use const,     only: BUFSZ, DPk
+  use const,     only: BUFSZ, DPk, TAU
   use structmod, only: struct_t
   use util,      only: string, newunit
   use clio,      only: croak
@@ -1612,9 +1610,9 @@ contains
     real(DPk)                :: RR(3,3)
 
     if (stru%ortho) then
-       RR(1,:) = stru%brlat(1,:) / stru%a
-       RR(2,:) = stru%brlat(2,:) / stru%a
-       RR(3,:) = stru%brlat(3,:) / stru%a
+       RR(1,:) = stru%prim_dir(1,:) / stru%a
+       RR(2,:) = stru%prim_dir(2,:) / stru%a
+       RR(3,:) = stru%prim_dir(3,:) / stru%a
     end if
 
     if (present(mp_grid)) then
@@ -1662,9 +1660,9 @@ contains
     real(DPk)                :: RR(3,3)
 
     if (stru%ortho) then
-       RR(1,:) = stru%brlat(1,:) / stru%a
-       RR(2,:) = stru%brlat(2,:) / stru%a
-       RR(3,:) = stru%brlat(3,:) / stru%a
+       RR(1,:) = stru%prim_dir(1,:) / stru%a
+       RR(2,:) = stru%prim_dir(2,:) / stru%a
+       RR(3,:) = stru%prim_dir(3,:) / stru%a
     end if
 
     call klist_detect_fmt(unit, fmt)
@@ -2196,4 +2194,4 @@ end module reallocate
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-11-29 22:05:49 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-12-01 13:59:37 assman@faepop71.tu-graz.ac.at>

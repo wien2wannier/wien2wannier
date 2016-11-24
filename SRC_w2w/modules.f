@@ -687,7 +687,7 @@ subroutine harmon(stru, jatom, N, X, Y, Z, Lmax2, F, DF)
 
   LMX=Lmax2+1
   do I=1,N
-     A = matmul(stru%gbas, (/X(I), Y(I), Z(I)/))
+     A = matmul(stru%conv_rec, (/X(I), Y(I), Z(I)/))
 
      XM = sqrt(sum(A**2))
      XA = stru%RMT(jatom) * XM
@@ -764,4 +764,4 @@ end module radint_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-08-05 13:59:08 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-12-01 13:59:28 assman@faepop71.tu-graz.ac.at>
