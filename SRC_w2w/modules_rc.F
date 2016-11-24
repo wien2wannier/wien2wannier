@@ -110,7 +110,7 @@ subroutine almgen(Alm, stru, jatom, lfirst, NB, kkk)
            i3=i3+1
 
            ! transform Q+k to cartesian coordinates
-           BK = matmul(stru%gbas, (/BKX(I), BKY(I), BKZ(I)/))
+           BK = matmul(stru%conv_rec, (/BKX(I), BKY(I), BKZ(I)/))
 
            call YLM (BK,LMAX2,YL) ! calculate Y_lm(Q+k)
 
@@ -188,7 +188,7 @@ subroutine almgen(Alm, stru, jatom, lfirst, NB, kkk)
               do jneq=1,stru%mult(jatom)
                  do M1=-l,l
                     i=i+1
-                    BK = matmul(stru%gbas, (/BKX(I), BKY(I), BKZ(I)/))
+                    BK = matmul(stru%conv_rec, (/BKX(I), BKY(I), BKZ(I)/))
 
                     call YLM (BK,LOMAX,YL)
                     ARG = dot_product((/BKX(I), BKY(I), BKZ(I)/), &
@@ -324,7 +324,7 @@ subroutine l2Mmn(stru, inwf, num_kpts, NNTOT)
            BZ=ZK(kkk)-KZ1+BQZ(pair_index)
 
            ! transform to cartesian coordinates
-           BK = matmul(stru%gbas, (/BX, BY, BZ/))
+           BK = matmul(stru%conv_rec, (/BX, BY, BZ/))
            BM = sqrt(sum(BK**2))
 
            ! compute radial intergrals <R(r)|j_(|b|*r)|R'(r)>
@@ -504,7 +504,7 @@ subroutine l2Amn(stru, inwf, num_kpts)
                       &         (/bkx(i), bky(i), bkz(i)/))
 
                  ! transform Q+k to cartesian coordinates
-                 bk = matmul(stru%gbas, bkrot)
+                 bk = matmul(stru%conv_rec, bkrot)
 
                  ! go to local (rotated) coords
                  bkrloc = matmul(stru%locrot(:,:,jatom), bk)
@@ -586,7 +586,7 @@ subroutine l2Amn(stru, inwf, num_kpts)
                           BK(2)=BKY(I)
                           BK(3)=BKZ(I)
                           bkrot = matmul(stru%rotij(:,:,latom), BK)
-                          BK    = matmul(stru%gbas, BKROT)
+                          BK    = matmul(stru%conv_rec, BKROT)
 
                           bkrloc = matmul(stru%locrot(:,:,jatom), BK)
                           call Ylm (Bkrloc, LOmax, YL)
@@ -744,9 +744,9 @@ subroutine planew(stru, NB, num_kpts, Nntot, maxx, maxy, maxz)
      do K=-m2z,m2z
         do J=-m2y,m2y
            do I=-m2x,m2x
-              BX = dot_product(stru%gbas(1, :), (/ i, j, k /))
-              BY = dot_product(stru%gbas(2, :), (/ i, j, k /))
-              BZ = dot_product(stru%gbas(3, :), (/ i, j, k /))
+              BX = dot_product(stru%conv_rec(1, :), (/ i, j, k /))
+              BY = dot_product(stru%conv_rec(2, :), (/ i, j, k /))
+              BZ = dot_product(stru%conv_rec(3, :), (/ i, j, k /))
 
               X = stru%RMT(JATOM) * sqrt(BX**2 + BY**2 + BZ**2)
               phshel=0
@@ -918,4 +918,4 @@ end module read_vec_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-08-04 09:19:21 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-11-24 14:41:18 assman@faepop71.tu-graz.ac.at>

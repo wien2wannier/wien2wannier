@@ -211,19 +211,15 @@ program wf
 
   write(unit_out,*)' gbas,  stru2frac'
   do i=1,3
-     write(unit_out, '(3f10.5,3x,3f10.5)') &
-          stru%gbas(i,:), stru%stru2frac(i,:)
+     write(unit_out, '(3f10.5,3x,3i3)') &
+          stru%conv_rec(i,:), stru%stru2frac(i,:)
   end do
 
   !     rotate boundary vectors
   do i=1,N_pair
-     ! FIXME: should this be using nint()?
-     bqx(i) = int(dot_product(stru%stru2frac(1,:), &
-          &       (/bqx1(i), bqy1(i), bqz1(i)/)))
-     bqy(i) = int(dot_product(stru%stru2frac(2,:), &
-          &       (/bqx1(i), bqy1(i), bqz1(i)/)))
-     bqz(i) = int(dot_product(stru%stru2frac(3,:), &
-          &       (/bqx1(i), bqy1(i), bqz1(i)/)))
+     bqx(i) = dot_product(stru%stru2frac(1,:), (/bqx1(i), bqy1(i), bqz1(i)/))
+     bqy(i) = dot_product(stru%stru2frac(2,:), (/bqx1(i), bqy1(i), bqz1(i)/))
+     bqz(i) = dot_product(stru%stru2frac(3,:), (/bqx1(i), bqy1(i), bqz1(i)/))
   enddo
 
   !.....CALCULATE CHARGE DENSITY CLM(R) IN SPHERES,  PARTIAL CHARGES
@@ -261,4 +257,4 @@ end program wf
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-08-03 17:47:20 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-11-24 17:04:12 assman@faepop71.tu-graz.ac.at>
