@@ -292,4 +292,6 @@ for suf in $should $can; do
     [[ -s $f ]] && mycp $f $target/$base.$suf
 done
 
-## Time-stamp: <2016-11-28 12:35:08 assman@faepop71.tu-graz.ac.at>
+exit 0
+
+## Time-stamp: <2016-11-28 12:45:28 assman@faepop71.tu-graz.ac.at>
