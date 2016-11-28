@@ -288,8 +288,8 @@ for suf in $must; do
 done
 
 for suf in $should $can; do
-    mycp $file.$suf $target/$base.$suf
+    f=$file.$suf
+    [[ -s $f ]] && mycp $f $target/$base.$suf
 done
 
-
-## Time-stamp: <2015-10-20 15:22:58 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-11-28 12:35:08 assman@faepop71.tu-graz.ac.at>
