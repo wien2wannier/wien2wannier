@@ -972,7 +972,7 @@ module structmod
   implicit none
 
   private
-  public :: struct_t, struct_read
+  public :: struct_t, struct_read, radgrid
 
   interface struct_read
      module procedure struct_read_unit, struct_read_fname
@@ -1449,6 +1449,13 @@ subroutine struct_read_argstr(arg, stru)
 
   call struct_read_fname(arg%s, stru)
 end subroutine struct_read_argstr
+
+pure elemental real(DPk) function radgrid(stru, iAt, iR)
+  type(struct_t), intent(in) :: stru
+  integer,        intent(in) :: iAt, iR
+
+  radgrid = stru%R0(iAt) * exp( (iR-1) * stru%dx(iAt) )
+end function radgrid
 end module structmod
 
 
@@ -2189,4 +2196,4 @@ end module reallocate
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-08-09 16:01:54 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-11-29 22:05:49 assman@faepop71.tu-graz.ac.at>

@@ -22,8 +22,9 @@ program wf_r
   use const, only: BUFSZ
   use clio,  only: fetcharg, argstr
   use param, only: unit_def, unit_vector, unit_out
-  use wplot, only: unit_psink, unit_psiarg, vecfn, psinkfn, psiargfn, outfn,&
-       &           idx_wann, iproc
+  use wplot, only: vecfn, idx_wann, iproc,             &
+       &           unit_psink, unit_psiarg, unit_grid, &
+       &           psinkfn, psiargfn, outfn, gridfn
 
   !! procedure includes
   use main_m
@@ -52,6 +53,9 @@ program wf_r
         psiargfn = fname
      case(unit_out)
         outfn    = fname
+     case(unit_grid)
+        gridfn   = fname
+        open(iunit, FILE=fname, STATUS=status, FORM=form)
      case default
         open(iunit, FILE=fname, STATUS=status, FORM=form)
      end select
@@ -70,4 +74,4 @@ end program wf_r
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-26 16:53:02 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-04 15:19:18 assman@faepop71.tu-graz.ac.at>

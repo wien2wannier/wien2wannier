@@ -21,7 +21,7 @@ Exit status:
 else  an error occurred
 '''
 
-__version__ = "$version: v1.0.0-223-g21026c7$"
+__version__ = "$version: v1.0.0-225-g70c5345$"
 
 try:
     __version__ = re.search(":\s*(.*?)\s*\$", __version__).group(1)

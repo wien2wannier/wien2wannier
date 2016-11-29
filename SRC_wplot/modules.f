@@ -15,7 +15,7 @@
 !!
 !! bessfu:    FJ(:,:,:), DFJ(:,:,:), IRAD(:), RAD(:)
 !!
-!! grid:      ilat(:,:), ireg(:), iri(:), Npg, Rgrid(:,:)
+!! grid:      ilat(:,:), ireg(:), iri(:)
 !!
 !! latt:      BR1(3,3), BR2(3,3), BR3(3,3), BR4(3,3)
 !!
@@ -24,8 +24,6 @@
 !! lolog:     ILO(:,:), LAPW(:,:), NLO
 !!
 !! radfu:     RRAD(:,:,:,:)
-!!
-!! radgrd:    DX(:), RM(:,:)
 !!
 !! struct:    POS(:,:), RMT(:)
 !!
@@ -38,8 +36,8 @@
 !! Procedure modules:
 !!
 !!    auggen_m, auglo_m, augpw_m, bessel_m, findmt_m, gbass_m,
-!!    grdgen_m, latgen_m, locdef_m, outwin_m, orth_m, rint13_m,
-!!    rotdef_m, spcgen_m, trans_m, wavint_m, wavsph_m
+!!    latgen_m, locdef_m, rint13_m, rotdef_m, spcgen_m, trans_m,
+!!    wavint_m, wavsph_m
 !!
 !!\===============================================
 
@@ -73,9 +71,278 @@ module wplot
   integer, parameter :: Nsym=48, Lmax7=8
 
 !!! The following is set by ‘wplot.f’ to be passed to ‘main.F’
-  character(BUFSZ) :: vecfn, psinkfn, psiargfn, outfn
+  character(BUFSZ) :: vecfn, psinkfn, psiargfn, outfn, gridfn
   integer          :: idx_wann=0, iproc=0
 end module wplot
+
+
+module latt
+  use const, only: DPk
+
+  implicit none
+  private; save
+
+! BR1(i,:) -- the real space lattice vectors a_i of the conventional u.c.
+! BR2(i,:) -- the real space lattice vectors a_i of the primitive unit cell
+! BR3(i,:) -- the reciprocal lattice vectors b_i of the conventional u.c
+! BR4(i,:) -- the reciprocal lattice vectors b_i of the primitive unit cell
+
+  real(DPk), public :: BR1(3,3), BR2(3,3), BR3(3,3), BR4(3,3)
+end module latt
+
+!---------------- Reading ‘inwplot’ files              ----------------------
+module inwplotmod
+  use const, only: DPk
+
+  implicit none
+  private
+  public :: inwplot_t, inwplot_read, unit_ATU, unit_ANG
+
+  interface inwplot_read
+     module procedure &
+          inwplot_read_fname, inwplot_read_unit, inwplot_read_argstr
+  end interface inwplot_read
+
+  real(DPk), parameter :: unit_ATU=1, unit_ANG=1/sqrt(0.529177_DPk**3)
+
+  type inwplot_t
+     logical      :: checkortho, dephas, WFrot, large, extgrid
+     integer      :: WFidx
+     real(DPk)    :: unit
+     character(3) :: unit_name
+     real(DPk)    :: orig(3), xend(3), yend(3), zend(3)
+
+     real(DPk), allocatable :: rgrid(:,:)
+  end type inwplot_t
+
+contains
+
+  subroutine inwplot_read_unit(lun, inwplot)
+!!! This is based on grdgen.f (including some comments)
+    use const,  only: ORTHO_TEST, TAU
+    use param,  only: unit_out
+    use util,   only: uppercase, string
+    use clio,   only: croak
+    use wplot,  only: unit_grid, unit_psink, gridfn
+    use latt,   only: br1, br4
+
+    integer,         intent(in)  :: lun
+    type(inwplot_t), intent(out) :: inwplot
+
+    character(len=5) :: relcomp
+    character(len=3) :: mode, post, unit
+    character(len=1) :: flag
+    integer          :: Npt, ig, div, Npx, Npy, Npz, i, j, ix,iy,iz
+    real(DPk)        :: cartax(3,3), fracax(3,3), prodax(3,3), angles(3)
+    real(DPk)        :: cartorig(3), fracorig(3), cosphi, phi(3,3)
+    character        :: xyz(3) = (/ 'x', 'y', 'z' /)
+
+    character(*), parameter :: &
+         fmt_orig  = "(' origin', 1X, 3F9.5, 3X, 3F13.7)",   &
+         fmt_axend = "(' ',A1,'-axis',1X,3F9.5,3X,3F13.7)",  &
+         fmt_axabs = "(' ‖',A1,'‖ ',F13.7)",                 &
+         fmt_angle = "(' ∠(',A1,',',A1,') ',F10.7,3X,F8.3)", &
+         fmt_grid  = "('#', i7, 2x, f13.7, 2(2x, f10.5))"
+
+    read(lun, '(A3, A1)') mode, flag
+
+    gridgen: select case ( uppercase(adjustl(mode)) )
+    case ('ANY')
+       inwplot%extgrid = .true.
+       read(lun, *) Npt
+       allocate(inwplot%rgrid(3, Npt))
+
+       cartfrac: select case (uppercase(flag))
+       case ('C')
+          do ig=1,Npt
+             read(unit_grid, *) inwplot%rgrid(:, ig), div
+             inwplot%rgrid(:, ig) = inwplot%rgrid(:, ig) / div
+          end do
+
+       case ('F')
+          do ig=1,Npt
+             read(unit_grid, *) inwplot%rgrid(:, ig)
+             inwplot%rgrid(:, ig) = matmul(br4, inwplot%rgrid(:, ig))
+          end do
+
+       case default
+          call croak("unknown FLAG `"//flag &
+            &   //"' in inwplot_read() [should be `C' or `F']")
+       end select cartfrac
+
+       write(unit_psink,                                  &
+            "('ANY   NP =',I0,/,                          &
+            & 'order according to the grid points ',/,    &
+            & 'provided in the input file ',/,            &
+            & '`', A, '''')") &
+            Npt, trim(gridfn)
+
+       write(unit_out, &
+            & "(' ARBITRARY LIST OF GRID POINTS' / &
+            & ' -----------------------------' / &
+            & ' number of grid points: ',I7)") Npt
+
+    case ('3D')
+       inwplot%extgrid = .false.
+       select case (uppercase(flag))
+       case ('O', ' ')
+          inwplot%checkortho = .true.
+       case ('N')
+          inwplot%checkortho = .false.
+       case default
+          call croak("unknown FLAG `"//flag &
+          &        //"' in inwplot_read() [should be `O' or `N']")
+       end select
+
+       read(lun, *) inwplot%orig, div; inwplot%orig = inwplot%orig/div
+       read(lun, *) inwplot%xend, div; inwplot%xend = inwplot%xend/div
+       read(lun, *) inwplot%yend, div; inwplot%yend = inwplot%yend/div
+       read(lun, *) inwplot%zend, div; inwplot%zend = inwplot%zend/div
+
+       read(lun, *) Npx, Npy, Npz
+
+       allocate (inwplot%rgrid(3, Npx*Npy*Npz))
+
+       write(unit_out, &
+            &"(' 3D-NET OF GRID POINTS'                                    /&
+            &' ---------------------'                                      /&
+            &' number of grid points for x, y, z: ',3(I0,' '),              &
+            &' (total: ',I0,')')")                                          &
+            Npx, Npy, Npz, Npx*Npy*Npz
+
+       write(unit_out, "(/' PLOTTING AREA'                         &
+            &            /' -------------'                         &
+            &            /' x = Sum(j=1,3) f_i a_i  with  f_i in', &
+            &             ' conventional fractional coordinates'   &
+            &           //'           f_1      f_2      f_3   ',   &
+            &             '        x [Bohr]     y [Bohr]     z [Bohr]')")
+
+       !---------------------------------------------------------------------
+       ! Transform origin and axes into primitive fractional coordinates
+       ! a) transform into Cartesian coordinates
+       !    and check axes for orthogonality
+       fracax(:,1) = inwplot%xend-inwplot%orig
+       fracax(:,2) = inwplot%yend-inwplot%orig
+       fracax(:,3) = inwplot%zend-inwplot%orig
+
+       cartax   = matmul(transpose(br1), fracax)
+       cartorig = matmul(transpose(br1), inwplot%orig)
+       prodax   = matmul(transpose(cartax), cartax)
+
+       write(unit_out, fmt_orig) inwplot%orig, cartorig
+       do i=1,3
+          write(unit_out, fmt_axend) xyz(i), fracax(:,i), cartax(:,i)
+       end do
+
+       write(unit_out, "(/'         length [Bohr]')")
+       do i=1,3
+          write(unit_out, fmt_axabs) xyz(i), sqrt(prodax(i,i))
+       end do
+
+       write(unit_out, "(/'         cos(φ)        φ [°]')")
+       phi = 0
+       do i=1, 2
+          do j=i+1, 3
+             cosphi = prodax(i,j) / sqrt(prodax(i,i) * prodax(j,j))
+             phi(i,j) = acos(cosphi) * 360 / TAU
+             phi(j,i) = phi(i,j)
+
+             write(unit_out, fmt_angle) xyz(i), xyz(j), cosphi, phi(i,j)
+          end do
+       end do
+
+       angles = (/ phi(2,3), phi(1,3), phi(1,2) /)
+       if (inwplot%checkortho &
+            .and. any(abs(angles - 90) > ORTHO_TEST/360*TAU)) &
+            then
+          call croak ('nonorthogonal axes (angles [°]: ' &
+               &      // trim(string(angles)) // ')')
+       end if
+
+       ! b) transform into primitive fractional coordinates
+       fracax   = matmul(br4, cartax)
+       fracorig = matmul(br4, cartorig)
+       !---------------------------------------------------------------------
+
+       ! Generate evaluation grid
+       ! use gnuplot order for data generation, i.e.
+       ! POS = IZ + (IY-1)*NP(3) + (IX-1)*NP(3)*NP(2)
+       fracax(:,1) = fracax(:,1) / max(Npx-1, 1)
+       fracax(:,2) = fracax(:,2) / max(Npy-1, 1)
+       fracax(:,3) = fracax(:,3) / max(Npz-1, 1)
+
+       forall (ix=0:Npx-1, iy=0:Npy-1, iz=0:Npz-1)
+          inwplot%rgrid(:, 1 + iz + + Npz*iy + Npz*Npy*ix) = &
+               fracorig + ix*fracax(:,1) + iy*fracax(:,2) + iz*fracax(:,3)
+       end forall
+
+       write(0, *) inwplot%rgrid
+
+       write(unit_psink, "('# 3D  NP      length(α)    ∠(α, x)    ∠(α, y)')")
+
+       write(unit_psink, fmt_grid) Npx, sqrt(prodax(1,1))
+       write(unit_psink, fmt_grid) Npy, sqrt(prodax(2,2)), phi(1,2)
+       write(unit_psink, fmt_grid) Npz, sqrt(prodax(3,3)), phi(1,3), phi(2,3)
+
+       write(unit_psink, &
+            "('#order: (((w(x,y,z), z=1,#z), y=1,#y), x=1,#x)')")
+       stop
+
+    case default
+       call croak("unknown MODE `"//mode &
+            &   //"' in inwplot_read() [should be `ANY' or `3D']")
+    end select gridgen
+
+    read(lun, '(A3)') post
+    select case ( uppercase(adjustl(post)) )
+    case ('DEP'); inwplot%dephas = .true.
+    case ('NO');  inwplot%dephas = .false.
+    case default; call croak("unknown postprocessing option `"//post//"'")
+    end select
+
+    read(lun, *) unit, relcomp
+    select case ( uppercase(adjustl(unit)) )
+    case ('', 'AU', 'ATU');
+       inwplot%unit = unit_ATU
+       inwplot%unit_name ='ATU'
+    case ('ANG');
+       inwplot%unit = unit_ANG
+       inwplot%unit_name ='ANG'
+    case default
+       call croak("unknown units option `"//unit//"'")
+    end select
+    select case ( uppercase(adjustl(relcomp)) )
+    case ('LARGE', ''); inwplot%large = .true.
+    case ('SMALL');     inwplot%large = .false.
+    case default
+       call croak("unknown relativistic component `"//relcomp//"'")
+    end select
+
+    read(lun, *) inwplot%WFidx, inwplot%WFrot
+  end subroutine inwplot_read_unit
+
+  subroutine inwplot_read_fname(fname, inwplot)
+    use util, only: newunit
+
+    character(*),    intent(in)  :: fname
+    type(inwplot_t), intent(out) :: inwplot
+
+    integer :: lun
+
+    open(unit=newunit(lun), file=fname, status='old')
+    call inwplot_read_unit(lun, inwplot)
+    close(lun)
+  end subroutine inwplot_read_fname
+
+  subroutine inwplot_read_argstr(arg, inwplot)
+    use clio, only: argstr
+
+    type(argstr),    intent(in)  :: arg
+    type(inwplot_t), intent(out) :: inwplot
+
+    call inwplot_read_fname(arg%s, inwplot)
+  end subroutine inwplot_read_argstr
+end module inwplotmod
 
 
 !---------------- Reading ‘chk’ files                  ----------------------
@@ -253,24 +520,8 @@ module grid
   implicit none
   private; save
 
-  real(DPk), allocatable, public :: rgrid(:,:)
   integer,   allocatable, public :: ireg(:),ilat(:,:),iri(:)
-  integer,                public :: npg
 end module grid
-
-module latt
-  use const, only: DPk
-
-  implicit none
-  private; save
-
-! BR1(i,:) -- the real space lattice vectors a_i of the conventional u.c.
-! BR2(i,:) -- the real space lattice vectors a_i of the primitive unit cell
-! BR3(i,:) -- the reciprocal lattice vectors b_i of the conventional u.c
-! BR4(i,:) -- the reciprocal lattice vectors b_i of the primitive unit cell
-
-  real(DPk), public :: BR1(3,3), BR2(3,3), BR3(3,3), BR4(3,3)
-end module latt
 
 module loabc
   use const, only: DPk
@@ -299,24 +550,6 @@ module radfu
   real(DPk), allocatable, public :: RRAD(:,:,:,:)
 end module radfu
 
-module radgrd
-  use const, only: DPk
-
-  implicit none
-  private; save
-
-  real(DPk), allocatable, public :: RM(:,:), DX(:)
-end module radgrd
-
-module struct
-  use const, only: DPk
-
-  implicit none
-  private; save
-
-  real(DPk), allocatable, public :: POS(:,:), RMT(:)
-end module struct
-
 module sym2
   use const, only: DPk
   use wplot, only: Nsym
@@ -337,147 +570,10 @@ module work
   complex(DPK), allocatable, public :: aug(:,:,:)
 end module work
 
-module work1
-  use const, only: DPK
-  use param, only: Nrad
-
-  implicit none
-  private; save
-
-  real(DPk), public :: A(Nrad), B(Nrad)
-end module work1
-
 
 !---------------------------  Procedure modules  ---------------------------
-module     outwin_m; contains
-subroutine outwin(REL,V,RI,DH,JRI,EH,FL,VAL,SLO,Nodes,Z)
-!     Integration of the scalar-relativistic Schroedinger equation
-!     with psi(r) = u_l(|r|) Y_lm(r/|r|)
-! ----------------------------------------------------------------
-!  Input:
-!    REL   .TRUE. for skalarrelativistic calculation
-!    V(:)  radialsymmetric potential in Hartree
-!    RI(:) radial mesh points
-!    DH    (logical) step width
-!    JRI   number of radial mesh points
-!    EH    energy in Hartree
-!    FL    angular momentum
-!    Z     charge of nucleus
-!
-!  Output:
-!    VAL       wave function u_l(r) at MT sphere r = Rmt
-!    SLO       descent d/dr u_l(r) at MT sphere r = Rmt
-!    Nodes     number of nodes
-!
-!  MODULE WORK
-!    A(:)   r * u _l(r)     at mesh points
-!    B(:)   r * us_l(r) * c at mesh points (2nd rel. component)
-!
-!           Note, that here <(u,us)|(v,vs)> := <u|v> + <us|vs>
-!
-!  Rydberg units
-!
-! ----------------------------------------------------------------
-
-  use param, only: Nrad
-  use const, only: DPk, clight
-  use work1, only: A, B
-
-  implicit none
-
-  logical,   intent(in)  :: rel
-  real(DPk), intent(in)  :: V(NRAD), RI(NRAD), DH, EH, FL, Z
-  integer,   intent(in)  :: JRI
-  real(DPk), intent(out) :: val, slo
-  integer,   intent(out) :: nodes
-
-  real(DPk) :: AA, B1, B2, C, D(2,3), det, DF1, DF2, DF3
-  real(DPk) :: DG1, DG2, DG3, DRDI, FLLP1, E, F0, G0, H83, phi
-  real(DPk) :: R, R1, R2, R3, R83SQ, S, SF, U, X, Y, ZZ
-  integer   :: k, iiij
-
-! Hartree in Ryd
-  E = 2*EH
-
-  Nodes = 0
-  ZZ = Z + Z
-
-  if (rel) then
-     C = 2*clight
-  else
-     C=1e10_DPk
-  end if
-
-  FLLP1 = FL*(FL + 1)
-  R83SQ = 64 / 9._DPk
-  R1    =  1 / 9._DPk
-  R2    = -5 * R1
-  R3    = 19 * R1
-  H83   =  8 / 3._DPk
-
-  G0 = 1
-  if (Z .lt. 0.9_DPk) then
-     S = FL+1
-     SF = FL
-     F0 = FL/C
-  else
-     AA = ZZ/C
-     S = sqrt(FLLP1 + 1 - AA*AA)
-     SF = S
-     F0 = G0*(S - 1)/AA
-  endif
-  do K = 1,3
-     R = RI(K)
-     DRDI = DH*R
-     A(K) = (R**S)*G0
-     B(K) = (R**SF)*F0
-     D(1,K) = DRDI*A(K)*S/R
-     D(2,K) = DRDI*B(K)*SF/R
-  end do
-
-  DG1 = D(1,1)
-  DG2 = D(1,2)
-  DG3 = D(1,3)
-  DF1 = D(2,1)
-  DF2 = D(2,2)
-  DF3 = D(2,3)
-  do K = 4, JRI
-     R = RI(K)
-     DRDI = DH*R
-
-!    factor of 2 before V because of Hartree-Rydberg !
-     PHI = (E - 2.d0*V(K)/R)*DRDI/C
-     U = DRDI*C + PHI
-     X = -DRDI/R
-     Y = -FLLP1*X*X/U + PHI
-     DET = R83SQ - X*X + U*Y
-     B1 = A(K-1)*H83 + R1*DG1 + R2*DG2 + R3*DG3
-     B2 = B(K-1)*H83 + R1*DF1 + R2*DF2 + R3*DF3
-     A(K) = (B1*(H83-X) + B2*U)/DET
-     B(K) = (B2*(H83+X) - B1*Y)/DET
-     if (A(K)*A(K-1) .lt. 0D0) Nodes = Nodes + 1
-     DG1 = DG2
-     DG2 = DG3
-     DG3 = U*B(K) - X*A(K)
-     DF1 = DF2
-     DF2 = DF3
-     DF3 = X*B(K) - Y*A(K)
-  end do
-
-  do iiij=1,JRI
-     B(iiij)=B(iiij)*c/2
-  end do
-
-  VAL = A(JRI)/RI(JRI)
-  SLO = DG3/(DH*RI(JRI))
-  SLO = (SLO-VAL)/RI(JRI)
-end subroutine outwin
-end module     outwin_m
-
-
 module     rint13_m; contains
 subroutine rint13(rel, A, B, X, Y, S, jatom, stru)
-  use radgrd,    only: dx
   use const,     only: DPk, clight
   use param,     only: Nrad
   use structmod, only: struct_t
@@ -522,7 +618,7 @@ subroutine rint13(rel, A, B, X, Y, S, jatom, stru)
   if(.not.REL) CIN=4E-22    ! legacy value
 
 !     CONVERT FROM RYDBERG TO HARTREE UNITS
-  D=exp(DX(JATOM))
+  D=exp(stru%dx(JATOM))
   J=3-mod(STRU%NPT(JATOM),2)
   J1=J-1
   R=STRU%R0(JATOM)*(D**(J-1))
@@ -540,8 +636,8 @@ subroutine rint13(rel, A, B, X, Y, S, jatom, stru)
 20 P1=STRU%R0(JATOM)*(A(1)*X(1)+CIN*B(1)*Y(1))
   P2=R1*(A(J1)*X(J1)+CIN*B(J1)*Y(J1))
   S=2*Z2+4*Z4+R*(A(J)*X(J)+CIN*B(J)*Y(J))+P2
-  S=(DX(JATOM)*S+P1)/3.0D0
-  if(J1.gt.1) S=S+0.5D0*DX(JATOM)*(P1+P2)
+  S=(stru%dx(JATOM)*S+P1)/3.0D0
+  if(J1.gt.1) S=S+0.5D0*stru%dx(JATOM)*(P1+P2)
 end subroutine rint13
 end module     rint13_m
 
@@ -684,19 +780,17 @@ end module     wavint_m
 
 
 module     auggen_m; contains
-subroutine auggen(rel,stru,whpsi)
-  use struct,    only: RMT
-  use radgrd,    only: RM, dx
+subroutine auggen(stru, large)
   use lolog,     only: Nlo, ilo, lapw
   use loabc,     only: Alo
   use atspdt,    only: P, DP
   use radfu,     only: rrad
-  use work1,     only: A, B
+  use uhelp,     only: A, B
   use const,     only: DPk
   use param,     only: NLOat, Nrad, Nrf, LOmax, &
        &               unit_out, unit_vsp, unit_vector
   use wplot,     only: Lmax7
-  use structmod, only: struct_t
+  use structmod, only: struct_t, radgrid
 
   !! procedure includes
   use diracout_m
@@ -706,11 +800,10 @@ subroutine auggen(rel,stru,whpsi)
 
   implicit none
 
-  logical,        intent(in) :: rel
   type(struct_t), intent(in) :: stru
-  character(5),   intent(in) :: WHPSI
+  logical,        intent(in) :: large
 
-  logical   :: large, rlo(1:nloat,0:lomax)
+  logical   :: rlo(1:nloat,0:lomax)
   integer   :: i, k, l, m, jatom, jlo, jrf, irf, nodes, kappa
   real(DPk) :: cfac, RMT2, rnorm, uve, duve, uv, uvb, duvb, duv
   real(DPk) :: dele, delei, fl, ei, e1, cross, clight, r_m
@@ -720,10 +813,9 @@ subroutine auggen(rel,stru,whpsi)
   real(DPk), dimension(Nrad)             :: AE, BE, VR
   real(DPk), dimension(NRAD,0:LMAX7,NRF) :: RAD1, RAD2
 
-  CFAC = 1.0D0 / 274.074D0
-  if(.not.REL) CFAC = 1.0D-11
-  LARGE = WHPSI .eq. 'LARGE'
-  if(LARGE) CFAC = 1.0D0
+  cfac = 1 / 274.074_DPk
+  if(.not. stru%rel) cfac = 1e-11_DPk
+  if(large) cfac = 1
 
   ! << skip header of *.vsp file >>
   read(unit_vsp,1000)
@@ -733,8 +825,8 @@ subroutine auggen(rel,stru,whpsi)
   ALO = 0
   ILO = 0
   do JATOM=1,STRU%NNEQ
-     RMT2 = RMT(JATOM)*RMT(JATOM)
-     write(unit_out,2010)JATOM,RMT(JATOM)
+     RMT2 = stru%rmt(jatom)**2
+     write(unit_out,2010) jatom, stru%RMT(jatom)
 
      ! << read atomic potential r * V(r) and convert into Rydberg >>
      read(unit_vsp,1010)
@@ -780,9 +872,8 @@ subroutine auggen(rel,stru,whpsi)
         EI=E(L)/2.0d0
         !         << compute d/dE u_l(r,E) by finite differences >>
         E1=EI-DELE
-        call OUTWIN(REL,VR,RM(1,JATOM),DX(JATOM),stru%Npt(jatom),E1, &
-             FL,UVB,DUVB,NODES,stru%Z(jatom))
-        call RINT13(REL,A,B,A,B,RNORM,JATOM, stru)
+        call outwin(stru, jatom, Vr, E1, FL, UVB, DUVB, Nodes)
+        call RINT13(stru%rel,A,B,A,B,RNORM,JATOM, stru)
         RNORM = 1.0D0/sqrt(RNORM)
         do M=1,stru%Npt(jatom)
            AE(M) = RNORM * A(M)
@@ -791,9 +882,8 @@ subroutine auggen(rel,stru,whpsi)
         UVB  = RNORM * UVB
         DUVB = RNORM * DUVB
         E1=EI+DELE
-        call OUTWIN(REL,VR,RM(1,JATOM),DX(JATOM),stru%Npt(jatom),E1, &
-             FL,UVE,DUVE,NODES,stru%Z(jatom))
-        call RINT13(REL,A,B,A,B,RNORM,JATOM, stru)
+        call outwin(stru, jatom, Vr, E1, FL, UVE, DUVE, Nodes)
+        call RINT13(stru%rel,A,B,A,B,RNORM,JATOM, stru)
         RNORM = 1.0D0/sqrt(RNORM)
         UVE  = DELEI*(RNORM*UVE -UVB )
         DUVE = DELEI*(RNORM*DUVE-DUVB)
@@ -801,12 +891,10 @@ subroutine auggen(rel,stru,whpsi)
            AE(M) = DELEI*(RNORM*A(M)-AE(M))
            BE(M) = DELEI*(RNORM*B(M)-BE(M))
         end do
-        !
+
         !         << now compute u_l(r,E) >>
-        !
-        call OUTWIN(REL,VR,RM(1,JATOM),DX(JATOM),stru%Npt(jatom),EI, &
-             FL,UV,DUV,NODES,stru%Z(jatom))
-        call RINT13(REL,A,B,A,B,RNORM,JATOM, stru)
+        call outwin(stru, jatom, Vr, EI, FL, UV, DUV, Nodes)
+        call RINT13(stru%rel,A,B,A,B,RNORM,JATOM, stru)
         RNORM = 1.0D0/sqrt(RNORM)
         do M=1,stru%Npt(jatom)
            A(M) = RNORM*A(M)
@@ -817,7 +905,7 @@ subroutine auggen(rel,stru,whpsi)
         !
         !         << insure orthogonality of d/dE u_l(r,E) on u_l(r,E) >>
         !
-        call RINT13(REL,A,B,AE,BE,CROSS,JATOM, stru)
+        call RINT13(stru%rel,A,B,AE,BE,CROSS,JATOM, stru)
         do M=1,stru%Npt(jatom)
            AE(M) = (AE(M)-CROSS*A(M))
            BE(M) = (BE(M)-CROSS*B(M))
@@ -830,7 +918,7 @@ subroutine auggen(rel,stru,whpsi)
            RAD2(I,L,1) = B(I)
            RAD2(I,L,2) = BE(I)
         end do
-        call RINT13(REL,AE,BE,AE,BE,PEI(L),JATOM, stru)
+        call RINT13(stru%rel,AE,BE,AE,BE,PEI(L),JATOM, stru)
         write(unit_out,2030) L,E(L),P(L,1,JATOM),DP(L,1,JATOM),P(L,2,JATOM),DP(L,2,JATOM)
      end do
      !
@@ -850,16 +938,15 @@ subroutine auggen(rel,stru,whpsi)
                  call diracout(stru, jatom, Vr, ei, kappa, uv, duv, nodes)
                  call dergl(stru, jatom, a, b)
                  do m=1,stru%Npt(jatom)
-                    r_m=RM(1,JATOM)*exp(dx(jatom)*(m-1))
+                    r_m=stru%R0(JATOM)*exp(stru%dx(jatom)*(m-1))
                     b(m)=b(m)*r_m/(2.d0*clight+(elo(l,jlo)- &
                          2.d0*vr(m)/r_m)/(2.d0*clight))
                     b(m)=b(m)*clight
                  enddo
               else
-                 call outwin(rel,vr,RM(1,JATOM),dx(jatom),stru%Npt(jatom),   &
-                      ei,fl,uv,duv,nodes,stru%Z(jatom))
+                 call outwin(stru, jatom, Vr, EI, FL, UV, DUV, Nodes)
               endif
-              call RINT13(REL,A,B,A,B,RNORM,JATOM, stru)
+              call RINT13(stru%rel,A,B,A,B,RNORM,JATOM, stru)
               RNORM = 1.0d0/sqrt(RNORM)
               do M=1,stru%Npt(jatom)
                  RAD1(M,L,irf) = RNORM*A(M)
@@ -867,8 +954,8 @@ subroutine auggen(rel,stru,whpsi)
               enddo
               P(L,irf,jatom)  = RNORM*UV
               DP(L,irf,jatom) = RNORM*DUV
-              call RINT13(REL,RAD1(1,L,1),RAD2(1,L,1),RAD1(1,L,irf),RAD2(1,L,irf),PI12LO,JATOM, stru)
-              call RINT13(REL,RAD1(1,L,2),RAD2(1,L,2),RAD1(1,L,irf),RAD2(1,L,irf),PE12LO,JATOM, stru)
+              call RINT13(stru%rel,RAD1(1,L,1),RAD2(1,L,1),RAD1(1,L,irf),RAD2(1,L,irf),PI12LO,JATOM, stru)
+              call RINT13(stru%rel,RAD1(1,L,2),RAD2(1,L,2),RAD1(1,L,irf),RAD2(1,L,irf),PE12LO,JATOM, stru)
            endif
 
            if (LAPW(L,JATOM)) then
@@ -900,12 +987,11 @@ subroutine auggen(rel,stru,whpsi)
         end do
      end do
 
-     !
      !       << re-scale radial augmentation functions  >>
      !       << with VR just being a working array here >>
-     do I=1,stru%Npt(jatom)
-        VR(I) = CFAC / RM(I,JATOM)
-     end do
+     Vr(1:stru%Npt(jatom)) = &
+          cfac / radgrid(stru, jatom, (/( i, i=1,stru%Npt(jatom) )/))
+
      do L=0,LMAX7
         if(LARGE)then
            do irf=1,nrf
@@ -943,8 +1029,7 @@ end module     auggen_m
 
 
 module     auglo_m; contains
-subroutine auglo(latom,il,Alm,rotloc,Y,bk,coef,nmat,stru)
-  use struct,    only: POS
+subroutine auglo(stru, latom, rotloc, pos, il, Alm, Y, BK, coef, Nmat)
   use lolog,     only: iLO
   use loabc,     only: Alo
   use const,     only: DPk
@@ -957,77 +1042,81 @@ subroutine auglo(latom,il,Alm,rotloc,Y,bk,coef,nmat,stru)
 
   implicit none
 
+  type(struct_t), intent(in)    :: stru
   integer,        intent(in)    :: latom, Nmat
   integer,        intent(inout) :: il
-  complex(DPk),   intent(inout) :: Alm((Lmax7+1)*(Lmax7+1),Nrf)
+  complex(DPk),   intent(inout) :: Alm((Lmax7+1)**2, Nrf)
   complex(DPk),   intent(in)    :: coef(Nmat)
-  real(DPk),      intent(in)    :: BK(3,NMAT), rotloc(3,3,*)
-  type(struct_t), intent(in)    :: stru
+  real(DPk),      intent(in)    :: &
+       BK(3,Nmat), rotloc(3,3,stru%Nat), pos(3,stru%Nat)
 
   complex(DPk) :: PHS, PHSSUM(-LOMAX:LOMAX), Y((LOMAX+1)*(LOMAX+1))
   real(DPk)    :: RK(3), arg
-  integer      :: i, l, lm, m, m1, irf, jlo, jatom, jneq
+  integer      :: l, lm, m, m1, irf, jlo, jatom, jneq
 
-  JATOM = stru%neq2at(LATOM)
-  do L=0,LOMAX
-     do jlo=1,ilo(L,JATOM)
-        PHSSUM = (0.0D0,0.0D0)
-        do JNEQ=1,stru%MULT(JATOM)
-           do M1=-L,L
-              IL=IL+1
-              do I=1,3
-                 RK(I)=ROTLOC(I,1,LATOM)*BK(1,IL)+  &
-                      ROTLOC(I,2,LATOM)*BK(2,IL)+ &
-                      ROTLOC(I,3,LATOM)*BK(3,IL)
-              enddo
-              call YLM(RK,LOMAX,Y)
-              ARG=BK(1,IL)*POS(1,LATOM)+BK(2,IL)*POS(2,LATOM) &
-                   + BK(3,IL)*POS(3,LATOM)
-              PHS=COEF(IL) * cmplx(cos(arg), sin(arg), DPk)
-              LM = L*L
+  jatom = stru%neq2at(latom)
+  do L=0,LOmax
+     do jlo=1,ilo(l,jatom)
+        phssum = 0
+        do jneq=1,stru%mult(jatom)
+           do m1=-l,l
+              il=il+1
+              rk = matmul(rotloc(:,:,latom), BK(:,il))
+
+              call YLM(rk, LOmax, Y)
+              arg = dot_product(BK(:, il), pos(:, latom))
+
+              phs=coef(il) * cmplx(cos(arg), sin(arg), DPk)
+
+              LM = L**2
               do M=-L,L
                  LM = LM + 1
-                 PHSSUM(M) = PHSSUM(M) + PHS * conjg( Y(LM) )
+                 phssum(M) = phssum(M) + PHS * conjg( Y(LM) )
+              ! write(0,'(i3, 2x, *(2e15.7, 2x))') lm, phs, y(lm)
               enddo
            enddo
         end do
-        LM = L*L
+
+        LM = L**2
         do M=-L,L
            LM=LM+1
-           do irf=1,NRF     !changed be p.wissgott
+           do irf=1,Nrf
               ALM(LM,irf)=ALM(LM,irf)+PHSSUM(M)*ALO(L,jlo,irf,JATOM)
            enddo
         enddo
      end do
   end do
+  ! write(0,'(*(2e15.7, 2x))') sum(phssum), sum(alo)
 end subroutine auglo
 end module     auglo_m
 
 
 module     augpw_m; contains
-subroutine augpw(latom, Npw, Alm, rotloc, Y, bk, coef, Nmat, iatnr)
-  use struct, only: POS, RMT
-  use atspdt, only: P, DP
-  use bessfu, only: irad, fj, dfj
-  use lolog,  only: lapw
-  use param,  only: Nrf
-  use wplot,  only: kconjg, Lmax7
-  use const,  only: DPk
+subroutine augpw(stru, latom, rotloc, pos, Npw, Alm, Y, BK, coef, Nmat)
+  use atspdt,    only: P, DP
+  use bessfu,    only: irad, fj, dfj
+  use lolog,     only: lapw
+  use param,     only: Nrf
+  use wplot,     only: kconjg, Lmax7
+  use const,     only: DPk
+  use structmod, only: struct_t
 
   !! procedure includes
   use Ylm_m
 
   implicit none
 
-  integer,      intent(in)  :: Latom, Npw, Nmat, iatnr(:)
-  real(DPk),    intent(in)  :: rotloc(3,3,*), BK(3,Nmat)
-  complex(DPk), intent(out) :: ALM((LMAX7+1)*(LMAX7+1),nrf)
-  complex(DPk), intent(out) :: Y((LMAX7+1)*(LMAX7+1))
-  complex(DPk), intent(in)  :: COEF(nmat)
+  type(struct_t), intent(in)  :: stru
+  integer,        intent(in)  :: Latom, Npw, Nmat
+  real(DPk),      intent(in)  :: &
+       BK(3,Nmat), rotloc(3,3,stru%Nat), pos(3,stru%Nat)
+  complex(DPk),   intent(in)  :: COEF(Nmat)
+  complex(DPk),   intent(out) :: Alm((LMAX7+1)**2, Nrf)
+  complex(DPk),   intent(out) :: Y  ((LMAX7+1)**2)
 
   complex(DPk) :: PHS, PHSLM
   real(DPk)    :: RK(3), arg, al, bl
-  integer      :: i, imt, jatom, iPW, lm, l, m
+  integer      :: imt, jatom, iPW, lm, l, m
 
 ! The PW part of the augmentation coefficients A_lm,a and B_lm,a
 ! of a given eigen state at a given atom a in the unit cell
@@ -1061,8 +1150,8 @@ subroutine augpw(latom, Npw, Alm, rotloc, Y, bk, coef, Nmat, iatnr)
 !       which is the expression used in LAPW1 and LAPW2
 ! ---------------------------------------------------------------------------
 
-  JATOM = iatnr(LATOM)
-  IMT   = IRAD (JATOM)
+  jatom = stru%neq2at(latom)
+  iMT   = iRad (jatom)
 
   !     << initialize ALM and BLM >>
   ALM = 0
@@ -1070,11 +1159,8 @@ subroutine augpw(latom, Npw, Alm, rotloc, Y, bk, coef, Nmat, iatnr)
   do IPW=1,NPW
 
      !       << Y*(*)_lm(T_a^-1(K+k)) >>
-     do I=1,3
-        RK(I) = ROTLOC(I,1,LATOM)*BK(1,IPW) &
-             + ROTLOC(I,2,LATOM)*BK(2,IPW) &
-             + ROTLOC(I,3,LATOM)*BK(3,IPW)
-     end do
+     RK = matmul(rotloc(:,:,latom), BK(:,ipw))
+
      call YLM(RK,LMAX7,Y)
 
      !:17[
@@ -1087,9 +1173,8 @@ subroutine augpw(latom, Npw, Alm, rotloc, Y, bk, coef, Nmat, iatnr)
      !:17]
 
      !       << c_K/sqrt(V) * exp(i(K+k)R_a) >>
-     ARG = BK(1,IPW)*POS(1,LATOM) + BK(2,IPW)*POS(2,LATOM) &
-          + BK(3,IPW)*POS(3,LATOM)
-     PHS = COEF(IPW) * cmplx(cos(arg), sin(arg), DPk)
+     arg = dot_product(BK(:, ipw), pos(:, latom))
+     phs = coef(ipw) * cmplx(cos(arg), sin(arg), DPk)
 
      !       << A_l,a and B_l,a (without Rmt^2 factor) >>
      ! -----------------------------------------------------------------
@@ -1107,7 +1192,7 @@ subroutine augpw(latom, Npw, Alm, rotloc, Y, bk, coef, Nmat, iatnr)
            BL =  FJ(L,IPW,IMT)*DP (L,1,JATOM) -  &
                 DFJ(L,IPW,IMT)* P (L,1,JATOM)
         else
-           AL = FJ(L,IPW,IMT)/P(L,1,JATOM)/RMT(JATOM)**2
+           AL = FJ(l,ipw,imt) / P(l,1,jatom) / stru%RMT(jatom)**2
            BL= 0.d0
         endif
         do M=-L,L
@@ -1396,11 +1481,11 @@ subroutine latgen(stru)
   write(unit_out,1010) (I,(BR2(I,J),J=1,3),I=1,3)
   write(unit_out,1020) (I,(BR3(I,J),J=1,3),I=1,3)
   write(unit_out,1030) (I,(BR4(I,J),J=1,3),I=1,3)
-1000 format(/' REAL SPACE LATTICE VECTORS a1, a2, a3 (in bohr)' &
+1000 format(/' REAL SPACE LATTICE VECTORS a1, a2, a3 (in Bohr)' &
        /' -----------------------------------------------' &
        /' CONVENTIONAL UNIT CELL :'/(' a',I1,'     = ',3F12.7))
 1010 format(/' PRIMITIVE UNIT CELL :'/(' a',I1,'     = ',3F12.7))
-1020 format(/' RECIPROCAL LATTIC VECTORS b1, b2, b3 (in 1/bohr)' &
+1020 format(/' RECIPROCAL LATTIC VECTORS b1, b2, b3 (in 1/Bohr)' &
        /' ------------------------------------------------' &
        /' CONVENTIONAL UNIT CELL :'/(' b',I1,'/2pi = ',3F12.7))
 1030 format(/' PRIMITIVE UNIT CELL :'/(' b',I1,'/2pi = ',3F12.7))
@@ -1408,52 +1493,23 @@ end subroutine latgen
 end module     latgen_m
 
 
-module           orth_m; contains
-logical function orth(A)
-  use const, only: DPk
-  implicit none
-
-  real(DPk), intent(in) :: A(3,3)
-
-  real(DPk), parameter  :: tol = 13-4_DPk
-
-  integer   :: i, j
-  real(DPk) :: T
-
-  !
-  ! Function to check whether A is orthogonal or not
-  !
-
-  ORTH = .false.
-  do I=1,3
-     do J=1,3
-        T = A(1,I)*A(1,J) + A(2,I)*A(2,J) + A(3,I)*A(3,J)
-        if(J.eq.I) T = T - 1
-        if(abs(T).gt.TOL) return
-     end do
-  end do
-  ORTH = .true.
-  return
-end function orth
-end module   orth_m
-
-
 module     wavsph_m; contains
-subroutine wavsph(R, Bfac, iAt, iR, Psi, Y, iatnr)
-  use radgrd, only: RM
-  use work,   only: aug
-  use const,  only: DPk
-  use wplot,  only: kconjg, Lmax7
+subroutine wavsph(R, Bfac, iAt, iR, Psi, Y, stru)
+  use work,      only: aug
+  use const,     only: DPk
+  use wplot,     only: kconjg, Lmax7
+  use structmod, only: struct_t, radgrid
 
   !! procedure includes
   use Ylm_m
 
   implicit none
 
-  real(DPk),    intent(in)  :: R(3)
-  complex(DPk), intent(in)  :: BFAC
-  integer,      intent(in)  :: iAt, iR, iatnr(:)
-  complex(DPk), intent(out) :: Psi, Y((LMAX7+1)*(LMAX7+1))
+  real(DPk),      intent(in)  :: R(3)
+  complex(DPk),   intent(in)  :: BFAC
+  integer,        intent(in)  :: iAt, iR
+  complex(DPk),   intent(out) :: Psi, Y((LMAX7+1)*(LMAX7+1))
+  type(struct_t), intent(in)  :: stru
 
   complex(DPk) :: PHS, PHSLM
   integer      :: lm, jatom
@@ -1463,7 +1519,7 @@ subroutine wavsph(R, Bfac, iAt, iR, Psi, Y, iatnr)
 !
 ! psi(r) = e^ikR Sum(lm) w_lm,a(|r-R-R_a|) Y*(*)_lm(T_a^-1(r-R-R_a))
 !
-! Here (*) stands for an optional additional complex conjugation on Y*_lm(...)
+! Here (*) stands for an optional additional complex conjugation on Y*_lm(⋯)
 ! WIEN95 : (*) =     and hence   *(*) = *
 ! WIEN97 : (*) = *   and hence   *(*) =
 ! -----------------------------------------------------------------------
@@ -1492,8 +1548,8 @@ subroutine wavsph(R, Bfac, iAt, iR, Psi, Y, iatnr)
 !:17[
   if(.not.KCONJG)then
 !       << WIEN95 convention : (*) =   >>
-     do LM=1,(LMAX7+1)*(LMAX7+1)
-        Y(LM) = conjg(Y(LM))
+     do lm=1,(LMAX7+1)**2
+        Y(lm) = conjg(Y(lm))
      end do
   end if
 !:17]
@@ -1502,16 +1558,16 @@ subroutine wavsph(R, Bfac, iAt, iR, Psi, Y, iatnr)
 ! --------------------------------------------------------------------------
 ! r in [r1,r2] : w(r) = [ w(r1) ( r - r2) + w(r2) ( r1 - r ) ] / ( r2 - r1 )
 ! --------------------------------------------------------------------------
-  JATOM = IATNR(IAT)
-  RR = sqrt( R(1)*R(1) + R(2)*R(2) + R(3)*R(3) )
-  R1 = RM(IR,JATOM)
-  R2 = RM(IR+1,JATOM)
+  jatom = stru%neq2at(iat)
+  RR = sqrt( dot_product(R, R) )
+  R1 = radgrid(stru, jatom, iR)
+  R2 = radgrid(stru, jatom, iR+1)
   W1 = (R2-RR)/(R2-R1)
   W2 = (RR-R1)/(R2-R1)
 
 !     << Sum(lm) ... >>
   PHS = 0
-  do LM=1,(LMAX7+1)*(LMAX7+1)
+  do LM=1,(LMAX7+1)**2
      PHSLM = W1*AUG(IR,LM,IAT) + W2*AUG(IR+1,LM,IAT)
      PHS = PHS + PHSLM * Y(LM)
   end do
@@ -1523,8 +1579,9 @@ end module     wavsph_m
 
 
 module     bessel_m; contains
-subroutine bessel(NK,LDNK,BK,NMT,RAD,LMAX2,F,DF)
+subroutine bessel(Npw, BK, NMT, rad, F, DF)
   use const, only: DPk
+  use wplot, only: Lmax7
 
   !! procedure includes
   use sphbes_m
@@ -1532,25 +1589,29 @@ subroutine bessel(NK,LDNK,BK,NMT,RAD,LMAX2,F,DF)
 
   implicit none
 
-  integer,   intent(in)  :: Nk, LDNK, lMax2, NMT
-  real(DPk), intent(in)  :: BK(3,Nk), rad(NMT)
-  real(DPk), intent(out) :: F(LMAX2+1,LDNK,NMT), DF(LMAX2+1,LDNK,NMT)
+  ! Effective dimensions:
+  !
+  !   BK(3, Nmatk); rad(NMT); F(Lmax7+1, Nmatk, NMT),
+  !   DF(Lmax7+1, Nmatk, NMT)
+  !
+  ! The actual array sizes in place of Nmatk and NMT may be different.
 
-  integer   :: ldim, ir, ik, l
+  integer,   intent(in)  :: Npw, NMT
+  real(DPk), intent(in)  :: BK(:,:), rad(:)
+  real(DPk), intent(out) :: F(:,:,:), DF(:,:,:)
+
+  integer   :: ldim, ir, ik
   real(DPk) :: AK, arg, RMT
 
-  LDIM = LMAX2 + 1
-  do IR=1,NMT
-     RMT = RAD(IR)
-     do IK=1,NK
-        AK  = sqrt( BK(1,IK)*BK(1,IK) + BK(2,IK)*BK(2,IK) + &
-             BK(3,IK)*BK(3,IK) )
-        ARG = AK * RMT
-        call SPHBES(LMAX2, ARG, F(:, IK, IR))
-        call DVBES1(F(:,IK,IR),DF(:, IK, IR), ARG, LDIM)
-        do L=1,LDIM
-           DF(L,IK,IR) = DF(L,IK,IR)*AK
-        end do
+  ldim = size(F, 1)
+  do iR=1,NMT
+     RMT = rad(iR)
+     do ik=1,Npw
+        AK  = sqrt( dot_product(BK(:,ik), BK(:,ik)) )
+        arg = AK * RMT
+        call sphbes(ldim-1, arg, F(:, ik, iR))
+        call dvbes1(F(:,ik,iR), DF(:, ik, iR), arg, ldim)
+        DF(:, ik, iR) = AK*DF(:, ik, iR)
      end do
   end do
 end subroutine bessel
@@ -1558,24 +1619,24 @@ end module     bessel_m
 
 
 module     rotdef_m; contains
-subroutine rotdef(stru, IOP)
+subroutine rotdef(stru, iop, pos)
   use const,     only: DPk
   use structmod, only: struct_t
   use clio,      only: croak
   use param,     only: unit_out
   use wplot,     only: mvatom
   use latt,      only: br2
-  use struct,    only: pos
   use sym2,      only: imat, trans, iord
 
   implicit none
 
-  type(struct_t), intent(in)  :: stru
-  integer,        intent(out) :: IOP(stru%Nneq*48)
+  type(struct_t), intent(in)    :: stru
+  integer,        intent(out)   :: iop(stru%Nneq*48)
+  real(DPk),      intent(inout) :: pos(3, stru%Nat)
 
   real(DPk), parameter :: half = 0.5_DPk, tol = 1e-4_DPk
 
-  integer   :: index, index1, i, j, jatom, jOp, m
+  integer   :: index, index1, jatom, jOp, m
   real(DPk) :: pos0(3), R(3), D(3)
 
 !!! << Input >>
@@ -1599,58 +1660,43 @@ subroutine rotdef(stru, IOP)
 !!!     << find the generating symmetry operations >>
   write(unit_out,2000)
 
-  INDEX=0
-  nneq: do JATOM=1,STRU%NNEQ
-     INDEX1 = INDEX+1
+  index=0
+  nneq: do jatom=1,stru%Nneq
+     index1 = index+1
 !!!       << store r_1.atom before updating it >>
-     do J=1,3
-        POS0(J) = STRU%POS(J,INDEX1)
-     end do
+     pos0 = pos(:,index1)
 
      mult: do M=1,stru%mult(jatom)
-        INDEX = INDEX+1
-        symop: do JOP=1,IORD
+        index = index+1
+        symop: do jop=1,iord
 
 !!!           << find {Q|t}(r_1.atom) >>
-           do I=1,3
-              R(I) = IMAT(1,I,JOP)*POS0(1) &
-                   + IMAT(2,I,JOP)*POS0(2) &
-                   + IMAT(3,I,JOP)*POS0(3) + TRANS(I,JOP)
-           end do
+           R = matmul(transpose(imat(:,:,jOp)), pos0 + trans(:,jOp))
 
 !!!           << check the difference modulo lattice translations >>
-           do I=1,3
-              D(I) = abs(mod(abs(stru%pos(i,index)-R(I)) + HALF, 1._DPk) &
-                   - HALF)
-           end do
+           D = abs(mod(abs(pos(:,index) - R) + HALF, 1._DPk) - HALF)
+
            if (D(1).lt.TOL.and.D(2).lt.TOL.and.D(3).lt.TOL) then
               IOP(INDEX) = JOP
               !:17[
-              if(.not.MVATOM)then
-                 do I=1,3
-                    R(I) = STRU%POS(I,INDEX)
-                 end do
+              if(.not. mvatom)then
+                 R = pos(:, index)
               endif
               !:17]
-              do I=1,3
-                 POS(I,INDEX) = R(I)
-              end do
+              pos(:, index) = R
 
 !!!             << print updated position in Cartesian coordinates >>
-              do J=1,3
-                 R(J) = POS(1,INDEX)*BR2(1,J) &
-                      + POS(2,INDEX)*BR2(2,J) &
-                      + POS(3,INDEX)*BR2(3,J)
-              end do
-              write(unit_out,2010) JATOM,IOP(INDEX),(R(J),J=1,3)
+              R = matmul(BR2, pos(:, index))
+
+              write(unit_out,2010) jatom, IOP(index), R
               cycle mult
            end if
         end do symop
 
 !!!         << something is wrong here >>
-        write(unit_out,1000) INDEX1,INDEX
-        write(unit_out,1010) INDEX1,(POS(I,INDEX1),I=1,3)
-        write(unit_out,1010) INDEX ,(POS(I,INDEX ),I=1,3)
+        write(unit_out,1000) index1, index
+        write(unit_out,1010) index1, pos(:, index1)
+        write(unit_out,1010) index , pos(:, index )
         call croak('error in ROTDEF')
      end do mult
   end do nneq
@@ -1662,16 +1708,14 @@ subroutine rotdef(stru, IOP)
 
 2000 format(/' SYMMETRY ADJUSTED POSITIONS OF THE BASIS ATOMS' &
        /' ----------------------------------------------' &
-       /' atom  symm.     x [bohr]     y [bohr]     z [bohr]')
+       /' atom  symm.     x [Bohr]     y [Bohr]     z [Bohr]')
 2010 format(2(I5,1X),3F13.7)
 end subroutine rotdef
 end module     rotdef_m
 
 
 module     findmt_m; contains
-subroutine findmt(P, atms, stru, iAt, iLat, iR, R)
-  use struct,    only: RMT, POS
-  use radgrd,    only: dx
+subroutine findmt(P, atms, stru, pos, iAt, iLat, iR, R)
   use const,     only: DPk
   use latt,      only: br2
   use structmod, only: struct_t
@@ -1679,7 +1723,7 @@ subroutine findmt(P, atms, stru, iAt, iLat, iR, R)
   implicit none
 
   type(struct_t), intent(in)  :: stru
-  real(DPk),      intent(in)  :: P(3), atms(3, stru%Nneq)
+  real(DPk),      intent(in)  :: P(3), atms(3, stru%Nneq), pos(3, stru%Nat)
   integer,        intent(out) :: iAt, iLat(3), iR
   real(DPk),      intent(out) :: R(3)
 
@@ -1715,9 +1759,9 @@ subroutine findmt(P, atms, stru, iAt, iLat, iR, R)
 
   dimension T(3),ILOW(3),IUP(3)
 
-  do IAT=1,STRU%NAT
-     JATOM = stru%neq2at(iat)
-     RMT2 = RMT(JATOM)*RMT(JATOM)
+  do iat=1,stru%Nat
+     jatom = stru%neq2at(iat)
+     RMT2 = stru%RMT(jatom)**2
 !
 !       << setup search area for atomic sphere at R0+R >>
 ! --------------------------------------------------------------------
@@ -1727,9 +1771,9 @@ subroutine findmt(P, atms, stru, iAt, iLat, iR, R)
 ! to account for numerical noise let s_i = s_i + 0.0001 here!
 ! --------------------------------------------------------------------
      do I=1,3
-        T   (I) = P(I) - POS(I,IAT)
-        ILOW(I) = nint( T(I) - ATMS(I,JATOM) + 0.4999D0 )
-        IUP (I) = nint( T(I) + ATMS(I,JATOM) - 0.4999D0 )
+        T   (I) = P(I) - pos(i,iat)
+        ILOW(I) = nint( T(I) - ATMS(I,JATOM) + 0.4999_DPk )
+        IUP (I) = nint( T(I) + ATMS(I,JATOM) - 0.4999_DPk )
      end do
 
 !       << check all relevent atomic sphere displacements >>
@@ -1742,8 +1786,8 @@ subroutine findmt(P, atms, stru, iAt, iLat, iR, R)
                  R(J) = (T(1)-JX)*BR2(1,J) + (T(2)-JY)*BR2(2,J) &
                       + (T(3)-JZ)*BR2(3,J)
               end do
-              R2 = R(1)*R(1)+R(2)*R(2)+R(3)*R(3)
 
+              R2 = dot_product(R,R)
               if( R2.lt.RMT2 ) then
 !               << in muffin tin sphere IAT >>
                  RR = sqrt(R2)
@@ -1751,7 +1795,7 @@ subroutine findmt(P, atms, stru, iAt, iLat, iR, R)
                  ILAT(2) = JY
                  ILAT(3) = JZ
                  IR = min(1 + int(log(max(RR/stru%r0(JATOM),1.0D0)) &
-                      &           / DX(JATOM)), &
+                      &           / stru%dx(JATOM)), &
                       &   stru%Npt(JATOM))
                  return
               end if
@@ -1772,7 +1816,7 @@ end module     findmt_m
 
 
 module     locdef_m; contains
-subroutine LOCDEF(ROT0,IMAT,ROT)
+subroutine locdef(rot0, imat, rot)
   use latt,  only: br2, br4
   use const, only: DPk
   !:17[
@@ -1804,367 +1848,53 @@ subroutine LOCDEF(ROT0,IMAT,ROT)
   ! R := Q o T  with  Q_ik = Sum(m,n) am_i Q_mn bn_k
 
   real(DPk) :: Amat(3,3), Bmat(3,3)
-  integer   :: i,j,k,m
+  integer   :: k
 
   !:17[
-  if(.not.USEROT)then
-     !       << don't apply any local rotations, i.e. R := E >>
-     ROT = 0
+  if(.not. userot)then
+     ! don't apply any local rotations, i.e. R := E
+     rot = 0
 
-     do K=1,3
-        ROT(K,K)=1.0D0
+     do k=1,3
+        rot(k,k) = 1
      end do
      return
   endif
   !:17]
-  !     << A_mk := Sum(n) Q_mn bn_k >>
-  do M=1,3
-     do K=1,3
-        AMAT(M,K)=IMAT(1,M)*BR4(1,K) &
-             +IMAT(2,M)*BR4(2,K) &
-             +IMAT(3,M)*BR4(3,K)
-     end do
-  end do
-  !
+
+  ! A_mk := Sum(n) Q_mn bn_k
+  Amat = matmul(transpose(imat), BR4)
+
   !:17[
-  if(.not.ADDLOC)then
-     !       << ignore local rotation matrix T from input, i.e. R = Q >>
-     !       << R_ik = Q_ik = Sum(m) am_i A_mk >>
-     do I=1,3
-        do K=1,3
-           ROT(K,I)=BR2(1,I)*AMAT(1,K) &
-                +BR2(2,I)*AMAT(2,K) &
-                +BR2(3,I)*AMAT(3,K)
-        end do
-     end do
-     return
-  endif
+  if(.not. addloc)&
+       ! ignore local rotation matrix T from input, i.e. R = Q
+       ! R_ik = Q_ik = Sum(m) am_i A_mk
+       rot = matmul(transpose(Amat), BR2)
   !:17]
-  !     << B_mj = Sum(k) A_mk T_kj >>
-  do M=1,3
-     do J=1,3
-        BMAT(M,J)=AMAT(M,1)*ROT0(J,1) &
-             +AMAT(M,2)*ROT0(J,2) &
-             +AMAT(M,3)*ROT0(J,3)
-     end do
-  end do
-  !
-  !     << R_ij = Sum(m) am_i B_mj >>
-  do I=1,3
-     do J=1,3
-        ROT(J,I)=BR2(1,I)*BMAT(1,J) &
-             +BR2(2,I)*BMAT(2,J) &
-             +BR2(3,I)*BMAT(3,J)
-     end do
-  end do
-  !
-  return
+
+  ! B_mj = Sum(k) A_mk T_kj
+  Bmat = matmul(Amat, transpose(rot0))
+
+  ! R_ij = Sum(m) am_i B_mj
+  rot = matmul(transpose(Bmat), BR2)
 end subroutine locdef
 end module     locdef_m
 
 
-module     grdgen_m; contains
-subroutine grdgen(MODE,NP)
-  use grid,  only: NPG, Rgrid, ireg, ilat, IRI
-  use const, only: DPk, BUFSZ
-  use param, only: unit_in, unit_out
-  use wplot, only: unit_grid, unit_psink
-  use latt,  only: BR1, BR4
-  use clio,  only: croak
-  use util,  only: string
-
-  implicit none
-
-
-! Input Format
-! ~~~~~~~~~~~~
-! Record 1: (A4)
-! MODE   --  'ANY '     if an arbitrary list of grid points is to be handled
-!            '<n>D <f>' if an n-dim. grid of grid points is to be handled
-!                       n = 0, 1, 2, 3 and f = ' ', 'O'(ORTHO.), 'N'(ON-ORTHO.)
-!
-! MODE == 'ANY '
-! --------------
-! Record 2: (*)
-! NPG  --  total number of grid points
-!
-! FOR EACH grid point
-!   Record 3: from unit 7 (*)
-!   RGRID(1:3)  --  the grid points in Cartesian coordinates
-! DONE
-!
-! MODE == '<n>D <f>'
-! ------------------
-! Record 2: (*)
-! IX,IY,IZ,IDIV  --  the origin (IX/IDIV,IY/IDIV,IZ/IDIV) of the evaluation
-!                    grid in conventional fractional coordinates
-!
-! FOR EACH dimension a = 1,...,n
-!   Record 3: (*)
-!   IX,IY,IZ,IDIV  --  the end-point (IX/IDIV,IY/IDIV,IZ/IDIV) of the a-axis
-!                      in conventional fractional coordinates
-! DONE
-!
-! Record 4: (*)
-! NPX,NPY,...    --  number of grid points along each axis
-!
-! If f = ' ' or 'O' the axes are checked for orthogonality !
-!
-! Output:
-! ~~~~~~~
-! MODE       -- input mode
-!
-! for MODE = 'ANY'
-!
-! for MODE = '<n>D <f>' (n > 0)
-! NP(a)      -- number of grid points along the a-axis
-!
-! in any case
-! NPG        -- total number of grid points
-! RGRID(:,i) -- the i-th grid point in primitive fractional coordinates
-
-
-  character(4),intent(out) :: mode
-  integer,     intent(out) :: NP(3)
-
-  real(DPk) :: O(3), F(3,3), X(3,0:3), RAX(3), PHI(1:2,2:3), Rij, cosphi
-  integer   :: Ngdim, ig, i, j, idv, k, Ndim, ix, iy, iz
-
-  character, parameter :: axis(3) = (/ 'x', 'y', 'z' /)
-
-!!!   Format parameters (cannot be ‘parameter’ due to different
-!!!   lengths)
-  character(len=BUFSZ) :: fmt_grid(-1:3)
-
-  fmt_grid(-1) = &
-       "(' ARBITRARY LIST OF GRID POINTS' / &
-       & ' -----------------------------' / &
-       & ' number of grid points: ',I7)"
-  fmt_grid(0) = &
-       "(' 0D: 1 POINT'    / &
-       & ' -----------')"
-  fmt_grid(1) = &
-       "(' 1D-NET OF GRID POINTS'         / &
-       & ' ---------------------'         / &
-       & ' number of grid points: ',I7)"
-
-  fmt_grid(2) = &
-       "(' 2D-NET OF GRID POINTS'                                      / &
-       & ' ---------------------'                                      / &
-       & ' number of grid points for x, y: ',2I5,' (total:',I7, ')')"
-  fmt_grid(3) = &
-       "(' 3D-NET OF GRID POINTS'                                         / &
-       & ' ---------------------'                                         / &
-       & ' number of grid points for x, y, z: ',3I4,' (total:', I7, ')')"
-
-
-!!!   <<  in the plotting grid >>
-  read(unit_in, '(A4)') MODE
-  if(MODE(1:3) == 'ANY') then
-     Ndim = -1
-
-     ! << arbitray list >>
-     read(unit_in,*) NPG
-
-     ngdim=npg
-     allocate (RGRID(3,NGDIM),IREG(NGDIM),ILAT(3,NGDIM),IRI(NGDIM))
-
-     read_grid: do ig=1,NPG
-        select case (MODE(4:4))
-        case ('F')
-           read(unit_grid, *) Rgrid(:, ig), IDV
-           Rgrid(:, ig) = Rgrid(:, ig) / IDV
-
-        case (' ', 'C')
-           read(unit_grid,*) Rgrid(:, ig)
-           ! << transform to primitive fractional coordinates >>
-           Rgrid(:, ig) = matmul(BR4(:,:), Rgrid(:, ig))
-
-        case default
-           call croak('unknown FLAG: '//mode(4:4))
-        end select
-     end do read_grid
-
-     ! << write grid info on data file >>
-     write(unit_psink,                                &
-          "(A4,'  NP =',I8,/,                         &
-          & 'order according to the grid points ',      &
-          & 'provided in the input file <case>.grid')") &
-          MODE,NPG
-  else
-     ! << the origin >>
-     read(unit_in,*) O, IDV
-     O = O / IDV
-
-     NDIM = 0
-     if(MODE(1:2).ne.'0D')then
-        ! << x-end >>
-        read(unit_in,*) (F(I,1),I=1,3),IDV
-        F(:,1) = F(:,1) / IDV - O
-
-        NDIM = 1
-        if(MODE(1:2).ne.'1D')then
-           ! << y-end >>
-           read(unit_in,*) (F(I,2),I=1,3),IDV
-           F(:,2) = F(:,2) / IDV - O
-
-           NDIM = 2
-           if(MODE(1:2).ne.'2D')then
-              ! << z-end >>
-              read(unit_in,*) (F(I,3),I=1,3),IDV
-              F(:,3) = F(:,3) / IDV - O
-
-              NDIM = 3
-           endif
-        endif
-     endif
-
-     ! << grid size >>
-     if(NDIM.gt.0) read(unit_in,*) NP(1:NDIM)
-
-     NPG = product(NP(1:Ndim))
-
-     NP(NDIM+1 : 3) = 1
-
-
-!!! Write grid info
-     select case (Ndim)
-     case (-1)
-        write(unit_out, fmt_grid(Ndim)) NPG
-     case (0)
-        write(unit_out, fmt_grid(Ndim))
-     case (1)
-        write(unit_out, fmt_grid(Ndim)) NP(1)
-     case (2, 3)
-        write(unit_out, fmt_grid(Ndim)) NP(1:NDIM), NPG
-     case default
-        call croak("What is this, string theory?  Ndim="//&
-             &     trim(string(Ndim)))
-     end select
-
-     ! << transform origin and axes into primitive fractional coordinates >>
-     ! << a) transform into Cartesian coordinates >>
-     ! <<    and check axes for orthogonality     >>
-     select case (mode(4:4))
-     case ('N', 'O')
-        continue
-     case (' ')
-        mode(4:4) = 'O'
-     case default
-        call croak('unknown FLAG: '//mode(4:4))
-     end select
-
-     write(unit_out, "(/' PLOTTING AREA'                         &
-          &            /' -------------'                         &
-          &            /' x = Sum(j=1,3) f_i a_i  with  f_i in', &
-          &             ' conventional fractional coordinates'   &
-          &           //'           f_1      f_2      f_3   ',   &
-          &             '        x [bohr]     y [bohr]     z [bohr]')")
-
-     X(:,0) = O(1)*BR1(1,:)+O(2)*BR1(2,:)+O(3)*BR1(3,:)
-
-     write(unit_out, "(' origin', 1X, 3F9.5, 3X, 3F13.7)") O, X(:,0)
-
-     do K=1,NDIM
-        do J=1,3
-           X(J,K) = F(1,K)*BR1(1,J)+F(2,K)*BR1(2,J)+F(3,K)*BR1(3,J)
-        end do
-
-        write(unit_out, "(' ',A1,'-axis',1X,3F9.5,3X,3F13.7)") &
-             AXIS(K),F(:,K), X(:,K)
-     end do
-
-     write(unit_out, "(/'        length [bohr]')")
-
-     do K=1,NDIM
-        RAX(K) = sqrt( X(1,K)*X(1,K)+X(2,K)*X(2,K)+X(3,K)*X(3,K) )
-        write(unit_out, "(' abs(',A1,') ',F13.7)") AXIS(K), RAX(K)
-     end do
-
-     if(NDIM>1) write(unit_out, "(/'          cos(phi)   phi [degree]')")
-     do I=1,NDIM-1
-        do J=I+1,NDIM
-           RIJ = X(1,I)*X(1,J) + X(2,I)*X(2,J) + X(3,I)*X(3,J)
-           COSPHI = RIJ/(RAX(I)*RAX(J))
-           PHI(I,J) = acos(COSPHI)*57.295779513082321D0
-
-           write(unit_out, "(' <)(',A1,',',A1,') ',F10.7,3X,F8.3)") &
-                AXIS(I), AXIS(J), COSPHI, PHI(I,J)
-
-           if(MODE(4:4) == 'O' .and. abs(COSPHI)>0.001) &
-                stop 'NON-ORTHOGONAL AXES'
-        end do
-     end do
-
-     ! << b) transform into primitive fractional coordinates >>
-     O(:) = BR4(:,1)*X(1,0)+BR4(:,2)*X(2,0)+BR4(:,3)*X(3,0)
-     do K=1,NDIM
-        do I=1,3
-           F(I,K) = BR4(I,1)*X(1,K)+BR4(I,2)*X(2,K)+BR4(I,3)*X(3,K)
-        end do
-     end do
-
-     ! << generate the evaluation grid >>
-     ngdim=npg
-     allocate (RGRID(3,NGDIM),IREG(NGDIM),ILAT(3,NGDIM),IRI(NGDIM))
-     do I=1,3
-        do K=1,NDIM
-           F(I,K) = F(I,K) / max(NP(K)-1,1)
-        end do
-        do K=NDIM+1,3
-           F(I,K) = 0.0D0
-        end do
-     end do
-     ! << use gnuplot order for data generation, i.e.  >>
-     ! << POS = IZ + (IY-1)*NP(3) + (IX-1)*NP(3)*NP(2) >>
-     ig = 0
-     do ix=0,NP(1)-1
-        do iy=0,NP(2)-1
-           do iz=0,NP(3)-1
-              ig = ig + 1
-              Rgrid(:,ig) = O(:) + ix*F(:,1) + iy*F(:,2) + iz*F(:,3)
-           end do
-        end do
-     end do
-     ! << write grid info on data file >>
-     MODE(4:4)=' '
-     if(NDIM.eq.0)then
-        write(unit_psink, "(A4)") MODE
-     else
-        write(unit_psink,                                 &
-             "(A4, '  NP         abs(X)':                 &
-             & '   ang(X',I1,',X)':'   ang(X',I1,',X)')") &
-             MODE, (J,J=1,NDIM-1)
-        do I=1,NDIM
-           write(unit_psink, "(I8,2X,F13.7,2(2X,F10.5))") &
-                NP(I),RAX(I),(PHI(J,I),J=1,I-1)
-        end do
-        if(NDIM == 2) &
-             write(unit_psink, "('order: ((psi(ix,iy),iy=1,ny),ix=1,nx)')")
-        if(NDIM == 3) &
-             write(unit_psink, &
-             "('order: (((psi(ix,iy,iz),iz=1,nz),iy=1,ny),ix=1,nx)')")
-     endif
-  endif
-end subroutine grdgen
-end module     grdgen_m
-
-
 module     trans_m; contains
-subroutine trans(stru)
+subroutine trans(pos)
   use const,     only: DPk
   use latt,      only: br1, br2, br3, br4
   use wplot,     only: Nsym
   use sym2,      only: rtrans=>trans, imat
-  use structmod, only: struct_t
 
   implicit none
 
-  type(struct_t), intent(inout) :: stru
+  real(DPk), intent(inout) :: pos(:, :)
 
   real(DPk) :: F(3), S(3,3), T(3,3), Q(3,3)
   integer   :: i, k, n
-!
+
 ! transforms real space vectors x and symmetry operations {Q|t}
 ! from conventional into primitive fractional coordinates
 ! --------------------------------------------------------------------
@@ -2195,9 +1925,14 @@ subroutine trans(stru)
 ! symmetry operations from conventional to primitive
 ! Q_kk' = Sum(ii') T(k,i) Q_ii' S(i',k')  and  t_k = Sum(i) T(k,i) t_i
 ! --------------------------------------------------------------------
-!
 
 !     << set up the transformation matrices >>
+  T = matmul(BR4, transpose(BR1))
+  S = matmul(BR3, transpose(BR2))
+  write(0,*) 'trans()'
+  write(0,'("T1=", 3F7.3)') T
+  write(0,'("S1=", 3F7.3)') S
+
   do K=1,3
      do I=1,3
         T(K,I) = BR4(K,1)*BR1(I,1) + BR4(K,2)*BR1(I,2) &
@@ -2207,34 +1942,34 @@ subroutine trans(stru)
      end do
   end do
 
+  write(0,'("T2=", 3F7.3)') T
+  write(0,'("S2=", 3F7.3)') S
+
 !     << transform the real space vectors >>
-  do N=1,stru%Nat
-     do K=1,3
-        F(K) = T(K,1)*stru%pos(1,N) + T(K,2)*stru%pos(2,N) &
-             + T(K,3)*stru%pos(3,N)
-     end do
-     do K=1,3
-        stru%pos(K,N) = F(K)
-     end do
+  do n=1,size(pos,2)
+     pos(:, N) = matmul(T, pos(:, n))
   end do
 
 !     << transform the symmetry operations >>
   do N=1,NSYM
+     F = matmul(T, rtrans(:, N))
+     Q = matmul(T, transpose(imat(:,:,N)))
+     write(0,'("F1=", 3F7.3)') F
+     write(0,'("Q1=", 3F7.3)') Q
      do K=1,3
         F(K) = T(K,1)*RTRANS(1,N) + T(K,2)*RTRANS(2,N) &
              + T(K,3)*RTRANS(3,N)
+
         do I=1,3
            Q(K,I) = T(K,1)*IMAT(I,1,N) + T(K,2)*IMAT(I,2,N) &
                 & + T(K,3)*IMAT(I,3,N)
         end do
      end do
-     do K=1,3
-        RTRANS(K,N) = F(K)
-        do I=1,3
-           IMAT(I,K,N) = nint( Q(K,1)*S(1,I) + Q(K,2)*S(2,I) + &
-                &              Q(K,3)*S(3,I) )
-        end do
-     end do
+     write(0,'("F2=", 3F7.3)') F
+     write(0,'("Q2=", 3F7.3)') Q
+
+     rtrans(:, N) = F
+     imat (:,:,N) = nint(matmul(Q, S))
   end do
 end subroutine trans
 end module     trans_m
@@ -2246,4 +1981,4 @@ end module     trans_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-08-04 10:56:32 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-11-29 16:55:33 assman@faepop71.tu-graz.ac.at>
