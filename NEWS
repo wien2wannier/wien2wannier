@@ -1,100 +1,99 @@
-                       Wien2Wannier 1.0.1 News
-                       ***********************
+                          Wien2Wannier News
+                          *****************
 
-Version 1.0 represents a major overhaul of the user interface.  The
-goal was to integrate it better into Wien2k and make it conform more
-to the expectations of the Wien2k user, as well as to improve
-usability in a more general sense.
+Version 2.0 introduces backward-incompatible changes in the format of
+`case.inwplot':
 
-To this end, backwards compatibility was sacrificed in several places.
-In particular:
+  - Removed the `switch' and `iseig' options.  They were leftovers
+    from `lapw7', unused in `wplot' (`switch' had to equal `WAN' and
+    `iseig' was ignored).
 
- * Wien2k integration:
+  - Added a boolean option `wfrot'.  If set, `wplot' reads a unitary
+    matrix from `case.wfrot' to be applied to the WFs before plotting.
 
-   - (most) wien2wannier programs are now called via Wien2k's `x'
-     script
+  - Removed the `nD' grid types for n=0,1,2 a redundant; i.e., only
+    the options `ANY' and `3D' remain.  Lower-dimensional grids can
+    easily be generated as special cases of `3D', or using `ANY'.
 
-   - wien2wannier is set up to be installed inside the $WIENROOT
-     directory.
+A script `checkinwplot' is provided that checks an input file for
+conformance to the new format and converts old-style input files.  `x
+wplot' calls this script automatically.
 
- * some names changed to conform to Wien2k conventions, e.g. the
-   `w2win' file is now called `inwf', and the program that produces it
-   is `write_inwf'
+Bugfixes and enhancements include:
 
-Please refer to the user's guide for details on the commands and
-procedures in the new version.
+* In `write_win':
 
-Other changes and new features include:
-
- * `write_inwf' brings many new features over the old `write_w2win',
-   e.g.
-
-   - flexible selection of initial projections [real-valued spherical
-     harmonics (s through f), s/p/d hybrids, and certain
-     symmetry-related groups (e.g. d-t2g)]
-
-   - an arbitrary rotation can be applied to each initial projection
-
-   - tab-completion, readline, and history support
-
- * fix handling of k-points for various lattice types
-
- * `shift_energy' and `join_vectorfiles' are no longer needed (setting
-   the Fermi energy is done by `w2w'; `w2w' and `wplot' can read
-   parallel vector files)
-
- * wien2wannier may now be used under the GNU GPL (see file `COPYING')
-
-================
-
-Changes in 1.0.1 (update to Wien2k_14.2) include:
-
-* changed the format of `case.inwplot':
-
-  - the `WAN' pseudo-switch is removed
-
-  - added an option for a unitary rotation in the space of WFs
-
-* several fixes and changes to `write_win':
-
-  - fixed calculation of atom positions (`atoms_cart' and `atoms_frac'
-    blocks); `atoms_cart' is the default because it is numerically
-    slightly better in some cases
+  - fixed calculation of atom positions; `atoms_cart' is the default
+    over `atoms_frac' because it appears to behave better numerically
 
   - fixed handling of Wannier90 options given on the command line
 
-  - bugfixes relating to `mp_grid', `bands_plot', and `guiding_centres'
+  - fixed bugs related to `mp_grid', `bands_plot', and
+    `guiding_centres'
 
   - implemented support for both old-format (5-digit integers) and
     new-format (10-digit integers) `klist' files
 
-* fixed a Makefile problem affecting `w2w' and `wplot'; when using
-  gfortran, real and complex module versions were mixed, resulting in
-  errors
+* In `w2w':
 
-* fixed a bug in w2wc which when compiled with ifort would sometimes
-  crash with an error ``read statement [from vectorso] requires too
-  much data'' in the presence of SOC
+  - adapted `w2w' to work with `-p -so'
 
-* fixed a bug in w2w where `case.mmn' wrongly acquired a complex
-  conjugation
+  - fixed crashes with an error ``read statement [from vectorso]
+    requires too much data'' in the presence of SOC
 
-* fixed a bug in w2w resulting in segmentation faults for some cases
+  - fixed spurious complex conjugation in `case.mmn'
 
-* fixed `w2w' to work with `-p -so'
+  - fixed a bug resulting in segmentation faults for some cases
 
-* fixed the normalization of real-space Wannier functions in
+* Fixed the normalization of real-space Wannier functions in
   `case.psink' by number of k-points (previously, the WFs as printed
   included a factor of `N_k')
 
+* Fixed a Makefile bug affecting `w2w' and `wplot' where real and
+  complex modules were mixed (cf. mailing list <goo.gl/WbMb0w>).
 
 Many thanks to Marc Höppner, Hong Jiang, Okan Köksal, Gernot
 Kraberger, Laurence Marks, Oleg Rubel, Liang Si, Yundi Quan, Ulrich
 Wedig, Jiaxu Yan, Jianxin Zhu, and Manuel Zingl for their valuable
 comments on past versions.
 
+================
 
-Changes in 1.0 (included in Wien2k_14.2) include:
+Version 1.0 represents a major overhaul of the user interface.  In
+particular:
+
+* Wien2k integration:
+
+  - (most) wien2wannier programs are now called via Wien2k's `x'
+    script
+
+  - wien2wannier is set up to be installed inside the $WIENROOT
+    directory.
+
+* some names changed to conform to Wien2k conventions, e.g. the
+  `w2win' file is now called `inwf', and the program that produces it
+  is `write_inwf'
+
+Other changes and new features include:
+
+* `write_inwf' brings many new features over the old `write_w2win',
+  e.g.
+
+  - flexible selection of initial projections [real-valued spherical
+    harmonics (s through f), s/p/d hybrids, and certain
+    symmetry-related groups (e.g. d-t2g)]
+
+  - an arbitrary rotation can be applied to each initial projection
+
+  - tab-completion, readline, and history support
+
+* fix handling of k-points for various lattice types
+
+* `shift_energy' and `join_vectorfiles' are no longer needed (setting
+  the Fermi energy is done by `w2w'; `w2w' and `wplot' can read
+  parallel vector files)
+
+* wien2wannier may now be used under the GNU GPL (see file `COPYING')
 
 * removed all Unicode (non-ASCII) characters from the messages printed
   by wien2wannier, they were causing problems for some users
@@ -257,5 +256,5 @@ new:       id=-(BQZ(pair_index)*m2y+BQY(pair_index))*m2x-BQX(pair_index)-1
 ## comment-start: "#"
 ## End:
 ##
-## Time-stamp: <2016-05-13 15:48:02 assman@faepop71.tu-graz.ac.at>
+## Time-stamp: <2016-11-29 17:39:19 assman@faepop71.tu-graz.ac.at>
 ##\---

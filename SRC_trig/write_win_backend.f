@@ -46,8 +46,8 @@ program write_win
   integer                           :: nkeys
 
   logical :: atoms_done=.false., uc_done=.false., proj_done=.false.
-  logical :: kmesh_done=.false., kpath_done=.false.
-  logical :: bandsplot_done=.false., guiding_done=.false., mpgrid_done=.false.
+  logical :: kmesh_done=.false., kpath_done=.false., mpgrid_done=.false.
+  logical :: bandsplot_done=.false., guiding_done=.false.
   logical :: write_kpath, bands_plot, guiding_centres
 
   type(struct_t) :: stru
@@ -257,7 +257,7 @@ contains
        end if unit
     end if appending
 
-    print fmt_brlat, transpose(stru%brlat)
+    print fmt_brlat, transpose(stru%prim_dir)
 
     if (a) then
        print '(A)', tail
@@ -332,7 +332,7 @@ contains
 
     do i=1,stru%nat
        if (c) then
-          print fmt_atoms, i, matmul(stru%pos(:, i),stru%lat2car)
+          print fmt_atoms, i, matmul(stru%pos(:, i), stru%conv_dir)
        else
           print fmt_atoms, i, matmul(stru%pos(:, i), stru%stru2frac)
        end if
@@ -482,4 +482,4 @@ end program write_win
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-03-01 17:12:18 assman@faepop36.tu-graz.ac.at>
+!! Time-stamp: <2016-11-24 16:29:28 assman@faepop71.tu-graz.ac.at>
