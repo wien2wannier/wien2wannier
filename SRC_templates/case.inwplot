@@ -1,9 +1,9 @@
-3D ORTHO      # dim.;  O(RTHOGONAL) | N(ON-ORTHOGONAL)
+3D ORTHO      # grid: 3D|ANY; check axes? (O|N) or coord. (C[rac]|F[art])
  0  0  0  1   # origin:  x, y, z; idiv
  1  0  0  1   #  x-end:  x, y, z; idiv
  0  1  0  1   #  y-end:  x, y, z; idiv
  0  0  1  1   #  z-end:  x, y, z; idiv
 20 20 20      # #(grid points) in x, y, z dir.
-NO            # DEP(HASING) | NO (POST-PROCESSING)
+NO            # post-processing: DEP(HASING) | NO
 ANG   LARGE   # units: ANG|ATU;  rel. comp.: LARGE|SMALL
  1    F       # Wannier function index; apply WF rotation?
