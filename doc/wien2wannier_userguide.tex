@@ -421,39 +421,41 @@ It can be generated via \writeinwplot, or adapted from the template in
 %
 
 \begin{lines}
-  \begin{flin}{mode, switch \rem{format(A3, A1)}}{}
-  mode & $n$D& with $n=0,\ldots,3$, an $n$-dimensional grid will be
-               specified\\
+  \begin{flin}{mode, flag \rem{format(A3, A1)}}{}
+  mode & 3D  & a regular grid will be specified\\
        & ANY & read arbitrary grid from \file{\case.grid}\\
-  flag & O,N & when \code{mode = $n$D}: check for orthogonality or not\\
+  flag & O,N & when \code{mode =  3D}: check for orthogonality or not\\
        & C,F & when \code{mode = ANY}: cartesian or fractional coordinates
   \end{flin}
 %
-  If \code{mode=$n$D} and \code{flag=O} or absent, grid axes will
-  be checked for pairwise orthogonality; set \code{flag=N} for
-  nonorthogonal axes. %
-  If \code{mode=ANY} and \code{flag=C} or absent, the grid points
-  in \file{\case.grid} are in cartesian coordinates (3 reals per
-  line); if \code{flag=F}, they are in fractional coordinates (3
-  numbers and divisor).
+  If \code{mode=3D} and \code{flag=O}, grid axes will be checked for
+  pairwise orthogonality; set \code{flag=N} for nonorthogonal axes.
+  If \code{mode=ANY} and \code{flag=C}, the grid points in
+  \file{\case.grid} are in cartesian coordinates (3 reals per line);
+  if \code{flag=F}, they are in fractional coordinates (3 numbers and
+  divisor).
 
-  \begin{flin}[T]{ix, iy, iz, idv \rem{(free format)}}{grid origin}
+  \begin{flin}[T]{ix, iy, iz, idv \rem{(free format)}}{grid origin
+      \rem{(\code{mode=3D})}}
     ix,iy,iz,idv & int& Coordinates of the origin of the grid, where x=ix/idv
                         etc. in units of the \emph{conventional}
                         lattice vectors
   \end{flin}
 
   \begin{flin}[T]{ix, iy, iz, idv \rem{(free format)}}{axis end-point
-      \rem{($n$ times)}}
+      \rem{(\code{mode=3D}; 3 times)}}
     ix, iy, iz, idv & int & Coordinates of the end points of each grid axis
   \end{flin}
 
-  If \code{mode=$n$D}, \textbf{l.~3} must be given $n$ times, once for
-  each direction; if \code{mode=ANY}, it must be omitted.
-
   \begin{flin}[T]{nx, ny, nz \rem{(free format)}}{mesh size}
     nx,ny,nz & int & number of mesh points in each direction
+                     \rem{(\code{mode=3D})}\\
+    npt      & int & total number of mesh points \rem{(\code{mode=ANY})}
   \end{flin}
+
+  If \code{mode=3D}, give \textbf{l.~3} 3 times, once for each
+  direction; if \code{mode=ANY}, omit \textbf{l.~2+3} and give the
+  total number of points to be read on \textbf{l.~4}.
 
   \begin{flin}{post \rem{format(A3)}}{post-processing option}
     post & DEP & ``dephasing'': each wave function is multiplied by a
@@ -935,4 +937,4 @@ done
 
 where you have previously created suitable case.{inwf,win}{up,dn} files.
 
-%%% Time-stamp: <2016-04-08 16:21:46 assman@faepop36.tu-graz.ac.at>
+%%% Time-stamp: <2016-11-29 09:35:52 assman@faepop71.tu-graz.ac.at>
