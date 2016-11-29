@@ -29,7 +29,7 @@
 
 \author{\name{Elias Assmann} \and \name{Jan Kune\v{s}} \and
   \name{Philipp Wissgott}}
-\newcommand*\tit{\texorpdfstring{\Wtow}{Wien2Wannier} 1.0.1 User's
+\newcommand*\tit{\texorpdfstring{\Wtow}{Wien2Wannier} 2.0 User's
   Guide}
 \newcommand*\subtit{From linearized augmented plane waves to maximally
   localized Wannier functions}
@@ -470,11 +470,11 @@ It can be generated via \writeinwplot, or adapted from the template in
          & SMALL & small relativistic component
   \end{flin}
 
-  \begin{flin}[T]{iwan, rot \rem{(free format)}}{\wf index, apply \wf
+  \begin{flin}[T]{iwan, wfrot \rem{(free format)}}{\wf index, apply \wf
       rotation?}
     iwan & int & index of the \wf to be plotted, unless overridden on
                  command line\\
-    rot  & logical & read unitary matrix from \file{\case.wfrot} and
+    wfrot& logical & read unitary matrix from \file{\case.wfrot} and
                      apply before plotting
   \end{flin}
 \end{lines}
@@ -486,6 +486,11 @@ the orbitals as given by \wannier (see section ``Final State'' in
 \file{\case.wout}).  Therefore, it is recommended to start with a
 coarse grid (for instance $10\times10\times10$), make sure the window
 is correct, and only then start a calculation with a finer grid.
+
+The option \file{wfrot} asks \wplot to read a $(N_\wf \times N_\wf)$
+matrix from \file{\case.wfrot}, which is applied to the \wfs before
+plotting.  This is useful for some post-processing applications, where
+a rotation in the Wannier subspace is desired.
 
 
 \ProgSec[copy required files]{prepwiiw}
@@ -923,16 +928,5 @@ centered at their original position.
 
 \end{thebibliography}
 \end{document}
-In general, wien2wannier for spin-polarized cases will work best if the spin directions are “similar”, or if you need only one spin.  This is because you normally have only one case.inwf file.  If you need both spins and they are “really different” (i.e., require different case.inwf and possibly case.win files), you will have to do something like
 
-$ for s in up dn; do
-	x lapw1 -$s
-	ln -sf case.inwf$s case.inwf
-	ln -sf case.win$s case.win
-	x w2w -$s
-	x wannier90 -$s
-done
-
-where you have previously created suitable case.{inwf,win}{up,dn} files.
-
-%%% Time-stamp: <2016-04-08 16:21:46 assman@faepop36.tu-graz.ac.at>
+%%% Time-stamp: <2016-11-28 15:29:50 assman@faepop71.tu-graz.ac.at>
