@@ -28,7 +28,7 @@ module param
   public
 
   character(*), parameter, private :: &
-       rev_str = "$version: v1.0.0-219-g8600896$"
+       rev_str = "$version: v1.0.0-220-gc6c13e2$"
   character(*), parameter, public  :: &
        wien2wannier_version = rev_str(11 : len (rev_str)-1)
 
@@ -519,7 +519,7 @@ module     sphbes_m; contains
 !***  PLACED IN.
 !*****  MODIFIED TO NOT REQUIRE THE WORKING SPACE.
 !*****        29 MAY,1968
-subroutine sphbes(N,X,FJ)
+subroutine sphbes(N, X, FJ)
   use const, only: R8
   use clio,  only: croak
   use util,  only: string
@@ -952,4 +952,4 @@ end module outwin_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-08-05 13:58:55 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-08-12 15:09:53 assman@faepop71.tu-graz.ac.at>
