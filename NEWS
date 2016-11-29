@@ -11,6 +11,14 @@ Version 2.0 introduces backward-incompatible changes in the format of
   - Added a boolean option `wfrot'.  If set, `wplot' reads a unitary
     matrix from `case.wfrot' to be applied to the WFs before plotting.
 
+  - Removed the `nD' grid types for n=0,1,2 a redundant; i.e., only
+    the options `ANY' and `3D' remain.  Lower-dimensional grids can
+    easily be generated as special cases of `3D', or using `ANY'.
+
+A script `checkinwplot' is provided that checks an input file for
+conformance to the new format and converts old-style input files.  `x
+wplot' calls this script automatically.
+
 Bugfixes and enhancements include:
 
 * In `write_win':
@@ -248,5 +256,5 @@ new:       id=-(BQZ(pair_index)*m2y+BQY(pair_index))*m2x-BQX(pair_index)-1
 ## comment-start: "#"
 ## End:
 ##
-## Time-stamp: <2016-11-28 15:21:16 assman@faepop71.tu-graz.ac.at>
+## Time-stamp: <2016-11-29 17:39:19 assman@faepop71.tu-graz.ac.at>
 ##\---
