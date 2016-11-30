@@ -21,7 +21,7 @@ Exit status:
 else  an error occurred
 '''
 
-__version__ = "$version: v1.0.0-236-g3b527e1$"
+__version__ = "$version: v1.0.0-237-g15bebed$"
 
 try:
     __version__ = re.search(":\s*(.*?)\s*\$", __version__).group(1)
@@ -54,7 +54,7 @@ try:
         flag = inwf[ln][3].lower()
 
         if flag == ' ':
-            inwf[ln] = inwf[ln][0:3] + opts[0] + inwf[ln][3:]
+            inwf[ln] = inwf[ln][0:3] + opts[0] + inwf[ln][4:]
             newstyle = False
         elif flag not in opts:
             raise InvalidError("FLAG is '"+flag+"' for MODE="+mode)
@@ -111,7 +111,7 @@ try:
     repl('(\s*\d+\s+)\d+', '\\1F')
 
 except InvalidError as i:
-    print>>sys.stderr, "invalid input at line %i: %s" %(ln+1, i)
+    print>>sys.stderr, P.prog + ": invalid input at line %i: %s" %(ln+1, i)
     sys.exit(3)
 
 if newstyle:
