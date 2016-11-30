@@ -276,8 +276,6 @@ contains
                fracorig + ix*fracax(:,1) + iy*fracax(:,2) + iz*fracax(:,3)
        end forall
 
-       write(0, *) inwplot%rgrid
-
        write(unit_psink, "('# 3D  NP      length(α)    ∠(α, x)    ∠(α, y)')")
 
        write(unit_psink, fmt_grid) Npx, sqrt(prodax(1,1))
@@ -286,7 +284,6 @@ contains
 
        write(unit_psink, &
             "('#order: (((w(x,y,z), z=1,#z), y=1,#y), x=1,#x)')")
-       stop
 
     case default
        call croak("unknown MODE `"//mode &
@@ -1981,4 +1978,4 @@ end module     trans_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-11-29 16:55:33 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-11-30 16:57:35 assman@faepop71.tu-graz.ac.at>
