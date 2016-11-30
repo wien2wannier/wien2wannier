@@ -1,4 +1,4 @@
-3D ORTHO      # grid: 3D|ANY; check axes? (O|N) or coord. (C[rac]|F[art])
+3D ORTHO      # grid: 3D|ANY; check axes? (ortho|non); or coord.: Cart|frac
  0  0  0  1   # origin:  x, y, z; idiv
  1  0  0  1   #  x-end:  x, y, z; idiv
  0  1  0  1   #  y-end:  x, y, z; idiv
