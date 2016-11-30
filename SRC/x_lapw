@@ -2270,8 +2270,9 @@ set exe = wplot$cmplx$para
 set soupdn=$updn
 if ( $so == so ) set soupdn=
 if ( $para == para ) set dopara=1
+set inwplot=$file.inwplot$updn
 cat <<EOF >$def
-  5,'$file.inwplot$updn',     'old',     'formatted',          0
+  5,'$inwplot',               'old',     'formatted',          0
   6,'$file.outputwplot$updn', 'unknown', 'formatted',          0
   7,'$file.grid$updn',        'unknown', 'formatted',          0
  10,'${scratch}$file.vector$sc$hf$so$updn','old','unformatted',0
@@ -2283,12 +2284,33 @@ cat <<EOF >$def
  32,'$file.chk$soupdn',       'old',     'unformatted',        0
  33,'$file.wfrot$soupdn',     'unknown', 'formatted',          0
 EOF
+if (! $?deffile_only) then
+    set tmp=`mktemp inwf.XXX`
+    checkinwplot_lapw <$inwplot >$tmp
+    if ($status == 2) then      # new `inwplot' generated
+        mv $inwplot $inwplot.old
+        mv $tmp $inwplot
+        cat <<EOF
+Warning: The format of case.inwplot changed in Wien2k 16.  I converted
+your input file \`$inwplot' to the new format.  The original file is
+still available as \`$inwplot.old'.
+
+To use the converted file, just run \`x wplot' again.
+EOF
+        exit(0)
+    else
+        # either $inwplot checked out or there was an error -- we try
+        # to continue anyway
+        rm $tmp
+    endif
+    unset tmp
+endif
 set def = ($def $wf)
 breaksw
 
 case find_bands:
 case findbands:
-## adapted from ‘spaghetti’
+## adapted from `spaghetti'
 set typ=1
 set updnso=$updn
 if ($so == so ) then
@@ -2809,4 +2831,4 @@ if (-e $running) rm $running
 exit(1)
 
 
-## Time-stamp: <2016-07-19 17:11:26 assman@faepop71.tu-graz.ac.at>
+## Time-stamp: <2016-11-30 11:59:18 assman@faepop71.tu-graz.ac.at>
