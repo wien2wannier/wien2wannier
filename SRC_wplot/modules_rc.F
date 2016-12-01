@@ -23,7 +23,6 @@ module     main_m
   end interface orth
 contains
 subroutine main()
-  use latt,       only: br1, br2, br3, br4
   use sym2,       only: rtrans=>trans, imat, iord
   use lolog,      only: lapw, ilo, Nlo
   use loabc,      only: Alo
@@ -51,7 +50,6 @@ subroutine main()
   use wavint_m
   use rotdef_m
   use locdef_m
-  use latgen_m
   use spcgen_m
   use findmt_m
   use auggen_m
@@ -108,9 +106,7 @@ subroutine main()
        & /' UNIT CELL ANGLES:',3F12.7,' [°]')") &
        stru%a, stru%alpha(:)
 
-  call latgen(stru)
-
-  call inwplot_read(unit_in, inwplot)
+  call inwplot_read(unit_in, inwplot, stru)
   close(unit_in)
   Npt = size(inwplot%rgrid, 2)
   allocate ( psi(Npt), tot(Npt), iLat(3, Npt), iRi(Npt), iReg(Npt) )
@@ -218,7 +214,7 @@ subroutine main()
        &  '        x [Bohr]     y [Bohr]     z [Bohr]')")
 
   do INDEX=1,stru%nat
-     R = matmul(transpose(BR1), stru%pos(:,index))
+     R = matmul(stru%conv_dir, stru%pos(:,index))
 
      write(unit_out,"(I5,1X,3F9.5,3X,3F13.7)") &
           stru%Neq2at(index), stru%pos(:,index), R
@@ -227,7 +223,7 @@ subroutine main()
   pos_sym = stru%pos
 
   ! trans() updates pos_sym, IMAT, RTRANS
-  if (.not. stru%prim) call trans(pos_sym)
+  if (.not. stru%prim) call trans(pos_sym, stru)
 
   ! rotdef() updates pos_sym, sets IOP
   call rotdef(stru, iop, pos_sym)
@@ -238,7 +234,7 @@ subroutine main()
      do mu=1,stru%mult(jneq)
         index = index+1
         call locdef(stru%locrot(:,:,jneq), imat(:,:,iop(index)), &
-             &      rotloc_sym (:,:,index))
+             &      rotloc_sym (:,:,index), stru)
      end do
   end do
 
@@ -264,7 +260,7 @@ subroutine main()
 ! SPC := Sum(i=1,3) [-s_i,+s_i] * a_i  with  s_i > 0
 ! and {a_1,a_2,a_3} being the primitive lattice vectors
 ! ---------------------------------------------------------------
-  call SPCGEN(stru%Nneq,stru%RMT,ATMS)
+  call SPCGEN(stru, atms)
   write(unit_out, &
        "(/' PRIMITIVE CELLS SURROUNDING THE MUFFIN TIN SPHERES' &
        & /' --------------------------------------------------' &
@@ -326,7 +322,7 @@ subroutine main()
 
 ! finally transform POS into global Cartesian coord.
   do index=1,stru%Nat
-     pos_sym(:,index) = matmul(pos_sym(:, index), BR2)
+     pos_sym(:,index) = matmul(stru%prim_dir, pos_sym(:, index))
   end do
 
 ! #######################################
@@ -352,10 +348,6 @@ subroutine main()
 
 ! set up constants and prefactors
   prefac = inwplot%unit / sqrt(stru%vol)
-
-! scale reciprocal basis vectors with 2pi
-  BR3 = TAU*BR3
-  BR4 = TAU*BR4
 
 !!! Main loop
   if(inwplot%extgrid) then
@@ -441,14 +433,14 @@ subroutine main()
 
         ! transform K+k into global Cartesian coordinates
         do ik=1,Nmatk
-           BK(:, ik) = matmul(transpose(BR3), &
+           BK(:, ik) = matmul(stru%conv_rec, &
                 &             (/ kx(ik)+fk(1), ky(ik)+fk(2), kz(ik)+fk(3) /))
         end do
 
         ! transform k into primitive fractional coordinates
         if(.not. stru%prim)then
-           R  = matmul(transpose(BR3), fk)
-           fk = matmul(BR2, R)
+           R  = matmul(stru%conv_rec, fk)
+           fk = matmul(transpose(stru%prim_dir), R)
         else
            fk = TAU * fk
         endif
@@ -648,4 +640,4 @@ end module main_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-11-29 22:20:22 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-12-01 17:34:38 assman@faepop71.tu-graz.ac.at>

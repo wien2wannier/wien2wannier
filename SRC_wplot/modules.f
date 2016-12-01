@@ -17,8 +17,6 @@
 !!
 !! grid:      ilat(:,:), ireg(:), iri(:)
 !!
-!! latt:      BR1(3,3), BR2(3,3), BR3(3,3), BR4(3,3)
-!!
 !! loabc:     ALO(:,:,:,:)
 !!
 !! lolog:     ILO(:,:), LAPW(:,:), NLO
@@ -36,8 +34,8 @@
 !! Procedure modules:
 !!
 !!    auggen_m, auglo_m, augpw_m, bessel_m, findmt_m, gbass_m,
-!!    latgen_m, locdef_m, rint13_m, rotdef_m, spcgen_m, trans_m,
-!!    wavint_m, wavsph_m
+!!    locdef_m, rint13_m, rotdef_m, spcgen_m, trans_m, wavint_m,
+!!    wavsph_m
 !!
 !!\===============================================
 
@@ -76,20 +74,6 @@ module wplot
 end module wplot
 
 
-module latt
-  use const, only: DPk
-
-  implicit none
-  private; save
-
-! BR1(i,:) -- the real space lattice vectors a_i of the conventional u.c.
-! BR2(i,:) -- the real space lattice vectors a_i of the primitive unit cell
-! BR3(i,:) -- the reciprocal lattice vectors b_i of the conventional u.c
-! BR4(i,:) -- the reciprocal lattice vectors b_i of the primitive unit cell
-
-  real(DPk), public :: BR1(3,3), BR2(3,3), BR3(3,3), BR4(3,3)
-end module latt
-
 !---------------- Reading ‘inwplot’ files              ----------------------
 module inwplotmod
   use const, only: DPk
@@ -117,17 +101,18 @@ module inwplotmod
 
 contains
 
-  subroutine inwplot_read_unit(lun, inwplot)
+  subroutine inwplot_read_unit(lun, inwplot, stru)
 !!! This is based on grdgen.f (including some comments)
-    use const,  only: ORTHO_TEST, TAU
-    use param,  only: unit_out
-    use util,   only: uppercase, string
-    use clio,   only: croak
-    use wplot,  only: unit_grid, unit_psink, gridfn
-    use latt,   only: br1, br4
+    use const,     only: DPk, ORTHO_TEST, TAU
+    use param,     only: unit_out
+    use util,      only: uppercase, string
+    use clio,      only: croak
+    use wplot,     only: unit_grid, unit_psink, gridfn
+    use structmod, only: struct_t
 
     integer,         intent(in)  :: lun
     type(inwplot_t), intent(out) :: inwplot
+    type(struct_t),  intent(in)  :: stru
 
     character(len=5) :: relcomp
     character(len=3) :: mode, post, unit
@@ -162,7 +147,8 @@ contains
        case ('F')
           do ig=1,Npt
              read(unit_grid, *) inwplot%rgrid(:, ig)
-             inwplot%rgrid(:, ig) = matmul(br4, inwplot%rgrid(:, ig))
+             inwplot%rgrid(:, ig) = matmul(transpose(stru%prim_rec)/TAU, &
+                  &                        inwplot%rgrid(:, ig))
           end do
 
        case default
@@ -225,8 +211,8 @@ contains
        fracax(:,2) = inwplot%yend-inwplot%orig
        fracax(:,3) = inwplot%zend-inwplot%orig
 
-       cartax   = matmul(transpose(br1), fracax)
-       cartorig = matmul(transpose(br1), inwplot%orig)
+       cartax   = matmul(stru%conv_dir, fracax)
+       cartorig = matmul(stru%conv_dir, inwplot%orig)
        prodax   = matmul(transpose(cartax), cartax)
 
        write(unit_out, fmt_orig) inwplot%orig, cartorig
@@ -260,8 +246,8 @@ contains
        end if
 
        ! b) transform into primitive fractional coordinates
-       fracax   = matmul(br4, cartax)
-       fracorig = matmul(br4, cartorig)
+       fracax   = matmul(transpose(stru%prim_rec/TAU), cartax)
+       fracorig = matmul(transpose(stru%prim_rec/TAU), cartorig)
        !---------------------------------------------------------------------
 
        ! Generate evaluation grid
@@ -318,26 +304,30 @@ contains
     read(lun, *) inwplot%WFidx, inwplot%WFrot
   end subroutine inwplot_read_unit
 
-  subroutine inwplot_read_fname(fname, inwplot)
-    use util, only: newunit
+  subroutine inwplot_read_fname(fname, inwplot, stru)
+    use util,      only: newunit
+    use structmod, only: struct_t
 
     character(*),    intent(in)  :: fname
     type(inwplot_t), intent(out) :: inwplot
+    type(struct_t),  intent(in)  :: stru
 
     integer :: lun
 
     open(unit=newunit(lun), file=fname, status='old')
-    call inwplot_read_unit(lun, inwplot)
+    call inwplot_read_unit(lun, inwplot, stru)
     close(lun)
   end subroutine inwplot_read_fname
 
-  subroutine inwplot_read_argstr(arg, inwplot)
-    use clio, only: argstr
+  subroutine inwplot_read_argstr(arg, inwplot, stru)
+    use clio,      only: argstr
+    use structmod, only: struct_t
 
     type(argstr),    intent(in)  :: arg
     type(inwplot_t), intent(out) :: inwplot
+    type(struct_t),  intent(in)  :: stru
 
-    call inwplot_read_fname(arg%s, inwplot)
+    call inwplot_read_fname(arg%s, inwplot, stru)
   end subroutine inwplot_read_argstr
 end module inwplotmod
 
@@ -694,17 +684,15 @@ end module     gbass_m
 
 
 module     spcgen_m; contains
-subroutine spcgen(NAT,RMT,ATMS)
-  use const, only: DPk
-  use latt,  only: br4
+subroutine spcgen(stru, atms)
+  use const,     only: DPk, TAU
+  use structmod, only: struct_t
 
   implicit none
 
-  integer,   intent(in)  :: NAt
-  real(DPk), intent(in)  :: RMT(NAT)
-  real(DPk), intent(out) :: ATMS(3,NAT)
+  type(struct_t), intent(in)  :: stru
+  real(DPk),      intent(out) :: atms(3, stru%Nneq)
 
-! -----------------------------------------------------------------------
 ! For a given lattice basis {a_1,a_2,a_3} each muffin tin sphere
 !   MTS := { r | |r| < Rmt }
 ! is surrounded by a (smallest) parallel epiped
@@ -714,7 +702,6 @@ subroutine spcgen(NAT,RMT,ATMS)
 ! The mininal realization of such a parallel epiped is given by
 !   s_i = Rmt * |b_i|
 ! where {b_1,b_2,b_3} is the reciprocal lattice basis of {a_1,a_2,a_3}.
-! -----------------------------------------------------------------------
 !
 ! Input:
 ! NAT       -- number of inequivalent atoms
@@ -726,13 +713,12 @@ subroutine spcgen(NAT,RMT,ATMS)
   real(DPk) :: B(3)
   integer   :: i, jatom
 
-  do I=1,3
-     B(I) = sqrt( BR4(I,1)**2 + BR4(I,2)**2 + BR4(I,3)**2 )
+  do i=1,3
+     b(i) = sqrt(sum( stru%prim_rec(:, i)**2 ))/TAU
   end do
-  do JATOM=1,NAT
-     do I=1,3
-        ATMS(I,JATOM) = RMT(JATOM) * B(I)
-     end do
+
+  do jatom = 1, stru%Nneq
+     atms(:, jatom) = stru%Rmt(jatom) * b(:)
   end do
 end subroutine spcgen
 end module     spcgen_m
@@ -1204,292 +1190,6 @@ end subroutine augpw
 end module     augpw_m
 
 
-module     latgen_m; contains
-subroutine latgen(stru)
-  use const,     only: DPk, TAU, SQ3
-  use latt,      only: br1, br2, br3, br4
-  use param,     only: unit_out
-  use structmod, only: struct_t
-  use clio,      only: croak
-
-  !! procedure includes
-  use gbass_m
-
-  implicit none
-
-  type(struct_t), intent(in) :: stru
-
-  real(DPk)    :: alpha, beta, gamma, cosPhi, phi
-  integer      :: i, j
-
-! << Output (to module LATT) >>
-! BR1(i,:) -- the real space lattice vectors a_i of the conventional unit cell
-! BR2(i,:) -- the real space lattice vectors a_i of the primitive unit cell
-! BR3(i,:) -- the reciprocal lattice vectors b_i of the conventional unit cell
-! BR4(i,:) -- the reciprocal lattice vectors b_i of the primitive unit cell
-!
-! Here, the reciprocal lattice vectors are evaluated without a factor of 2pi !
-!
-! Caution: The lattice vectors setup here must precisely co-incide with
-!          those used within LAPW2 !
-!
-  ALPHA = stru%alpha(1) * TAU/360
-  BETA  = stru%alpha(2) * TAU/360
-  GAMMA = stru%alpha(3) * TAU/360
-
-  BR1=0; BR2=0
-
-  if(STRU%LATTIC(1:1) == 'P')then
-! -------------------------------------------------------------------------
-!       << primitive lattice : P a b c alp bet gam >>
-!
-!       a_1 = a * (sin(bet)*sin(phi),sin(bet)*cos(phi),cos(bet))
-!       a_2 = b * (        0        ,      sin(alp)   ,cos(alp))
-!       a_3 = c * (        0        ,        0        ,  1     )
-!       with
-!       cos(phi) := ( cos(gam) - cos(alp)*cos(bet) ) / sin(alp)*sin(bet)
-!
-!       triclinic, monoclinic, orthorhombic, tetragonal, cubic
-!
-!       b_1 = ( 1/sin(bet)*sin(phi)                    ,     0     ,0) / a
-!       b_2 = (-1/sin(alp)*tan(phi)                    , 1/sin(alp),0) / b
-!       b_3 = ( 1/tan(alp)*tan(phi)-1/tan(bet)*sin(phi),-1/tan(alp),1) / c
-! -------------------------------------------------------------------------
-     COSPHI=(cos(GAMMA)-cos(ALPHA)*cos(BETA))/sin(ALPHA)/sin(BETA)
-     PHI=acos(COSPHI)
-!       << primitive unit cell >>
-     BR2(1,1)=STRU%A(1)*sin(BETA)*sin(PHI)
-     BR2(1,2)=STRU%A(1)*sin(BETA)*cos(PHI)
-     BR2(1,3)=STRU%A(1)*cos(BETA)
-     BR2(2,2)=STRU%A(2)*sin(ALPHA)
-     BR2(2,3)=STRU%A(2)*cos(ALPHA)
-     BR2(3,3)=STRU%A(3)
-!       << conventional unit cell >>
-     BR1 = BR2
-  else if(STRU%LATTIC(1:1) == 'H') then
-! -------------------------------------------------------------------------
-!       << hexagonal lattice : H a * c * * * >>
-!
-!       a_1 = a * (sqrt(3)/2,-1/2,0)
-!       a_2 = a * (     0   ,  1 ,0)
-!       a_3 = c * (     0   ,  0 ,1)
-!
-!       this setting corresponds to the P a a c 90 90 120 setting
-!
-!       b_1 = ( 1/sqrt(3),  -1 ,   1 ) / a
-!       b_2 = ( 1/sqrt(3),   1 ,   1 ) / a
-!       b_3 = (-2/sqrt(3),   0 ,   1 ) / c
-! -------------------------------------------------------------------------
-!       << primitive unit cell >>
-     BR2(1,1)= STRU%A(1)*SQ3/2
-     BR2(1,2)=-STRU%A(1)/2
-     BR2(2,2)= STRU%A(1)
-     BR2(3,3)= STRU%A(3)
-!       << conventional unit cell >>
-     BR1 = BR2
-  else if(STRU%LATTIC(1:1) == 'T'.or.STRU%LATTIC(1:1) == 'R') then
-! -------------------------------------------------------------------------
-!       << rhombohedral or trigonal lattice : R a * c * * * >>
-!
-!       a_1 = ( a/(2*sqrt(3)),-a/2,c/3)
-!       a_2 = ( a/(2*sqrt(3)), a/2,c/3)
-!       a_3 = (-a/   sqrt(3) ,  0 ,c/3)
-!
-!       Note: Although the trigonal lattice is treated as a primitive
-!             lattice the lattice parameter correspond to the surrounding
-!             (non-primitive) hexagonal unit cell.
-!
-!       b_1 = ( 1/(a*sqrt(3)), -1/b , 1/c )
-!       b_2 = ( 1/(a*sqrt(3)),  1/b , 1/c )
-!       b_3 = (-2/(a*sqrt(3)),   0  , 1/c )
-! -------------------------------------------------------------------------
-!       << primitive unit cell >>
-     BR2(1,1)= STRU%A(1)/2/SQ3
-     BR2(1,2)=-STRU%A(1)/2
-     BR2(1,3)= STRU%A(3)/3
-     BR2(2,1)= STRU%A(1)/2/SQ3
-     BR2(2,2)= STRU%A(1)/2
-     BR2(2,3)= STRU%A(3)/3
-     BR2(3,1)=-STRU%A(1)/SQ3
-     BR2(3,3)= STRU%A(3)/3
-!       << conventional unit cell >>
-     BR1 = BR2
-  else if(STRU%LATTIC(1:1) == 'F') then
-! -------------------------------------------------------------------------
-!       << face-centered lattice : F a b c * * *
-!
-!       a_1 = ( 0 ,b/2,c/2)
-!       a_2 = (a/2, 0 ,c/2)
-!       a_3 = (a/2,b/2, 0 )
-!
-!       orthorhombic, cubic
-!
-!       b_1 = ( -1/a ,  1/b ,  1/c )
-!       b_2 = (  1/a , -1/b ,  1/c )
-!       b_3 = (  1/a ,  1/b , -1/c )
-! -------------------------------------------------------------------------
-!       << primitive unit cell >>
-     BR2(1,2)=STRU%A(2)/2
-     BR2(1,3)=STRU%A(3)/2
-     BR2(2,1)=STRU%A(1)/2
-     BR2(2,3)=STRU%A(3)/2
-     BR2(3,1)=STRU%A(1)/2
-     BR2(3,2)=STRU%A(2)/2
-!       << conventional unit cell >>
-     BR1(1,1)=STRU%A(1)
-     BR1(2,2)=STRU%A(2)
-     BR1(3,3)=STRU%A(3)
-  else if(STRU%LATTIC(1:1) == 'B') then
-! -------------------------------------------------------------------------
-!       << body-centered lattice : B a b c * * *
-!
-!       a_1 = (-a/2, b/2, c/2)
-!       a_2 = ( a/2,-b/2, c/2)
-!       a_3 = ( a/2, b/2,-c/2)
-!
-!       orthorhombic, tetragonal, cubic
-!
-!       b_1 = (  0  , 1/b , 1/c )
-!       b_2 = ( 1/a ,  0  , 1/c )
-!       b_3 = ( 1/a , 1/b ,  0  )
-! -------------------------------------------------------------------------
-!       << primitive unit cell >>
-     BR2(1,1)=-STRU%A(1)/2
-     BR2(1,2)= STRU%A(2)/2
-     BR2(1,3)= STRU%A(3)/2
-     BR2(2,1)= STRU%A(1)/2
-     BR2(2,2)=-STRU%A(2)/2
-     BR2(2,3)= STRU%A(3)/2
-     BR2(3,1)= STRU%A(1)/2
-     BR2(3,2)= STRU%A(2)/2
-     BR2(3,3)=-STRU%A(3)/2
-!       << conventional unit cell >>
-     BR1(1,1)=STRU%A(1)
-     BR1(2,2)=STRU%A(2)
-     BR1(3,3)=STRU%A(3)
-  else if(stru%lattic(1:3)=='CXY' .and. stru%alpha(3)==90) then
-! -------------------------------------------------------------------------
-!       << base-centered (in the xy-plane) : CXY a b c alp bet 90 >>
-!
-!       Note: either alp or bet must be 90 degree
-!
-!       a_1 = (a*sin(bet)/2,-b*sin(alp)/2,a*cos(bet)/2-b*cos(alp)/2)
-!       a_2 = (a*sin(bet)/2, b*sin(alp)/2,a*cos(bet)/2+b*cos(alp)/2)
-!       a_3 = (    0       ,    0       ,            c            )
-!
-!       monoclinic, orthorhombic
-!
-!       b_1 = ( 1/(a*sin(bet)),-1/(b*sin(alp)), 0 )
-!       b_2 = ( 1/(a*sin(bet)), 1/(b*sin(alp)), 0 )
-!       b_3 = (-1/(c*tan(bet)),-1/(c*tan(alp)),1/c)
-! -------------------------------------------------------------------------
-     if(stru%alpha(1)/=90 .and. stru%alpha(2)/=90) &
-          call croak('LATTIC NOT DEFINED: '//stru%lattic)
-!       << primitive unit cell >>
-     BR2(1,1)= STRU%A(1)/2*sin(BETA)
-     BR2(1,2)=-STRU%A(2)/2*sin(ALPHA)
-     BR2(1,3)= STRU%A(1)/2*cos(BETA) &
-          - STRU%A(2)/2*cos(BETA)
-     BR2(2,1)= STRU%A(1)/2*sin(BETA)
-     BR2(2,2)= STRU%A(2)/2*sin(ALPHA)
-     BR2(2,3)= STRU%A(1)/2*cos(BETA) &
-          + STRU%A(2)/2*cos(ALPHA)
-     BR2(3,3)= STRU%A(3)
-!       << conventional unit cell >>
-     BR1(1,1)=STRU%A(1)*sin(BETA)
-     BR1(1,3)=STRU%A(1)*cos(BETA)
-     BR1(2,2)=STRU%A(2)*sin(ALPHA)
-     BR1(2,3)=STRU%A(2)*cos(ALPHA)
-     BR1(3,3)=STRU%A(3)
-  else if(stru%lattic(1:3)=='CYZ' .and. stru%alpha(1)==90) then
-! -------------------------------------------------------------------------
-!       << base-centered (in the yz-plane) : CYZ a b c 90 bet gam >>
-!
-!       Note: either bet or gam must be 90 degree
-!
-!       a_1 = (a*sin(bet)*sin(gam),a*sin(bet)*cos(gam),a*cos(bet))
-!       a_2 = (        0        ,           b/2       ,  -c/2    )
-!       a_3 = (        0        ,           b/2       ,   c/2    )
-!
-!       monoclinic, orthorhombic
-!
-!       b_1 = ( 1/(a*sin(bet)*sin(gam))               , 0 ,  0 )
-!       b_2 = (-1/(b*tan(gam))+1/(c*tan(bet)*sin(gam)),1/b,-1/c)
-!       b_3 = (-1/(b*tan(gam))-1/(c*tan(bet)*sin(gam)),1/b, 1/c)
-! -------------------------------------------------------------------------
-     if(stru%alpha(2)/=90 .and. stru%alpha(3)/=90) &
-          call croak('LATTIC NOT DEFINED: '//stru%lattic)
-!       << primitive unit cell >>
-     BR2(1,1)= STRU%A(1)*sin(BETA)*sin(GAMMA)
-     BR2(1,2)= STRU%A(1)*sin(BETA)*cos(GAMMA)
-     BR2(1,3)= STRU%A(1)*cos(BETA)
-     BR2(2,2)= STRU%A(2)/2
-     BR2(2,3)=-STRU%A(3)/2
-     BR2(3,2)= STRU%A(2)/2
-     BR2(3,3)= STRU%A(3)/2
-!       << conventional unit cell >>
-     BR1(1,1)=STRU%A(1)*sin(BETA)*sin(GAMMA)
-     BR1(1,2)=STRU%A(1)*sin(BETA)*cos(GAMMA)
-     BR1(1,3)=STRU%A(1)*cos(BETA)
-     BR1(2,2)=STRU%A(2)
-     BR1(3,3)=STRU%A(3)
-  else if(stru%lattic(1:3)=='CXZ' .and. stru%alpha(2)==90) then
-! -------------------------------------------------------------------------
-!       << base-centered (in the xz-plane) : CXZ a b c alp 90 gam >>
-!
-!       Note: either alp or gam must be 90 degree
-!
-!       a_1 = (a*sin(gam)/2,a*cos(gam)/2,  -c/2    )
-!       a_2 = (    0       ,b*sin(alp)  ,b*cos(alp))
-!       a_3 = (a*sin(gam)/2,a*cos(gam)/2,   c/2    )
-!
-!       monoclinic, orthorhombic
-!
-!       b_1 = ( 1/(a*sin(gam))         , 1/(c*tan(alp)),-1/c)
-!       b_2 = (-1/(b*tan(gam)*sin(alp)), 1/(b*sin(alp)),  0 )
-!       b_3 = ( 1/(a*sin(gam))         ,-1/(c*tan(alp)), 1/c)
-! -------------------------------------------------------------------------
-     if(stru%alpha(1)/=90 .and. stru%alpha(3)/=90) &
-          call croak('LATTIC NOT DEFINED: '//stru%lattic)
-!       << primitive unit cell >>
-     BR2(1,1)= STRU%A(1)/2*sin(GAMMA)
-     BR2(1,2)= STRU%A(1)/2*cos(GAMMA)
-     BR2(1,3)=-STRU%A(3)/2
-     BR2(2,2)= STRU%A(2)*sin(ALPHA)
-     BR2(2,3)= STRU%A(2)*cos(ALPHA)
-     BR2(3,1)= STRU%A(1)/2*sin(GAMMA)
-     BR2(3,2)= STRU%A(1)/2*cos(GAMMA)
-     BR2(3,3)= STRU%A(3)/2
-!       << conventional unit cell >>
-     BR1(1,1)=STRU%A(1)*sin(GAMMA)
-     BR1(1,2)=STRU%A(1)*cos(GAMMA)
-     BR1(2,2)=STRU%A(2)*sin(ALPHA)
-     BR1(2,3)=STRU%A(2)*cos(ALPHA)
-     BR1(3,3)=STRU%A(3)
-  else
-     stop 'LATTIC NOT DEFINED'
-  end if
-
-!     << find reciprocal lattice vectors (without a factor of 2pi) >>
-  call GBASS(BR1,BR3,.false.)
-  call GBASS(BR2,BR4,.false.)
-
-  write(unit_out,1000) (I,(BR1(I,J),J=1,3),I=1,3)
-  write(unit_out,1010) (I,(BR2(I,J),J=1,3),I=1,3)
-  write(unit_out,1020) (I,(BR3(I,J),J=1,3),I=1,3)
-  write(unit_out,1030) (I,(BR4(I,J),J=1,3),I=1,3)
-1000 format(/' REAL SPACE LATTICE VECTORS a1, a2, a3 (in Bohr)' &
-       /' -----------------------------------------------' &
-       /' CONVENTIONAL UNIT CELL :'/(' a',I1,'     = ',3F12.7))
-1010 format(/' PRIMITIVE UNIT CELL :'/(' a',I1,'     = ',3F12.7))
-1020 format(/' RECIPROCAL LATTIC VECTORS b1, b2, b3 (in 1/Bohr)' &
-       /' ------------------------------------------------' &
-       /' CONVENTIONAL UNIT CELL :'/(' b',I1,'/2pi = ',3F12.7))
-1030 format(/' PRIMITIVE UNIT CELL :'/(' b',I1,'/2pi = ',3F12.7))
-end subroutine latgen
-end module     latgen_m
-
-
 module     wavsph_m; contains
 subroutine wavsph(R, Bfac, iAt, iR, Psi, Y, stru)
   use work,      only: aug
@@ -1622,7 +1322,6 @@ subroutine rotdef(stru, iop, pos)
   use clio,      only: croak
   use param,     only: unit_out
   use wplot,     only: mvatom
-  use latt,      only: br2
   use sym2,      only: imat, trans, iord
 
   implicit none
@@ -1683,7 +1382,7 @@ subroutine rotdef(stru, iop, pos)
               pos(:, index) = R
 
 !!!             << print updated position in Cartesian coordinates >>
-              R = matmul(BR2, pos(:, index))
+              R = matmul(transpose(stru%prim_dir), pos(:, index))
 
               write(unit_out,2010) jatom, IOP(index), R
               cycle mult
@@ -1714,7 +1413,6 @@ end module     rotdef_m
 module     findmt_m; contains
 subroutine findmt(P, atms, stru, pos, iAt, iLat, iR, R)
   use const,     only: DPk
-  use latt,      only: br2
   use structmod, only: struct_t
 
   implicit none
@@ -1733,11 +1431,8 @@ subroutine findmt(P, atms, stru, pos, iAt, iLat, iR, R)
 ! --------------------------------------------------------------------
 ! Input:
 ! P(:)  -- the real space point in primitive fractional coordinates
-! NAT   -- total number of atoms per unit cell
 ! ATMS  -- the size of the smallest primitive unit cells surrounding
 !          the muffin tin spheres of each group of sym.-eq. atoms
-!
-! module LATT    data on the Bravais lattice
 !
 ! Output:
 ! IAT   -- the atom a the muffin tin sphere belongs to
@@ -1773,20 +1468,17 @@ subroutine findmt(P, atms, stru, pos, iAt, iLat, iR, R)
         IUP (I) = nint( T(I) + ATMS(I,JATOM) - 0.4999_DPk )
      end do
 
-!       << check all relevent atomic sphere displacements >>
+     ! check all relevent atomic sphere displacements
      do JZ=ILOW(3),IUP(3)
         do JY=ILOW(2),IUP(2)
            do JX=ILOW(1),IUP(1)
 
-!             << load x - R0 - R in Cartesian coordinates >>
-              do J=1,3
-                 R(J) = (T(1)-JX)*BR2(1,J) + (T(2)-JY)*BR2(2,J) &
-                      + (T(3)-JZ)*BR2(3,J)
-              end do
+              ! load x - R0 - R in Cartesian coordinates
+              R = matmul(stru%prim_dir, T - (/ jx, jy, jz /))
 
               R2 = dot_product(R,R)
               if( R2.lt.RMT2 ) then
-!               << in muffin tin sphere IAT >>
+                 ! in muffin tin sphere IAT
                  RR = sqrt(R2)
                  ILAT(1) = JX
                  ILAT(2) = JY
@@ -1803,38 +1495,31 @@ subroutine findmt(P, atms, stru, pos, iAt, iLat, iR, R)
 
 !     << in interstitial >>
   IAT = 0
-  do J=1,3
-     R(J) = P(1)*BR2(1,J) + P(2)*BR2(2,J) + P(3)*BR2(3,J)
-  end do
-
-  return
+  R = matmul(stru%prim_dir, P)
 end subroutine findmt
 end module     findmt_m
 
 
 module     locdef_m; contains
-subroutine locdef(rot0, imat, rot)
-  use latt,  only: br2, br4
-  use const, only: DPk
+subroutine locdef(rot0, imat, rot, stru)
+  use const,     only: DPk, TAU
+  use structmod, only: struct_t
   !:17[
-  use wplot, only: addloc, userot
+  use wplot,     only: addloc, userot
   !:17]
 
   implicit none
 
-  real(DPk), intent(in)  :: rot0(3,3)
-  integer,   intent(in)  :: iMat(3,3)
-  real(DPk), intent(out) :: rot (3,3)
+  real(DPk),       intent(in)  :: rot0(3,3)
+  integer,         intent(in)  :: iMat(3,3)
+  real(DPk),       intent(out) :: rot (3,3)
+  type(struct_t),  intent(in)  :: stru
 
   ! Input:
   ! ROT0 : local reference rotation matrix (Cartesian coordinates)
   !        x'_i = Sum(j) (T^-1)_ij x_j  with  T_ji = (T^-1)_ij = ROT0(i,j)
   ! IMAT : symmetry operation {Q|t} (primitive fractional coordinates)
   !        y_m = Sum(n) Q_mn x_n + t_m  with  Q_mn = IMAT(n,m)
-  !
-  ! from module LATT
-  ! BR2  : primitive real space lattice vector am = BR2(m,:)
-  ! BR4  : primitive reciprocal lattice vector bn = BR4(n,:) [without 2pi]
   !
   ! Output:
   ! ROT  : symmetry adapted local rotation matrix (Cartesian coordinates)
@@ -1860,110 +1545,84 @@ subroutine locdef(rot0, imat, rot)
   !:17]
 
   ! A_mk := Sum(n) Q_mn bn_k
-  Amat = matmul(transpose(imat), BR4)
+  Amat = transpose(matmul(stru%prim_rec/TAU, imat))
 
   !:17[
   if(.not. addloc)&
        ! ignore local rotation matrix T from input, i.e. R = Q
        ! R_ik = Q_ik = Sum(m) am_i A_mk
-       rot = matmul(transpose(Amat), BR2)
+       rot = transpose(matmul(stru%prim_dir, Amat))
   !:17]
 
   ! B_mj = Sum(k) A_mk T_kj
   Bmat = matmul(Amat, transpose(rot0))
 
   ! R_ij = Sum(m) am_i B_mj
-  rot = matmul(transpose(Bmat), BR2)
+  rot = transpose(matmul(stru%prim_dir, Bmat))
 end subroutine locdef
 end module     locdef_m
 
 
 module     trans_m; contains
-subroutine trans(pos)
-  use const,     only: DPk
-  use latt,      only: br1, br2, br3, br4
+subroutine trans(pos, stru)
+  use const,     only: DPk, TAU
   use wplot,     only: Nsym
   use sym2,      only: rtrans=>trans, imat
+  use structmod, only: struct_t
 
   implicit none
 
-  real(DPk), intent(inout) :: pos(:, :)
+  real(DPk),      intent(inout) :: pos(:, :)
+  type(struct_t), intent(in)    :: stru
 
   real(DPk) :: F(3), S(3,3), T(3,3), Q(3,3)
   integer   :: i, k, n
 
-! transforms real space vectors x and symmetry operations {Q|t}
-! from conventional into primitive fractional coordinates
-! --------------------------------------------------------------------
-! Input:
-! NPOS     -- the number of real space vectors x to transform
-! NSYM     -- the number of symmetry operations {Q|t} to transform
-!
-! module LATT
-! BR1(i,:) -- conventional real space lattice vectors a_i
-! BR2(i,:) -- primitive    real space lattice vectors a_i
-! BR3(i,:) -- conventional reciprocal lattice vectors b_i (without 2pi)
-! BR4(i,:) -- primitive    reciprocal lattice vectors b_i (without 2pi)
-!
-! Input/Output:
-! POS(:,n)    -- the n-th real space vector x
-!                x = Sum(i=1,3) x_i a_i  with  x_i = POS(i,n)
-! IMAT(:,:,n) -- the n-th symmetry operation {Q,t} :
-! RTRANS(:,n)       y_i = Sum(j) Q_ij x_i + t_i  with  Q_ij = IMAT(j,i,n)
-!                                             and   t_i  = RTRANSK(  i,n)
-!
-! Algorithm:
-! real space vectors from conventional to primitive:
-! p_k = Sum(i) T(k,i) c_i  with  T(k,i) = Sum(j) BR4(k,j) BR1(i,j)
-!
-! real space vectors from primitive to conventional:
-! c_i = Sum(k) S(i,k) p_k  with  S(i,k) = Sum(j) BR3(i,j) BR2(k,j)
-!
-! symmetry operations from conventional to primitive
-! Q_kk' = Sum(ii') T(k,i) Q_ii' S(i',k')  and  t_k = Sum(i) T(k,i) t_i
-! --------------------------------------------------------------------
+  ! trans() transforms real space vectors x and symmetry operations
+  ! {Q|t} from conventional into primitive fractional coordinates
+  !
+  ! Input/Output:
+  !
+  !   POS(:,n)    — the n-th real space vector x = Σ_i POS(i,n) a_i
+  !
+  !
+  !   IMAT(:,:,n) — the n-th symmetry operation {Q,t} :
+  !   RTRANS(:,n)       y = Q⋅x + t  with  Q_ij = IMAT(j,i,n)
+  !                                   and  t_i  = RTRANS(i,n)
+  !
+  ! Notation:
+  !
+  !   A = ( a₁ a₂ a₃ ) and B are the direct and reciprocal lattice
+  !   vectors in column-is-a-vector convention; primed quantities are
+  !   in the primitive cell, unprimed in the conventional.
+  !
+  ! Algorithm:
+  !
+  !   real space vectors from conventional to primitive:
+  !                          T
+  !     p = T⋅c  with  T = B' /τ A
+  !
+  !   real space vectors from primitive to conventional:
+  !                         T
+  !     c = S⋅p  with  S = B  /τ A'
+  !
+  !   symmetry operations from conventional to primitive
+  !
+  !     Q' = T⋅Q⋅S  and  t' = T⋅t
 
-!     << set up the transformation matrices >>
-  T = matmul(BR4, transpose(BR1))
-  S = matmul(BR3, transpose(BR2))
-  write(0,*) 'trans()'
-  write(0,'("T1=", 3F7.3)') T
-  write(0,'("S1=", 3F7.3)') S
+  ! set up the transformation matrices
+  T = matmul(transpose(stru%prim_rec/TAU), stru%conv_dir)
+  S = matmul(transpose(stru%conv_rec/TAU), stru%prim_dir)
 
-  do K=1,3
-     do I=1,3
-        T(K,I) = BR4(K,1)*BR1(I,1) + BR4(K,2)*BR1(I,2) &
-             + BR4(K,3)*BR1(I,3)
-        S(I,K) = BR3(I,1)*BR2(K,1) + BR3(I,2)*BR2(K,2) &
-             + BR3(I,3)*BR2(K,3)
-     end do
-  end do
-
-  write(0,'("T2=", 3F7.3)') T
-  write(0,'("S2=", 3F7.3)') S
-
-!     << transform the real space vectors >>
+  ! transform the real space vectors
   do n=1,size(pos,2)
      pos(:, N) = matmul(T, pos(:, n))
   end do
 
-!     << transform the symmetry operations >>
+  ! transform the symmetry operations
   do N=1,NSYM
      F = matmul(T, rtrans(:, N))
      Q = matmul(T, transpose(imat(:,:,N)))
-     write(0,'("F1=", 3F7.3)') F
-     write(0,'("Q1=", 3F7.3)') Q
-     do K=1,3
-        F(K) = T(K,1)*RTRANS(1,N) + T(K,2)*RTRANS(2,N) &
-             + T(K,3)*RTRANS(3,N)
-
-        do I=1,3
-           Q(K,I) = T(K,1)*IMAT(I,1,N) + T(K,2)*IMAT(I,2,N) &
-                & + T(K,3)*IMAT(I,3,N)
-        end do
-     end do
-     write(0,'("F2=", 3F7.3)') F
-     write(0,'("Q2=", 3F7.3)') Q
 
      rtrans(:, N) = F
      imat (:,:,N) = nint(matmul(Q, S))
@@ -1978,4 +1637,4 @@ end module     trans_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-11-30 16:57:35 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-12-01 17:53:04 assman@faepop71.tu-graz.ac.at>
