@@ -9,23 +9,23 @@
 
 \newcommand\wienroot{\file{\$WIENROOT}\xspace}
 
-\ProgName[w2w]            {wiiw}
-\ProgName[wannier90.x]    {wannierx}
-\ProgName                 {wplot}
-\ProgName[prepare\_w2wdir]{prepwiiw}
+\ProgName                 {convham}
 \ProgName[init\_w2w]      {initwiiw}
 \ProgName                 {findbands}
-\ProgName[write\_inwf]    {writeinwf}
-\ProgName[write\_win]     {writewin}
-\ProgName[wannier90]      {xwannier}
-\ProgName[w2waddsp]       {wiiwaddsp}
-\ProgName[write\_inwplot] {writeinwplot}
-\ProgName[wplot2xsf]      {wplottoxsf}
-\ProgName                 {convham}
-\ProgName                 {shifteig}
-\ProgName                 {rephase}
 \ProgName                 {joinvec}
+\ProgName[prepare\_w2wdir]{prepwiiw}
+%\ProgName                {rephase}
+\ProgName                 {shifteig}
+\ProgName[w2w]            {wiiw}
+\ProgName[w2waddsp]       {wiiwaddsp}
+\ProgName[wannier90]      {xwannier}
+\ProgName[wannier90.x]    {wannierx}
+\ProgName                 {wplot}
+\ProgName[wplot2xsf]      {wplottoxsf}
 \ProgName[write\_insp]    {writeinsp}
+\ProgName[write\_inwf]    {writeinwf}
+\ProgName[write\_inwplot] {writeinwplot}
+\ProgName[write\_win]     {writewin}
 
 \author{\name{Elias Assmann} \and \name{Jan Kune\v{s}} \and
   \name{Philipp Wissgott}}
@@ -495,18 +495,20 @@ plotting.  This is useful for some post-processing applications, where
 a rotation in the Wannier subspace is desired.
 
 
-\ProgSec[copy required files]{prepwiiw}
+\ProgSec[Fourier transform Wannier Ham\-il\-to\-ni\-an]{convham}
 
-A \wien computation can be the starting point for various runs of
-\wtow. This script creates a new subfolder of a \wien directory and is
-invoked by
+This program Fourier transforms the \wannier real space Hamiltonian
+$H(\mb R)$ (\file{\case{}\_hr.dat}) to its k-space representation $H(\mb
+k)$ (\file{\case.ham\_fine}) on the k-points given by
+\file{\case.klist}.  In this way, if the real-space Hamiltonian is
+sufficiently localized, $H(\mb k)$ may be interpolated to arbitrarily
+fine k-grids.  \file{convham} is executed by invoking the command
 %
 \begin{usage}
-  \prepwiiw \textit{subdir}
+  x \convham [-band]
+  | \\
+  \convham \deffile
 \end{usage}
-%
-where \file{subdir} is the name of the subdirectory to be created.
-
 
 \ProgSec[prepare \wtow input files]{initwiiw}
 
@@ -545,73 +547,63 @@ contained in the interval across all k-points, and which bands cross
 the interval at any k-point.
 
 
-\ProgSec[prepare input file for \wiiw]{writeinwf}
+\ProgSec[join parallel \file{vector} files]{joinvec}
 
-This program prepares the main input file \file{\case.inwf} for
-\wiiw.  It is executed by invoking the command
+\file{energy} files from a parallel calculation into one
+\file{\case.vector} and one \file{\case.energy}.  It is executed by
+invoking the command
 %
 \begin{usage}
-  \writeinwf \usgrem{(interactive)} |
-  \\
-  \writeinwf{} -bands Nmin Nmax PROJ [PROJ ...]
-  \usgrem{(noninteractive)}
+  x \joinvec [-up|-dn -c -so]
 \end{usage}
 %
-It will ask (in interactive mode) for a range of bands, which are all
-the bands to be taken into account by \wiiw (including those for
-disentanglement).  Then, it will ask for ``projection specifications''
-\file{PROJ = SITE:ORB[:ZAXIS[:XAXIS]]}, which consist of colon-
-separated parts naming an atomic site, an orbital, and, optionally,
-rotated $z$- and $x$-axes\footnote{\writeinwf uses the method of
-  Ref.~\cite{ylmrot} to rotate the spherical harmonics.}.  Please see
-\file{write\_inwf -h} and \file{write\_inwf -H axes/sites/orbitals}
-for further information on these.  Interactively, you can also use tab
-completion to discover input options and command line history to
-recall past inputs.
-
-The program will keep asking for projections until it has accumulated
-as many projections as bands were specified.  However, one can stop
-early by pressing \file{Ctrl-D} (EOF); in this case, there will be
-fewer Wannier functions than bands (disentanglement).
+All \file{.vector\_*} files are merged into one \file{.vector} file
+containing the header of the first file \file{.vector\_1}~(and
+correspondingly for the \file{.energy} files).
 
 
-\ProgSec[prepare input file for \wannierx]{writewin}
+\ProgSec[copy required files]{prepwiiw}
 
-This program reads \file{\case.inwf}, \file{\case.klist}, and some
-other files, and produces \file{\case.win}, the input file for
-\wannierx.  It is executed by invoking the command
+A \wien computation can be the starting point for various runs of
+\wtow. This script creates a new subfolder of a \wien directory and is
+invoked by
 %
 \begin{usage}
-  \writewin [-fresh]
+  \prepwiiw \textit{subdir}
 \end{usage}
-
-If \file{\case.win} already exists, \file{write\_win} updates it.
-Otherwise (or if \file{-fresh} is given), the template in
-\file{\wienroot/SRC\_templates} is used.
+%
+where \file{subdir} is the name of the subdirectory to be created.
 
 
-\ProgSec[wrapper for \wannierxHd]{xwannier}
+% \ProgSec{rephase}
 
-A wrapper script for \wannierx is provided to take care of spin
-polarization and spin-orbit coupling.  In the context of \wtow,
-\wannierx is executed by invoking the command
+% program reads the psiarg files to determine the most probable phases
+% of all Wannier functions. Then, the input for the interface file
+% \case.inwf is rewritten in a way that a subsequent run of \wtow and
+% \wannier leads to real Wannier orbitals~(this does not work in all
+% cases). The Fortran program \file{rephase} is invoked by the command
+% %
+% \begin{usage}
+%   \rephase \case [-w] [-up/-dn] [-wf=idx\_wann]
+% \end{usage}
+% %
+% where the option -w means that \file{\case.inwf} is automatically
+% updated~(future wien2wannier runs will then have a higher probability
+% of producing real Wannier orbitals) and the option -w idx\_wann
+% indicates that the action is only applied for the Wannier function
+% \file{idx\_wann}.
+
+
+\ProgSec[shift energies in \file{\case.eig}]{shifteig}
+
+to zero in \file{\case.eig}.  If needed, this program can be used to
+apply an additional shift by \file{DE} (in eV).  \file{shifteig} is
+executed by invoking the command
 %
 \begin{usage}
-  x \xwannier [-up|-dn|-so|-pp] |
-  \xwannier [-up|-dn|-so|-pp]
+  x \shifteig [-up|-dn] -efermi DE |
+  \shifteig \deffile DE
 \end{usage}
-%
-The wrapper script must be able to find the executable \wannierx,
-i.e. you have to either have it in your \file{\$PATH}, or edit the
-script \file{wannier90\_lapw} to provide the location.
-
-With \file{-pp}, \wannierx will produce \file{\case.nnkp}; with
-\file{-so}, \wiiwaddsp will be called to add the spin channels
-together before running \wannierx.
-
-Extensive diagnostic output goes to \file{\case.wout}, error messages
-to \file{\case.werr}; the full results (in particular the $U(\mb k$)
-matrices) are stored in the binary file \file{\case.chk}.
 
 
 \ProgSec[add spin directions for SOC]{wiiwaddsp}
@@ -636,16 +628,28 @@ command
 after running \file{x \wiiw -up} and \file{-dn}.
 
 
-\ProgSec[prepare input file for \wplot]{writeinwplot}
+\ProgSec[wrapper for \wannierxHd]{xwannier}
 
-This program may help in preparing the input file for \wplot.
-(Alternatively, copy the template from
-\file{\wienroot/SRC\_templates}.)  It is executed by invoking the
-command
+A wrapper script for \wannierx is provided to take care of spin
+polarization and spin-orbit coupling.  In the context of \wtow,
+\wannierx is executed by invoking the command
 %
 \begin{usage}
-  \writeinwplot \case
+  x \xwannier [-up|-dn|-so|-pp] |
+  \xwannier [-up|-dn|-so|-pp]
 \end{usage}
+%
+The wrapper script must be able to find the executable \wannierx,
+i.e. you have to either have it in your \file{\$PATH}, or edit the
+script \file{wannier90\_lapw} to provide the location.
+
+With \file{-pp}, \wannierx will produce \file{\case.nnkp}; with
+\file{-so}, \wiiwaddsp will be called to add the spin channels
+together before running \wannierx.
+
+Extensive diagnostic output goes to \file{\case.wout}, error messages
+to \file{\case.werr}; the full results (in particular the $U(\mb k$)
+matrices) are stored in the binary file \file{\case.chk}.
 
 
 \ProgSec[convert \wplot output to \file{xsf} format]{wplottoxsf}
@@ -676,67 +680,6 @@ coordinates given in that file.  If \file{translate\_home\_cell} (and
 plot where the Wannier centers lie in the ``home'' unit cell.
 
 
-\ProgSec[Fourier transform Wannier Ham\-il\-to\-ni\-an]{convham}
-
-This program Fourier transforms the \wannier real space Hamiltonian
-$H(\mb R)$ (\file{\case{}\_hr.dat}) to its k-space representation $H(\mb
-k)$ (\file{\case.ham\_fine}) on the k-points given by
-\file{\case.klist}.  In this way, if the real-space Hamiltonian is
-sufficiently localized, $H(\mb k)$ may be interpolated to arbitrarily
-fine k-grids.  \file{convham} is executed by invoking the command
-%
-\begin{usage}
-  x \convham [-band]
-  | \\
-  \convham \deffile
-\end{usage}
-
-\ProgSec[shift energies in \file{\case.eig}]{shifteig}
-
-to zero in \file{\case.eig}.  If needed, this program can be used to
-apply an additional shift by \file{DE} (in eV).  \file{shifteig} is
-executed by invoking the command
-%
-\begin{usage}
-  x \shifteig [-up|-dn] -efermi DE |
-  \shifteig \deffile DE
-\end{usage}
-
-
-\ProgSec{rephase}
-
-program reads the psiarg files to determine the most probable phases
-of all Wannier functions. Then, the input for the interface file
-\case.inwf is rewritten in a way that a subsequent run of \wtow and
-\wannier leads to real Wannier orbitals~(this does not work in all
-cases). The Fortran program \file{rephase} is invoked by the command
-%
-\begin{usage}
-  \rephase \case [-w] [-up/-dn] [-wf=idx\_wann]
-\end{usage}
-%
-where the option -w means that \file{\case.inwf} is automatically
-updated~(future wien2wannier runs will then have a higher probability
-of producing real Wannier orbitals) and the option -w idx\_wann
-indicates that the action is only applied for the Wannier function
-\file{idx\_wann}.
-
-
-\ProgSec[join parallel \file{vector} files]{joinvec}
-
-\file{energy} files from a parallel calculation into one
-\file{\case.vector} and one \file{\case.energy}.  It is executed by
-invoking the command
-%
-\begin{usage}
-  x \joinvec [-up|-dn -c -so]
-\end{usage}
-%
-All \file{.vector\_*} files are merged into one \file{.vector} file
-containing the header of the first file \file{.vector\_1}~(and
-correspondingly for the \file{.energy} files).
-
-
 \ProgSec[write input file for \file{spaghetti}]{writeinsp}
 
 Fermi energy read from \file{\case.scf2} in the input file for
@@ -747,36 +690,61 @@ Fermi energy read from \file{\case.scf2} in the input file for
 \end{usage}
 
 
-% \chapter{Installation}
-% \label{sec:installation}
+\ProgSec[prepare input file for \wiiw]{writeinwf}
 
-% This procedure assumes that \wien is unpacked and configured (i.e. you
-% have run \file{siteconfig}) in a
-% directory \wienroot.
+This program prepares the main input file \file{\case.inwf} for
+\wiiw.  It is executed by invoking the command
+%
+\begin{usage}
+  \writeinwf \usgrem{(interactive)} |
+  \\
+  \writeinwf{} -bands Nmin Nmax PROJ [PROJ ...]
+  \usgrem{(noninteractive)}
+\end{usage}
+%
+It will ask (in interactive mode) for a range of bands, which are all
+the bands to be taken into account by \wiiw (including those for
+disentanglement).  Then, it will ask for ``projection specifications''
+\file{PROJ = SITE:ORB[:ZAXIS[:XAXIS]]}, which consist of colon-
+separated parts naming an atomic site, an orbital, and, optionally,
+rotated $z$- and $x$-axes\footnote{\writeinwf uses the method of
+  Ref.~\cite{ylmrot} to rotate the spherical harmonics.}.  Please see
+\file{write\_inwf -h} and \file{write\_inwf -H axes/sites/orbitals}
+for further information on these.  Interactively, you can also use tab
+completion to discover input options and command line history to
+recall past inputs.
 
-% \section{\wtow}
-% \label{sec:install:wien2wannier}
-
-% Get the source from
-% \url{http://www.ifp.tuwien.ac.at/forschung/arbeitsgruppen/cms/software-download/wien2wannier/}
-% and unpack,
-% %
-% \begin{verbatim}
-%    $ tar -xvf wien2wannier-X.Y.tar.gz
-% \end{verbatim}
-
-% The directory \file{wien2wannier-X.Y/} has been created.  Installation
-% instructions are provided in the file \file{INSTALL}.
+The program will keep asking for projections until it has accumulated
+as many projections as bands were specified.  However, one can stop
+early by pressing \file{Ctrl-D} (EOF); in this case, there will be
+fewer Wannier functions than bands (disentanglement).
 
 
-% \section{\wannier}
-% \label{sec:install:wannier90}
+\ProgSec[prepare input file for \wplot]{writeinwplot}
 
-% \Wannier can be downloaded from \url{http://wannier.org}.  It should
-% be compiled with the same settings as \wtow, because \wplot needs to
-% read the binary \file{chk} file.  You can find these settings in
-% \file{\wienroot/\{COMPILER,OPTIONS\}}.  Refer to the \wannier
-% documentation for furtherinstallation instructions.
+This program may help in preparing the input file for \wplot.
+(Alternatively, copy the template from
+\file{\wienroot/SRC\_templates}.)  It is executed by invoking the
+command
+%
+\begin{usage}
+  \writeinwplot \case
+\end{usage}
+
+
+\ProgSec[prepare input file for \wannierx]{writewin}
+
+This program reads \file{\case.inwf}, \file{\case.klist}, and some
+other files, and produces \file{\case.win}, the input file for
+\wannierx.  It is executed by invoking the command
+%
+\begin{usage}
+  \writewin [-fresh]
+\end{usage}
+
+If \file{\case.win} already exists, \file{write\_win} updates it.
+Otherwise (or if \file{-fresh} is given), the template in
+\file{\wienroot/SRC\_templates} is used.
 
 
 \chapter{Getting help}
@@ -786,10 +754,14 @@ Online help for all programs can be requested via the option
 also includes a file \file{CHEATSHEET}, which concisely summarizes the
 usual steps of a calculation.  If this does not help, send questions
 relating to the usage of \wtow to the Wien2k mailing list at
-\url{http://www.wien2k.at/reg_user/mailing_list/}.  For questions
-about \wannier and the \mlwf procedure, there is a mailing list at
-\url{http://www.wannier.org/forum.html}.  The \wtow maintainer can be
-reached at \url{wien2wannier@ifp.tuwien.ac.at}.
+\url{http://www.wien2k.at/reg_user/mailing_list/}.
+
+For help on updating \wtow, see the file \file{INSTALL}.  Comments on
+\wtow (bug reports, feature requests, etc.) can be submitted through
+the \href{https://github.com/wien2wannier/wien2wannier}{GitHub page}.
+
+For questions about \wannier and the \mlwf procedure, there is a
+mailing list at \url{http://www.wannier.org/forum.html}.
 
 
 \section{FAQ}
