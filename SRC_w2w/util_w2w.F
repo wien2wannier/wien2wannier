@@ -16,7 +16,7 @@
 !!
 !! util: Assorted miscellanea
 !!
-!!    string(), uppercase(), lowercase(), inverse3x3()
+!!    string(), uppercase(), lowercase(), invert3x3()
 !!    ptime(), type(ptimer), ptick(), ptock(), ptot(),
 !!    line_count(), paropen(), newunit()
 !!
@@ -90,7 +90,7 @@ module util
   implicit none
 
   private
-  public :: string, inverse3x3, ptime, ptimer, ptick, ptock, ptot, &
+  public :: string, invert3x3, ptime, ptimer, ptick, ptock, ptot, &
        &    uppercase, lowercase, basename, line_count, paropen, newunit
 
   interface string
@@ -158,28 +158,30 @@ contains
     write(reals2str, fmt) ra
   end function reals2str
 
-  pure subroutine inverse3x3(a, ainv)
-    !inverse of th 3x3 matrix A
+  pure function invert3x3(A) result(Ainv)
     implicit none
 
-    real(DPk), intent(in)  :: a(3,3)
-    real(DPk), intent(out) :: ainv(3,3)
+    real(DPk), dimension(3,3), intent(in) :: A
+    real(DPk), dimension(3,3)             :: Ainv
+
     real(DPk) :: det
 
-    det = a(1,1)*a(2,2)*a(3,3) + a(1,2)*a(2,3)*a(3,1) &
-         +a(1,3)*a(2,1)*a(3,2) - a(3,1)*a(2,2)*a(1,3) &
-         -a(1,1)*a(3,2)*a(2,3) - a(2,1)*a(1,2)*a(3,3)
+    det = A(1,1)*A(2,2)*A(3,3) + A(1,2)*A(2,3)*A(3,1) &
+         +A(1,3)*A(2,1)*A(3,2) - A(3,1)*A(2,2)*A(1,3) &
+         -A(1,1)*A(3,2)*A(2,3) - A(2,1)*A(1,2)*A(3,3)
 
-    ainv(1,1) = (  a(2,2)*a(3,3) - a(2,3)*a(3,2) ) / det
-    ainv(2,1) = (- a(2,1)*a(3,3) + a(2,3)*a(3,1) ) / det
-    ainv(3,1) = (  a(2,1)*a(3,2) - a(2,2)*a(3,1) ) / det
-    ainv(1,2) = (- a(1,2)*a(3,3) + a(1,3)*a(3,2) ) / det
-    ainv(2,2) = (  a(1,1)*a(3,3) - a(1,3)*a(3,1) ) / det
-    ainv(3,2) = (- a(1,1)*a(3,2) + a(1,2)*a(3,1) ) / det
-    ainv(1,3) = (  a(1,2)*a(2,3) - a(1,3)*a(2,2) ) / det
-    ainv(2,3) = (- a(1,1)*a(2,3) + a(1,3)*a(2,1) ) / det
-    ainv(3,3) = (  a(1,1)*a(2,2) - a(1,2)*a(2,1) ) / det
-  end subroutine inverse3x3
+    Ainv(1,1) = (  A(2,2)*A(3,3) - A(2,3)*A(3,2) ) / det
+    Ainv(2,1) = (- A(2,1)*A(3,3) + A(2,3)*A(3,1) ) / det
+    Ainv(3,1) = (  A(2,1)*A(3,2) - A(2,2)*A(3,1) ) / det
+
+    Ainv(1,2) = (- A(1,2)*A(3,3) + A(1,3)*A(3,2) ) / det
+    Ainv(2,2) = (  A(1,1)*A(3,3) - A(1,3)*A(3,1) ) / det
+    Ainv(3,2) = (- A(1,1)*A(3,2) + A(1,2)*A(3,1) ) / det
+
+    Ainv(1,3) = (  A(1,2)*A(2,3) - A(1,3)*A(2,2) ) / det
+    Ainv(2,3) = (- A(1,1)*A(2,3) + A(1,3)*A(2,1) ) / det
+    Ainv(3,3) = (  A(1,1)*A(2,2) - A(1,2)*A(2,1) ) / det
+  end function invert3x3
 
 !!! ptime stuff
   subroutine ptime_setunit(unit, timer, flush)
@@ -984,8 +986,6 @@ module structmod
 
   type struct_t
      !! Structure to represent a ‘struct’ file
-     !!
-     !! The conventions here follow mostly those of ‘structeditor’
 
      character(len=80) :: title
      character(len= 4) :: lattic       ! lattice type
@@ -997,7 +997,16 @@ module structmod
      logical           :: ortho, prim  ! orthogonal axes?  primitive latt.?
      real(DPk)         :: vol          ! u.c. volume
 
-     ! primitive and conventional unit cells in direct and reciprocal space
+     ! Primitive and conventional unit cells in direct and reciprocal space
+     ! in “column is a vector” convention:
+     !
+     !    conv_rec(:, i) = b_i   conv_dir(:, i) = a_i
+     !    prim_rec(:, i) = b_i'  prim_dir(:, i) = a_i'
+     !
+     ! We include the factor of τ such that a_i ⋅ b_j = τ δ_ij or
+     !       T
+     !    rec ⋅ prim = τ I
+
      real(DPk), dimension(3,3) :: conv_dir, conv_rec, prim_dir, prim_rec
      ! ‘struct’ to “fractional” coordinates
      integer,   dimension(3,3) :: stru2frac
@@ -1029,7 +1038,7 @@ contains
   subroutine struct_read_unit(lun, stru)
     use const, only: TAU, SQ3, ORTHO_TEST
     use clio,  only: croak
-    use util,  only: inverse3x3, lowercase
+    use util,  only: invert3x3, lowercase
 
     integer,        intent(in)  :: lun
     type(struct_t), intent(out) :: stru
@@ -1128,8 +1137,8 @@ contains
     cosac = cos(alpha(2))
     cosbc = cos(alpha(1)); sinbc = sin(alpha(1))
 
-    stru%conv_rec = 0; stru%conv_dir = 0
-    stru%prim_rec = 0; stru%prim_dir = 0
+    stru%conv_rec = 0
+    stru%prim_rec = 0
 
     lattic: select case (stru%lattic(1:1))
     case ('H')
@@ -1247,17 +1256,22 @@ contains
        call croak('unknown lattice type `' // trim(stru%lattic) // "'")
     end select lattic
 
-    call inverse3x3(stru%conv_rec, stru%conv_dir);
-    call inverse3x3(stru%prim_rec, stru%prim_dir);
+    ! Between the direct and reciprocal lattice: an inversion, a
+    ! transposition, and a τ.
+    !     _        _       _        _
+    !    |          |     |          | -1 T
+    !    | a₁ a₂ a₃ | = τ | b₁ b₂ b₃ |
+    !    |_        _|     |_        _|
 
-    stru%stru2frac = nint(matmul(stru%conv_dir, stru%prim_rec))
+    stru%conv_dir = transpose(invert3x3(stru%conv_rec)) * TAU
+    stru%prim_dir = transpose(invert3x3(stru%prim_rec)) * TAU
 
-    stru%conv_dir = TAU * stru%conv_dir
-    stru%prim_dir = TAU * stru%prim_dir
+    ! We don't want no τs in “stru2frac”.
+    stru%stru2frac = nint(matmul(invert3x3(stru%conv_rec), &
+         &                       stru%prim_rec))
 
     stru%vol = product(stru%a) / rvfac
 
-    ! make_ksym() needs gbas and friends
     call read_rsym()
     call make_ksym()
     call rotdef()
@@ -1320,7 +1334,7 @@ contains
          ! FIXME: why the check for CXZ??  sdefl.f has it …
          do i=1,Nksym
             stru%ksym(:,:,i) = nint(                             &
-                 matmul(matmul(stru%prim_dir, stru%ksym(:,:,i)), &
+                 matmul(matmul(transpose(stru%prim_dir), stru%ksym(:,:,i)), &
                  &      stru%prim_rec) / TAU)
          end do
       end if
@@ -1610,9 +1624,9 @@ contains
     real(DPk)                :: RR(3,3)
 
     if (stru%ortho) then
-       RR(1,:) = stru%prim_dir(1,:) / stru%a
-       RR(2,:) = stru%prim_dir(2,:) / stru%a
-       RR(3,:) = stru%prim_dir(3,:) / stru%a
+       RR(1,:) = stru%prim_dir(:,1) / stru%a
+       RR(2,:) = stru%prim_dir(:,2) / stru%a
+       RR(3,:) = stru%prim_dir(:,3) / stru%a
     end if
 
     if (present(mp_grid)) then
@@ -1660,9 +1674,9 @@ contains
     real(DPk)                :: RR(3,3)
 
     if (stru%ortho) then
-       RR(1,:) = stru%prim_dir(1,:) / stru%a
-       RR(2,:) = stru%prim_dir(2,:) / stru%a
-       RR(3,:) = stru%prim_dir(3,:) / stru%a
+       RR(1,:) = stru%prim_dir(:,1) / stru%a
+       RR(2,:) = stru%prim_dir(:,2) / stru%a
+       RR(3,:) = stru%prim_dir(:,3) / stru%a
     end if
 
     call klist_detect_fmt(unit, fmt)
@@ -2194,4 +2208,4 @@ end module reallocate
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-12-01 13:59:37 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-12-01 16:05:16 assman@faepop71.tu-graz.ac.at>
