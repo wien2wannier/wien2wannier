@@ -2285,15 +2285,23 @@ cat <<EOF >$def
  33,'$file.wfrot$soupdn',     'unknown', 'formatted',          0
 EOF
 if (! $?deffile_only) then
+    if (! -e $inwplot || -z $inwplot) then
+        cat <<EOF
+Input file \`$inwplot' not found.  It will be copied from a template.
+Please edit and re-run \`x wplot'.
+EOF
+        cp -v $WIENROOT/SRC_templates/case.inwplot $inwplot
+        exit(0)
+    endif
     set tmp=`mktemp inwf.XXX`
     checkinwplot_lapw <$inwplot >$tmp
     if ($status == 2) then      # new `inwplot' generated
         mv $inwplot $inwplot.old
         mv $tmp $inwplot
         cat <<EOF
-Warning: The format of case.inwplot changed in Wien2k 16.  I converted
-your input file \`$inwplot' to the new format.  The original file is
-still available as \`$inwplot.old'.
+Warning: The format of case.inwplot changed in Wien2k 16.  Your input
+file \`$inwplot' has been converted to the new format.  The original
+is still available as \`$inwplot.old'.
 
 To use the converted file, just run \`x wplot' again.
 EOF
@@ -2831,4 +2839,4 @@ if (-e $running) rm $running
 exit(1)
 
 
-## Time-stamp: <2016-11-30 11:59:18 assman@faepop71.tu-graz.ac.at>
+## Time-stamp: <2016-12-01 18:55:01 assman@faepop71.tu-graz.ac.at>
