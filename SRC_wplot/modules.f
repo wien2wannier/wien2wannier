@@ -25,7 +25,7 @@
 !!
 !! struct:    POS(:,:), RMT(:)
 !!
-!! sym2:      imat(3,3,Nsym), iord, trans(3,Nsym)
+!! sym2:      imat(3,3,Nsym), trans(3,Nsym)
 !!
 !! work:      aug(:,:,:)
 !!
@@ -89,66 +89,67 @@ module inwplotmod
 
   real(DPk), parameter :: unit_ATU=1, unit_ANG=1/sqrt(0.529177_DPk**3)
 
+  type grid
+     ! the number of points in each direction
+     integer                      :: N(3)
+     ! the origin (second index = 0) and axes in conventional
+     ! fractional and Cartesian coortinates
+     real(DPk), dimension(3, 0:3) :: frac, Cart
+     ! convenience variables for length (x, y, z) and angles (yz, xz, xy)
+     real(DPk), dimension(3)      :: len, ang
+  end type grid
+
   type inwplot_t
      logical      :: checkortho, dephas, WFrot, large, extgrid
      integer      :: WFidx
      real(DPk)    :: unit
      character(3) :: unit_name
-     real(DPk)    :: orig(3), xend(3), yend(3), zend(3)
 
-     real(DPk), allocatable :: rgrid(:,:)
+     type(grid), allocatable :: grid ! defined for 3D grids but not ANY
+
+     real(DPk), allocatable :: rpts(:,:)
   end type inwplot_t
 
 contains
 
-  subroutine inwplot_read_unit(lun, inwplot, stru)
+  subroutine inwplot_read_unit(lun, inw, stru)
 !!! This is based on grdgen.f (including some comments)
     use const,     only: DPk, ORTHO_TEST, TAU
-    use param,     only: unit_out
     use util,      only: uppercase, string
     use clio,      only: croak
-    use wplot,     only: unit_grid, unit_psink, gridfn
     use structmod, only: struct_t
+    use wplot,     only: unit_grid
 
     integer,         intent(in)  :: lun
-    type(inwplot_t), intent(out) :: inwplot
+    type(inwplot_t), intent(out) :: inw
     type(struct_t),  intent(in)  :: stru
 
     character(len=5) :: relcomp
     character(len=3) :: mode, post, unit
     character(len=1) :: flag
-    integer          :: Npt, ig, div, Npx, Npy, Npz, i, j, ix,iy,iz
-    real(DPk)        :: cartax(3,3), fracax(3,3), prodax(3,3), angles(3)
-    real(DPk)        :: cartorig(3), fracorig(3), cosphi, phi(3,3)
-    character        :: xyz(3) = (/ 'x', 'y', 'z' /)
-
-    character(*), parameter :: &
-         fmt_orig  = "(' origin', 1X, 3F9.5, 3X, 3F13.7)",   &
-         fmt_axend = "(' ',A1,'-axis',1X,3F9.5,3X,3F13.7)",  &
-         fmt_axabs = "(' ‖',A1,'‖ ',F13.7)",                 &
-         fmt_angle = "(' ∠(',A1,',',A1,') ',F10.7,3X,F8.3)", &
-         fmt_grid  = "('#', i7, 2x, f13.7, 2(2x, f10.5))"
+    integer          :: Npt, ig, div, i, j, n, ijk(3)
+    real(DPk)        :: coo(3), cosphi, prim(3, 0:3)
 
     read(lun, '(A3, A1)') mode, flag
 
     gridgen: select case ( uppercase(adjustl(mode)) )
     case ('ANY')
-       inwplot%extgrid = .true.
+       inw%extgrid = .true.
        read(lun, *) Npt
-       allocate(inwplot%rgrid(3, Npt))
+       allocate(inw%rpts(3, Npt))
 
        cartfrac: select case (uppercase(flag))
        case ('C')
           do ig=1,Npt
-             read(unit_grid, *) inwplot%rgrid(:, ig), div
-             inwplot%rgrid(:, ig) = inwplot%rgrid(:, ig) / div
+             read(unit_grid, *) inw%rpts(:, ig), div
+             inw%rpts(:, ig) = inw%rpts(:, ig) / div
           end do
 
        case ('F')
           do ig=1,Npt
-             read(unit_grid, *) inwplot%rgrid(:, ig)
-             inwplot%rgrid(:, ig) = matmul(transpose(stru%prim_rec)/TAU, &
-                  &                        inwplot%rgrid(:, ig))
+             read(unit_grid, *) inw%rpts(:, ig)
+             inw%rpts(:, ig) = matmul(transpose(stru%prim_rec)/TAU, &
+                  &                             inw%rpts(:, ig))
           end do
 
        case default
@@ -156,120 +157,80 @@ contains
             &   //"' in inwplot_read() [should be `C' or `F']")
        end select cartfrac
 
-       write(unit_psink,                                  &
-            "('ANY   NP =',I0,/,                          &
-            & 'order according to the grid points ',/,    &
-            & 'provided in the input file ',/,            &
-            & '`', A, '''')") &
-            Npt, trim(gridfn)
-
-       write(unit_out, &
-            & "(' ARBITRARY LIST OF GRID POINTS' / &
-            & ' -----------------------------' / &
-            & ' number of grid points: ',I7)") Npt
-
     case ('3D')
-       inwplot%extgrid = .false.
+       inw%extgrid = .false.
+       allocate( inw%grid )
+
        select case (uppercase(flag))
        case ('O', ' ')
-          inwplot%checkortho = .true.
+          inw%checkortho = .true.
        case ('N')
-          inwplot%checkortho = .false.
+          inw%checkortho = .false.
        case default
           call croak("unknown FLAG `"//flag &
           &        //"' in inwplot_read() [should be `O' or `N']")
        end select
 
-       read(lun, *) inwplot%orig, div; inwplot%orig = inwplot%orig/div
-       read(lun, *) inwplot%xend, div; inwplot%xend = inwplot%xend/div
-       read(lun, *) inwplot%yend, div; inwplot%yend = inwplot%yend/div
-       read(lun, *) inwplot%zend, div; inwplot%zend = inwplot%zend/div
+       read(lun, *) coo(:), div
+       inw%grid%frac(:, 0) = coo/div
 
-       read(lun, *) Npx, Npy, Npz
+       read(lun, *) coo(:), div
+       inw%grid%frac(:, 1) = coo/div - inw%grid%frac(:, 0)
 
-       allocate (inwplot%rgrid(3, Npx*Npy*Npz))
+       read(lun, *) coo(:), div
+       inw%grid%frac(:, 2) = coo/div - inw%grid%frac(:, 0)
 
-       write(unit_out, &
-            &"(' 3D-NET OF GRID POINTS'                                    /&
-            &' ---------------------'                                      /&
-            &' number of grid points for x, y, z: ',3(I0,' '),              &
-            &' (total: ',I0,')')")                                          &
-            Npx, Npy, Npz, Npx*Npy*Npz
+       read(lun, *) coo(:), div
+       inw%grid%frac(:, 3) = coo/div - inw%grid%frac(:, 0)
 
-       write(unit_out, "(/' PLOTTING AREA'                         &
-            &            /' -------------'                         &
-            &            /' x = Sum(j=1,3) f_i a_i  with  f_i in', &
-            &             ' conventional fractional coordinates'   &
-            &           //'           f_1      f_2      f_3   ',   &
-            &             '        x [Bohr]     y [Bohr]     z [Bohr]')")
+       read(lun, *) inw%grid%N
 
-       !---------------------------------------------------------------------
+       allocate( inw%rpts(3, product(inw%grid%N)) )
+
        ! Transform origin and axes into primitive fractional coordinates
        ! a) transform into Cartesian coordinates
        !    and check axes for orthogonality
-       fracax(:,1) = inwplot%xend-inwplot%orig
-       fracax(:,2) = inwplot%yend-inwplot%orig
-       fracax(:,3) = inwplot%zend-inwplot%orig
+       inw%grid%Cart   = matmul(stru%conv_dir, inw%grid%frac)
 
-       cartax   = matmul(stru%conv_dir, fracax)
-       cartorig = matmul(stru%conv_dir, inwplot%orig)
-       prodax   = matmul(transpose(cartax), cartax)
+       inw%grid%len = (/( sqrt(sum( inw%grid%Cart(:,i)**2 )), i=1,3 )/)
 
-       write(unit_out, fmt_orig) inwplot%orig, cartorig
-       do i=1,3
-          write(unit_out, fmt_axend) xyz(i), fracax(:,i), cartax(:,i)
-       end do
+       n = 1
+       do i = 3, 2, -1
+          do j = i-1, 1, -1
+             cosphi = dot_product(inw%grid%Cart(:,i), inw%grid%Cart(:,j)) &
+                  / inw%grid%len(i) / inw%grid%len(j)
 
-       write(unit_out, "(/'         length [Bohr]')")
-       do i=1,3
-          write(unit_out, fmt_axabs) xyz(i), sqrt(prodax(i,i))
-       end do
+             inw%grid%ang(n) = acos(cosphi) * 360 / TAU
 
-       write(unit_out, "(/'         cos(φ)        φ [°]')")
-       phi = 0
-       do i=1, 2
-          do j=i+1, 3
-             cosphi = prodax(i,j) / sqrt(prodax(i,i) * prodax(j,j))
-             phi(i,j) = acos(cosphi) * 360 / TAU
-             phi(j,i) = phi(i,j)
-
-             write(unit_out, fmt_angle) xyz(i), xyz(j), cosphi, phi(i,j)
+             n = n+1
           end do
        end do
 
-       angles = (/ phi(2,3), phi(1,3), phi(1,2) /)
-       if (inwplot%checkortho &
-            .and. any(abs(angles - 90) > ORTHO_TEST/360*TAU)) &
+       if (inw%checkortho &
+            .and. any(abs(inw%grid%ang - 90) > ORTHO_TEST/360*TAU)) &
             then
           call croak ('nonorthogonal axes (angles [°]: ' &
-               &      // trim(string(angles)) // ')')
+               &      // trim(string(inw%grid%ang)) // ')')
        end if
 
        ! b) transform into primitive fractional coordinates
-       fracax   = matmul(transpose(stru%prim_rec/TAU), cartax)
-       fracorig = matmul(transpose(stru%prim_rec/TAU), cartorig)
-       !---------------------------------------------------------------------
+       prim = matmul(transpose(stru%prim_rec/TAU), inw%grid%Cart)
 
        ! Generate evaluation grid
        ! use gnuplot order for data generation, i.e.
        ! POS = IZ + (IY-1)*NP(3) + (IX-1)*NP(3)*NP(2)
-       fracax(:,1) = fracax(:,1) / max(Npx-1, 1)
-       fracax(:,2) = fracax(:,2) / max(Npy-1, 1)
-       fracax(:,3) = fracax(:,3) / max(Npz-1, 1)
+       do i = 1,3
+          prim(:,i) = prim(:,i) / max(inw%grid%N(i)-1, 1)
+       end do
 
-       forall (ix=0:Npx-1, iy=0:Npy-1, iz=0:Npz-1)
-          inwplot%rgrid(:, 1 + iz + + Npz*iy + Npz*Npy*ix) = &
-               fracorig + ix*fracax(:,1) + iy*fracax(:,2) + iz*fracax(:,3)
-       end forall
+       do i = 1, product(inw%grid%N)
+          do j = 1,3
+             ijk(j) = mod( (i-1) / product( inw%grid%N(3 : j+1 : -1) ), &
+                  &        inw%grid%N(j) )
+          end do
 
-       write(unit_psink, "('# 3D  NP      length(α)    ∠(α, x)    ∠(α, y)')")
-
-       write(unit_psink, fmt_grid) Npx, sqrt(prodax(1,1))
-       write(unit_psink, fmt_grid) Npy, sqrt(prodax(2,2)), phi(1,2)
-       write(unit_psink, fmt_grid) Npz, sqrt(prodax(3,3)), phi(1,3), phi(2,3)
-
-       write(unit_psink, &
-            "('#order: (((w(x,y,z), z=1,#z), y=1,#y), x=1,#x)')")
+          inw%rpts(:, i) = prim(:,0) + matmul(prim(:, 1:3), ijk)
+       end do
 
     case default
        call croak("unknown MODE `"//mode &
@@ -278,30 +239,30 @@ contains
 
     read(lun, '(A3)') post
     select case ( uppercase(adjustl(post)) )
-    case ('DEP'); inwplot%dephas = .true.
-    case ('NO');  inwplot%dephas = .false.
+    case ('DEP'); inw%dephas = .true.
+    case ('NO');  inw%dephas = .false.
     case default; call croak("unknown postprocessing option `"//post//"'")
     end select
 
     read(lun, *) unit, relcomp
     select case ( uppercase(adjustl(unit)) )
     case ('', 'AU', 'ATU');
-       inwplot%unit = unit_ATU
-       inwplot%unit_name ='ATU'
+       inw%unit = unit_ATU
+       inw%unit_name ='ATU'
     case ('ANG');
-       inwplot%unit = unit_ANG
-       inwplot%unit_name ='ANG'
+       inw%unit = unit_ANG
+       inw%unit_name ='ANG'
     case default
        call croak("unknown units option `"//unit//"'")
     end select
     select case ( uppercase(adjustl(relcomp)) )
-    case ('LARGE', ''); inwplot%large = .true.
-    case ('SMALL');     inwplot%large = .false.
+    case ('LARGE', ''); inw%large = .true.
+    case ('SMALL');     inw%large = .false.
     case default
        call croak("unknown relativistic component `"//relcomp//"'")
     end select
 
-    read(lun, *) inwplot%WFidx, inwplot%WFrot
+    read(lun, *) inw%WFidx, inw%WFrot
   end subroutine inwplot_read_unit
 
   subroutine inwplot_read_fname(fname, inwplot, stru)
@@ -424,9 +385,10 @@ contains
     read(lun)((chk%u_matrix(:,j,jk), j=1,chk%num_wann), jk=1,chk%num_kpts)
 
     Mmn: if (rm) then
-       allocate(chk%m_matrix(chk%num_wann,chk%num_wann,chk%nntot,chk%num_kpts))
+       allocate( &
+            chk%m_matrix(chk%num_wann,chk%num_wann,chk%nntot,chk%num_kpts) )
        read(lun) (((chk%m_matrix(:, j, l, jk), &
-            &            j=1,chk%num_wann), l=1,chk%nntot), jk=1,chk%num_kpts)
+            j=1,chk%num_wann), l=1,chk%nntot), jk=1,chk%num_kpts)
     else
        read(lun)
     end if Mmn
@@ -544,8 +506,8 @@ module sym2
   implicit none
   private; save
 
-  real(DPk), public :: TRANS(3,NSYM)
-  integer,   public :: IMAT(3,3,NSYM), IORD
+  real(DPk), public :: TRANS(3,Nsym)
+  integer,   public :: IMAT(3,3,Nsym)
 end module sym2
 
 module work
@@ -902,7 +864,8 @@ subroutine auggen(stru, large)
            RAD2(I,L,2) = BE(I)
         end do
         call RINT13(stru%rel,AE,BE,AE,BE,PEI(L),JATOM, stru)
-        write(unit_out,2030) L,E(L),P(L,1,JATOM),DP(L,1,JATOM),P(L,2,JATOM),DP(L,2,JATOM)
+        write(unit_out,2030) &
+             L,E(L),P(L,1,JATOM),DP(L,1,JATOM),P(L,2,JATOM),DP(L,2,JATOM)
      end do
      !
      !       << local orbitals >>
@@ -1322,7 +1285,7 @@ subroutine rotdef(stru, iop, pos)
   use clio,      only: croak
   use param,     only: unit_out
   use wplot,     only: mvatom
-  use sym2,      only: imat, trans, iord
+  use sym2,      only: imat, trans
 
   implicit none
 
@@ -1340,7 +1303,6 @@ subroutine rotdef(stru, iop, pos)
 !!!
 !!! from MODULE SYM2 -- symmetry operations
 !!! IMAT,TRANS -- symmetry operations (in primitive fractional coordinates)
-!!! IORD     -- number of symmetry operations
 !!! -------------------------------------------------------------------------
 !!! {Q|t} : y_i = Sum(j) Q_ij x_j + t_i  with  Q_ij = IMAT(j,i) and t_i = TRANS(i)
 !!! -------------------------------------------------------------------------
@@ -1364,7 +1326,7 @@ subroutine rotdef(stru, iop, pos)
 
      mult: do M=1,stru%mult(jatom)
         index = index+1
-        symop: do jop=1,iord
+        symop: do jop = 1, size(stru%rsym, 3)
 
 !!!           << find {Q|t}(r_1.atom) >>
            R = matmul(transpose(imat(:,:,jOp)), pos0 + trans(:,jOp))
@@ -1637,4 +1599,4 @@ end module     trans_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-12-01 17:53:04 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-12-02 18:14:07 assman@faepop71.tu-graz.ac.at>

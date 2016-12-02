@@ -23,7 +23,7 @@ module     main_m
   end interface orth
 contains
 subroutine main()
-  use sym2,       only: rtrans=>trans, imat, iord
+  use sym2,       only: rtrans=>trans, imat
   use lolog,      only: lapw, ilo, Nlo
   use loabc,      only: Alo
   use atspdt,     only: p, dp
@@ -41,7 +41,7 @@ subroutine main()
   use param,      only: NRF, NLOAt, LOmax, Nrad, wien2wannier_version, &
        &                unit_in, unit_out, unit_struct, unit_vector
   use wplot,      only: unit_inwf, unit_psink, unit_psiarg, unit_chk, &
-       &                unit_rot, outfn, vecfn, psinkfn, psiargfn, &
+       &                unit_rot, outfn, vecfn, psinkfn, psiargfn, gridfn, &
        &                iproc, Lmax7, idx_wann, Nsym
 
   !! procedure includes
@@ -65,7 +65,7 @@ subroutine main()
   type(struct_t)   :: stru
   type(chk_t)      :: chk
   type(inwf_t)     :: inwf
-  type(inwplot_t)  :: inwplot
+  type(inwplot_t)  :: inwp
 
 #ifndef _COMPLEX_
   real(DPk),    allocatable :: CF(:)
@@ -87,16 +87,26 @@ subroutine main()
   integer      :: j, j2, j3, jneq, jmult, k, kkk, kkkabs, l, latom, lm, m, mu
   integer      :: Nb, NE, Nmatk, Nmat, Nmt, Npw, Npt, iloop, irf
 
+  character, parameter :: xyz(3) = (/ 'x', 'y', 'z' /)
+
+  character(*), parameter :: &
+       fmt_grid  = "('# ', A1, i7, 2x, f13.7, 2(2x, f10.5))"
+
   call struct_read(unit_struct, stru)
   close(unit_struct)
 
-  allocate ( ILO(0:LOMAX, stru%Nneq),         LAPW(0:LMAX7,stru%Nneq)      )
-  allocate ( ALO(0:LOMAX,NLOAT,NRF,stru%Nneq))
-  allocate ( P(0:LMAX7,NRF,stru%Nneq),        DP(0:LMAX7,NRF,stru%Nneq)    )
-  allocate ( RRAD(NRAD,0:LMAX7,NRF,stru%Nneq)                              )
-  allocate ( RAD(stru%Nneq),                  IRAD(stru%Nneq)              )
-  allocate ( atms(3,stru%Nneq)            )
-  allocate ( IOP(stru%Nneq*48),               nreg(0:stru%Nneq*48)         )
+  call inwplot_read(unit_in, inwp, stru)
+  close(unit_in)
+
+!!! Now we know the WF index INWP%WFIDX and can open files accordingly …
+  call wfopen(unit_psink,  psinkfn,  inwp%WFidx, STATUS='unknown')
+  call wfopen(unit_psiarg, psiargfn, inwp%WFidx, STATUS='unknown')
+  call wfopen(unit_out,    outfn,    inwp%WFidx, STATUS='unknown')
+
+!!! … and begin writing to unit_out.
+  write(unit_out, '("wplot ", A /)') wien2wannier_version
+
+  write(unit_out,"( ' selected Wannier function:',I5)") inwp%WFidx
 
   write(unit_out, '(/A/)') trim(stru%title)
   write(unit_out,"(1X,A4,' LATTIC WITH ',I5,' INEQUIV. ATOMS/UC USING ', &
@@ -106,87 +116,18 @@ subroutine main()
        & /' UNIT CELL ANGLES:',3F12.7,' [°]')") &
        stru%a, stru%alpha(:)
 
-  call inwplot_read(unit_in, inwplot, stru)
-  close(unit_in)
-  Npt = size(inwplot%rgrid, 2)
-  allocate ( psi(Npt), tot(Npt), iLat(3, Npt), iRi(Npt), iReg(Npt) )
-  tot=0
-
-  call inwf_read(unit_inwf, inwf)
-  close(unit_inwf)
-
-  Nb = inwf%bmax - inwf%bmin + 1
-
-  allocate(uu(Nb))
-  if (idx_wann.gt.0) then
-     inwplot%WFidx = idx_wann
-  endif
-
-!!! Now we know the WF index INWPLOT%WFIDX and can open files accordingly
-  call wfopen(unit_psink,  psinkfn,  inwplot%WFidx, STATUS='unknown')
-  call wfopen(unit_psiarg, psiargfn, inwplot%WFidx, STATUS='unknown')
-  call wfopen(unit_out,    outfn,    inwplot%WFidx, STATUS='unknown')
-
-  write(unit_out, '("W2W ", A /)') wien2wannier_version
-
-  write(unit_out,"( ' selected Wannier function:',I5)") inwplot%WFidx
-
-!!! Read chk file for num_wann, u_matrix, and friends
-  call chk_read(unit_chk, chk)
-  close(unit_chk)
-
-  write(unit_out,'("Read Wannier90 ‘chk’ file ", A)') trim(chk%header)
-
-  if (chk%num_bands /= nb) &
-       call croak("Error in read-in of chk file: &
-       &inconsistency of number of Bloch bands")
-
-  if (inwplot%WFidx > chk%num_wann) &
-       call croak("Error in read-in of chk file: &
-          &number of Wannier functions is smaller than given index")
-
-!!! Apply WF rotation
-  if (inwplot%WFrot) then
-     write(unit_out,*) "rotate with matrix from unit ", unit_rot
-     allocate(rotmat(chk%num_wann, chk%num_wann), tmprot(chk%num_wann*2))
-
-     do i=1,chk%num_wann
-        read(unit_rot,*) tmprot
-
-        do j=1,chk%num_wann
-           rotmat(i,j) = cmplx(tmprot(2*j-1), tmprot(2*j), DPk)
-        enddo
-     enddo
-     close(unit_rot)
-
-     if (.not. orth(rotmat)) then
-        call carp("rotation matrix is not unitary")
-        write(buf, '( "(", I0, "(F10.5, '' + '', F7.5, ''i''))" )') &
-             chk%num_wann
-        write(error_unit, buf) transpose(rotmat)
-     end if
-  endif
-
-  ! FIXME: Nrad could be replaced by max(stru%npt)
-  if (any(stru%Npt > Nrad)) call croak('NRAD too small')
-
-  NMT = 0
-  allocate ( rotloc_sym(3, 3, stru%Nat) )
-  allocate (    pos_sym(3,    stru%Nat) )
-  atoms: do jneq=1,stru%Nneq
-     do j=1,NMT
-        if(stru%RMT(jneq) == rad(j))then
-           irad(jneq) = j
-           cycle atoms
-        endif
-     end do
-
-     NMT        = NMT + 1
-     rad(NMT)   = stru%RMT(jneq)
-     irad(jneq) = NMT
-  end do atoms
-
-  allocate ( aug(Nrad,(Lmax7+1)**2, stru%Nat) )
+  write(unit_out,"(/' REAL SPACE LATTICE VECTORS a1, a2, a3 (in bohr)' &
+       &           /' -----------------------------------------------' &
+       &    /' CONVENTIONAL UNIT CELL :'/(' a_',I1,'    = ',3F12.7))") &
+       ( i, stru%conv_dir(:,i), i=1,3 )
+  write(unit_out,"(/' PRIMITIVE UNIT CELL :'/(' a_',I1,'    = ',3F12.7))") &
+       ( i, stru%prim_dir(:,i), i=1,3 )
+  write(unit_out,"(/' RECIPROCAL LATTIC VECTORS b1, b2, b3 (in 1/bohr)' &
+       &           /' ------------------------------------------------' &
+       &     /' CONVENTIONAL UNIT CELL :'/(' b_',I1,'/τ  = ',3F12.7))") &
+       ( i, stru%conv_rec(:,i)/TAU, i=1,3 )
+  write(unit_out,"(/' PRIMITIVE UNIT CELL :'/(' b_',I1,'/τ  = ',3F12.7))") &
+       ( i, stru%prim_rec(:,i)/TAU, i=1,3 )
 
   write(unit_out, &
        "(/' SYMMETRY OPERATIONS'                                     &
@@ -194,15 +135,9 @@ subroutine main()
        & /' y = {Q|t}(x) : y_i = Sum(j) Q_ij x_j + t_i',             &
        & /' with y_i and x_j in conventional fractional coordinates' &
        &//' symm    Q(:,1)  Q(:,2)  Q(:,3)    t(:)')")
-
-  iord = size(stru%rsym, 3)
-  if(IORD.gt.NSYM) call croak('NSYM too small')
-
-  imat   = stru%rsym
-  rtrans = stru%rtrans
-  do K=1,IORD
+  do k = 1, size(stru%rsym, 3)
      write(unit_out,"(I5,3I8,F13.5/2(5X,3I8,F13.5/))") &
-          K,((IMAT(J,I,K),J=1,3),RTRANS(I,K),I=1,3)
+          k,( stru%rsym(:,i,k), stru%rtrans(i,k),i=1,3)
   end do
 
   write(unit_out, &
@@ -212,15 +147,32 @@ subroutine main()
        &  '  (in the conventional unit cell)'            &
        &//' atom    f_1      f_2      f_3   ',           &
        &  '        x [Bohr]     y [Bohr]     z [Bohr]')")
-
   do INDEX=1,stru%nat
-     R = matmul(stru%conv_dir, stru%pos(:,index))
-
-     write(unit_out,"(I5,1X,3F9.5,3X,3F13.7)") &
-          stru%Neq2at(index), stru%pos(:,index), R
+     write(unit_out,"(I5,1X,3F9.5,3X,3F13.7)") stru%Neq2at(index), &
+          stru%pos(:,index), matmul(stru%conv_dir, stru%pos(:,index))
   end do
 
+  Npt = size(inwp%rpts, 2)
+
+  allocate( P   (      0:Lmax7, Nrf, stru%Nneq), rotloc_sym(3, 3, stru%Nat) )
+  allocate( DP  (      0:Lmax7, Nrf, stru%Nneq),    pos_sym(3,    stru%Nat) )
+  allocate( LAPW(      0:Lmax7,      stru%Nneq),  RAD (   stru%Nneq)        )
+  allocate( Rrad(Nrad, 0:Lmax7, Nrf, stru%Nneq),  IRAD(   stru%Nneq)        )
+  allocate( aug (Nrad,  (Lmax7+1)**2, stru%Nat),  IOP (   stru%Nneq*48)     )
+  allocate( ALO (0:LOmax, NLOat, Nrf, stru%Nneq), nreg( 0:stru%Nneq*48)     )
+  allocate( ILO (0:LOmax,             stru%Nneq), atms(3, stru%Nneq)        )
+  allocate( psi(Npt), tot(Npt), iLat(3, Npt), iRi(Npt), iReg(Npt)           )
+  tot=0
+
   pos_sym = stru%pos
+  imat    = stru%rsym
+  rtrans  = stru%rtrans
+
+  ! FIXME: make Nsym dynamical
+  if(size(stru%rsym, 3) > Nsym) call croak('Nsym too small')
+
+  ! FIXME: Nrad could be replaced by max(stru%npt)
+  if (any(stru%Npt > Nrad)) call croak('NRAD too small')
 
   ! trans() updates pos_sym, IMAT, RTRANS
   if (.not. stru%prim) call trans(pos_sym, stru)
@@ -244,7 +196,6 @@ subroutine main()
        & /' x'' = T^-1(x) : x''_i = Sum(j) x_j T_ji'  &
        & ,'  with x_j and x''_i in Cartesian coord.'  &
        &//' atom  symm.      T(:,1)      T(:,2)      T(:,3)')")
-
   do INDEX=1,stru%Nat
      write(unit_out,"(2(I5,1X),3F12.6,2(/12X,3F12.6)/)") &
           stru%neq2at(index), iop(index), rotloc_sym(:,:,index)
@@ -254,6 +205,128 @@ subroutine main()
         call croak('Local rotation matrix not orthogonal')
      endif
   end do
+
+  extgrid: if (inwp%extgrid) then
+     write(unit_psink,                                  &
+          "('ANY   NP =',I0,/,                          &
+          & 'order according to the grid points ',/,    &
+          & 'provided in the input file ',/,            &
+          & '`', A, '''')") &
+          Npt, trim(gridfn)
+
+     write(unit_out, &
+          & "(' ARBITRARY LIST OF GRID POINTS' / &
+          & ' -----------------------------' / &
+          & ' number of grid points: ',I7)") Npt
+  else
+     write(unit_out, &
+          &"(' 3D-NET OF GRID POINTS'                                    /&
+          &' ---------------------'                                      /&
+          &' number of grid points for x, y, z: ',3(I0,' '),              &
+          &' (total: ',I0,')')")                                          &
+          inwp%grid%N, Npt
+
+     write(unit_out, "(/' PLOTTING AREA'                         &
+          &            /' -------------'                         &
+          &            /' x = Sum(j=1,3) f_i a_i  with  f_i in', &
+          &             ' conventional fractional coordinates'   &
+          &           //'           f_1      f_2      f_3   ',   &
+          &             '        x [Bohr]     y [Bohr]     z [Bohr]')")
+
+     write(unit_out, "(' origin', 1X, 3F9.5, 3X, 3F13.7)") &
+          inwp%grid%frac(:,0), inwp%grid%cart(:,0)
+
+     do i=1,3
+        write(unit_out, "(' ',A1,'-axis',1X,3F9.5,3X,3F13.7)") &
+             xyz(i), inwp%grid%frac(:,i), inwp%grid%cart(:,i)
+     end do
+
+     write(unit_out, "(/'         length [Bohr]')")
+     do i=1,3
+        write(unit_out, "(' ‖',A1,'‖ ',F13.7)") xyz(i), inwp%grid%len(i)
+     end do
+
+     write(unit_out, "(/'         cos(φ)        φ [°]')")
+     j=3
+     do i=1,2
+        do j=i+1,3
+           write(unit_out, "(' ∠(',A1,',',A1,') ',F10.7,3X,F8.3)") &
+                xyz(i), xyz(j), cos(inwp%grid%ang(3)), inwp%grid%ang(3)
+        end do
+     end do
+
+     write(unit_psink, "('# α     NP(α)   length(α)    ∠(α, x)    ∠(α, y)')")
+
+     write(unit_psink, fmt_grid) &
+          xyz(1), inwp%grid%N(1), inwp%grid%len(1)
+     write(unit_psink, fmt_grid) &
+          xyz(2), inwp%grid%N(2), inwp%grid%len(2), inwp%grid%ang(3)
+     write(unit_psink, fmt_grid) &
+          xyz(3), inwp%grid%N(2), inwp%grid%len(3), inwp%grid%ang(2:1:-1)
+
+     write(unit_psink, &
+          "('#order: (((w(x,y,z), z=1,#z), y=1,#y), x=1,#x)')")
+  endif extgrid
+
+  call inwf_read(unit_inwf, inwf)
+  close(unit_inwf)
+
+  Nb = inwf%bmax - inwf%bmin + 1
+
+  allocate(uu(Nb))
+  if (idx_wann.gt.0) then
+     inwp%WFidx = idx_wann
+  endif
+
+!!! Read chk file for num_wann, u_matrix, and friends
+  call chk_read(unit_chk, chk)
+  close(unit_chk)
+
+  write(unit_out,'("Read Wannier90 ‘chk’ file ", A)') trim(chk%header)
+
+  if (chk%num_bands /= nb) &
+       call croak("Error in read-in of chk file: &
+       &inconsistency of number of Bloch bands")
+
+  if (inwp%WFidx > chk%num_wann) &
+       call croak("Error in read-in of chk file: &
+          &number of Wannier functions is smaller than given index")
+
+!!! Apply WF rotation
+  if (inwp%WFrot) then
+     write(unit_out,*) "rotate with matrix from unit ", unit_rot
+     allocate(rotmat(chk%num_wann, chk%num_wann), tmprot(chk%num_wann*2))
+
+     do i=1,chk%num_wann
+        read(unit_rot,*) tmprot
+
+        do j=1,chk%num_wann
+           rotmat(i,j) = cmplx(tmprot(2*j-1), tmprot(2*j), DPk)
+        enddo
+     enddo
+     close(unit_rot)
+
+     if (.not. orth(rotmat)) then
+        call carp("rotation matrix is not unitary")
+        write(buf, '( "(", I0, "(F10.5, '' + '', F7.5, ''i''))" )') &
+             chk%num_wann
+        write(error_unit, buf) transpose(rotmat)
+     end if
+  endif
+
+  NMT = 0
+  atoms: do jneq=1,stru%Nneq
+     do j=1,NMT
+        if(stru%RMT(jneq) == rad(j))then
+           irad(jneq) = j
+           cycle atoms
+        endif
+     end do
+
+     NMT        = NMT + 1
+     rad(NMT)   = stru%RMT(jneq)
+     irad(jneq) = NMT
+  end do atoms
 
 ! find the surrounding primitve cell SPC of each atomic sphere
 ! ---------------------------------------------------------------
@@ -287,7 +360,7 @@ subroutine main()
   NREG(:) = 0
 
   do ig=1,Npt
-     call findmt(inwplot%rgrid(:,ig), atms, stru, pos_sym, index, &
+     call findmt(inwp%rpts(:,ig), atms, stru, pos_sym, index, &
           &      iLat(:,ig), iRi(ig), R)
      IREG(IG) = INDEX
      NREG(INDEX)= NREG(INDEX) + 1
@@ -298,10 +371,10 @@ subroutine main()
         ! functions
 
         ! r' := T^-1(r)
-        inwplot%rgrid(:,ig) = matmul(rotloc_sym(:,:,index), r)
+        inwp%rpts(:,ig) = matmul(rotloc_sym(:,:,index), r)
      else
         ! in interstitial
-        inwplot%rgrid(:,ig) = r
+        inwp%rpts(:,ig) = r
      endif
   end do
 
@@ -332,7 +405,7 @@ subroutine main()
 ! set up the augmentation functions
 ! for each group of equivalent atoms
   call paropen(unit_vector, vecfn, iproc, 1, FORM='unformatted')
-  call auggen(stru, inwplot%large)
+  call auggen(stru, inwp%large)
   close(unit_vector)
 
 ! write wave function options to output
@@ -341,16 +414,16 @@ subroutine main()
        & /' ------------------------'                         &
        & /' evaluation of the ',A,' relativistic component',  &
        &  ' of the wave functions in ',A,' units')")          &
-       merge('large', 'small', inwplot%large), trim(inwplot%unit_name)
+       merge('large', 'small', inwp%large), trim(inwp%unit_name)
 
-  if(inwplot%dephas) &
+  if(inwp%dephas) &
        write(unit_out,"( ' after dephasing of the wave function')")
 
 ! set up constants and prefactors
-  prefac = inwplot%unit / sqrt(stru%vol)
+  prefac = inwp%unit / sqrt(stru%vol)
 
 !!! Main loop
-  if(inwplot%extgrid) then
+  if(inwp%extgrid) then
      write(unit_out,2150)'according to the grid point input file'
   else
      write(unit_out,2150) '(((w(x,y,z), z=1,#z), y=1,#y), x=1,#x)'
@@ -384,27 +457,27 @@ subroutine main()
            local_contribution = 0
            if (chk%have_disentangled) then
               do j2=1, chk%num_wann
-                 if (inwplot%WFrot) then
+                 if (inwp%WFrot) then
                     do j3=1, chk%num_wann
                        local_contribution = local_contribution &
-                            + rotmat(inwplot%WFidx,j3)         &
+                            + rotmat(inwp%WFidx,j3)         &
                             & * chk%u_matrix(j2,j3,kkk)        &
                             & * chk%u_matrix_opt(j,j2,kkk)
                     enddo
                  else
                     local_contribution = local_contribution  &
-                         + chk%u_matrix(j2,inwplot%WFidx,kkk) &
+                         + chk%u_matrix(j2,inwp%WFidx,kkk) &
                          & * chk%u_matrix_opt(j,j2,kkk)
                  endif
               enddo
            else
-              if (inwplot%WFrot) then
+              if (inwp%WFrot) then
                  do j2=1, chk%num_wann
                     local_contribution = local_contribution+ &
-                         rotmat(j2,inwplot%WFidx)*chk%u_matrix(j,j2,kkk)
+                         rotmat(j2,inwp%WFidx)*chk%u_matrix(j,j2,kkk)
                  enddo
               else
-                 local_contribution = chk%u_matrix(j,inwplot%WFidx,kkk)
+                 local_contribution = chk%u_matrix(j,inwp%WFidx,kkk)
               endif
            endif
            uu(j)=local_contribution
@@ -524,8 +597,8 @@ subroutine main()
         do ig=1,Npt
            if(ireg(ig) == 0) then
               ! grid point in interstitial
-              if(inwplot%large)then
-                 call wavint(inwplot%rgrid(1,ig),Npw,psi(ig),bk,coef,nmatk)
+              if(inwp%large)then
+                 call wavint(inwp%rpts(1,ig),Npw,psi(ig),bk,coef,nmatk)
               else
                  psi(ig ) = 0
               endif
@@ -534,19 +607,18 @@ subroutine main()
               ! load calc. Bloch factor e^ikR
               arg = dot_product(fk, ilat(:, ig))
               phs = cmplx(cos(arg), sin(arg), DPk)
-              call wavsph(inwplot%rgrid(1,ig), phs, ireg(ig), iri(ig), &
+              call wavsph(inwp%rpts(1,ig), phs, ireg(ig), iri(ig), &
                    &      psi(ig), Y, stru)
            endif
         end do
 
-        write(0,'(3(2e18.6, 2x))') psi(1), psi(500), psi(1000)
         tot = tot + psi
      end do kpoints
   end do vecfiles
 
   ! DEPHAS: A perfectly cromulent phase cannot always be achieved, but
   ! we will do our best.
-  if (inwplot%dephas) then
+  if (inwp%dephas) then
      PHSAV = 0
      do IG=1,Npt
         if(abs(tot(IG)) > PHASE_TOL) &
@@ -640,4 +712,4 @@ end module main_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-12-01 17:34:38 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-12-02 18:20:27 assman@faepop71.tu-graz.ac.at>
