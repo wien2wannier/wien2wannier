@@ -24,7 +24,7 @@
 \ProgName[wplot2xsf]      {wplottoxsf}
 \ProgName[write\_insp]    {writeinsp}
 \ProgName[write\_inwf]    {writeinwf}
-\ProgName[write\_inwplot] {writeinwplot}
+%\ProgName[write\_inwplot] {writeinwplot}
 \ProgName[write\_win]     {writewin}
 
 \author{\name{Elias Assmann} \and \name{Jan Kune\v{s}} \and
@@ -125,7 +125,6 @@ Frohner, Philipp Hansmann, Nico Parragh and Giorgio Sangiovanni.
 
 
 \tableofcontents
-\listoftodos
 
 \mainmatter
 
@@ -241,9 +240,8 @@ computed by \file{spaghetti}, e.g.\ in \file{gnuplot}, use the command
 
 \subsection{Plot Wannier Functions}
 \begin{description}
-\item[\writeinwplot] asks for a real-space grid on which the
-  Wannier functions should be plotted, and writes
-  \file{\case.inwplot}.
+\item[\file{\case.inwplot}] specifies the real-space grid on which the
+  Wannier functions should be plotted.
 \item[\file{x wplot -wf \textit{m}}] evaluates Wannier function number
   $m$ on the real-space grid, and writes the density $|w_m(\mb r)|^2$
   to \file{\case{}\_\textit{m}.psink} and the phase $\arg w_m(\mb r)$
@@ -414,8 +412,7 @@ plotted; \file{\textit{m}} above overrides this.  Output goes to
 
 \wplot is based on \file{lapw7} and shares the general structure of
 the input file.  A sample input file for \file{wplot} is given below.
-It can be generated via \writeinwplot, or adapted from the template in
-\file{\wienroot/SRC\_templates}.
+A template can be found in \file{\wienroot/SRC\_templates}.
 %
 \Template{inwplot}
 %
@@ -720,16 +717,16 @@ early by pressing \file{Ctrl-D} (EOF); in this case, there will be
 fewer Wannier functions than bands (disentanglement).
 
 
-\ProgSec[prepare input file for \wplot]{writeinwplot}
+% \ProgSec[prepare input file for \wplot]{writeinwplot}
 
-This program may help in preparing the input file for \wplot.
-(Alternatively, copy the template from
-\file{\wienroot/SRC\_templates}.)  It is executed by invoking the
-command
-%
-\begin{usage}
-  \writeinwplot \case
-\end{usage}
+% This program may help in preparing the input file for \wplot.
+% (Alternatively, copy the template from
+% \file{\wienroot/SRC\_templates}.)  It is executed by invoking the
+% command
+% %
+% \begin{usage}
+%   \writeinwplot \case
+% \end{usage}
 
 
 \ProgSec[prepare input file for \wannierx]{writewin}
@@ -903,4 +900,4 @@ centered at their original position.
 \end{thebibliography}
 \end{document}
 
-%%% Time-stamp: <2016-11-29 22:49:45 ea@archpad>
+%%% Time-stamp: <2016-12-03 21:48:07 ea@archpad>
