@@ -24,7 +24,7 @@ import math
 import glob
 import numpy as np
 
-__version__ = "$version: v1.0.0-257-g213b6f1$"
+__version__ = "$version: v1.0.0-258-g30914a8$"
 
 try:
     __version__ = re.search(":\s*(.*?)\s*\$", __version__).group(1)
@@ -375,11 +375,10 @@ for i, N, psink, psiarg, xsf, wplot in \
 
     verbalize("   reading `"+psink.name+"'")
 
-    if psink.readline().split()[0] != '3D':
-        raise AssertionError("only 3D grids are supported")
-    nx = int(psink.readline().split()[0])
-    ny = int(psink.readline().split()[0])
-    nz = int(psink.readline().split()[0])
+    psink.readline()
+    nx = int(psink.readline()[3:8])
+    ny = int(psink.readline()[3:8])
+    nz = int(psink.readline()[3:8])
     psink.readline()            # “order”
     data = np.fromfile(psink, sep=' ')
     psink.close()
@@ -438,4 +437,4 @@ for i, N, psink, psiarg, xsf, wplot in \
     print>>xsf, "END_BLOCK_DATAGRID_3D"
 
 
-## Time-stamp: <2016-12-01 19:35:35 assman@faepop71.tu-graz.ac.at>
+## Time-stamp: <2016-12-03 18:51:13 assman@faepop71.tu-graz.ac.at>

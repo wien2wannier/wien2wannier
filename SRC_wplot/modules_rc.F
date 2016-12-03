@@ -90,7 +90,7 @@ subroutine main()
   character, parameter :: xyz(3) = (/ 'x', 'y', 'z' /)
 
   character(*), parameter :: &
-       fmt_grid  = "('# ', A1, i7, 2x, f13.7, 2(2x, f10.5))"
+       fmt_grid  = "('# ', A1, i5, 2x, f13.7, 2(2x, f10.5))"
 
   call struct_read(unit_struct, stru)
   close(unit_struct)
@@ -253,8 +253,7 @@ subroutine main()
         end do
      end do
 
-     write(unit_psink, "('# α     NP(α)   length(α)    ∠(α, x)    ∠(α, y)')")
-
+     write(unit_psink, "('# α   NP(α)   length(α)    ∠(α, x)    ∠(α, y)')")
      write(unit_psink, fmt_grid) &
           xyz(1), inwp%grid%N(1), inwp%grid%len(1)
      write(unit_psink, fmt_grid) &
@@ -710,4 +709,4 @@ end module main_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-12-03 13:37:15 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-12-03 18:36:45 assman@faepop71.tu-graz.ac.at>
