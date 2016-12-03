@@ -32,7 +32,7 @@ alias	output		'set date = `date +"(%T)"`;'\
 			'printf ">   %s\t%s \n" "\!:*" "$date" ;'\
 			'printf "\n>   %s\t%s " "\!:*" "$date" >> $dayfile'
 
-alias	exec		'($bin/x \!:*) ;'\
+alias	exec		'($bin/x_lapw \!:*) ;'\
 			'teststatus'
 
 alias	total_exec	'output \!:*;'\
@@ -220,7 +220,7 @@ else
   set numk = "0\
     $numk"
   endif
-  $bin/x kgen -fbz <<EOF
+  $bin/x_lapw kgen -fbz <<EOF
 $numk
 0
 EOF
@@ -352,4 +352,4 @@ theend
 exit 0
 
 
-## Time-stamp: <2015-05-28 16:24:43 assman@faepop23.tu-graz.ac.at>
+## Time-stamp: <2016-12-03 17:41:05 assman@faepop71.tu-graz.ac.at>
