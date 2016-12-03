@@ -1334,7 +1334,7 @@ subroutine rotdef(stru, iop, pos)
 !!!           << check the difference modulo lattice translations >>
            D = abs(mod(abs(pos(:,index) - R) + HALF, 1._DPk) - HALF)
 
-           if (D(1).lt.TOL.and.D(2).lt.TOL.and.D(3).lt.TOL) then
+           if ( all(D < TOL) ) then
               IOP(INDEX) = JOP
               !:17[
               if(.not. mvatom)then
@@ -1344,7 +1344,7 @@ subroutine rotdef(stru, iop, pos)
               pos(:, index) = R
 
 !!!             << print updated position in Cartesian coordinates >>
-              R = matmul(transpose(stru%prim_dir), pos(:, index))
+              R = matmul(stru%prim_dir, pos(:, index))
 
               write(unit_out,2010) jatom, IOP(index), R
               cycle mult
