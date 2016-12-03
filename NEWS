@@ -15,6 +15,8 @@ Version 2.0 introduces backward-incompatible changes in the format of
     the options `ANY' and `3D' remain.  Lower-dimensional grids can
     easily be generated as special cases of `3D', or using `ANY'.
 
+In addition, `write_inwplot` has been removed.
+
 A script `checkinwplot' is provided that checks an input file for
 conformance to the new format and converts old-style input files.  `x
 wplot' calls this script automatically.
@@ -256,5 +258,5 @@ new:       id=-(BQZ(pair_index)*m2y+BQY(pair_index))*m2x-BQX(pair_index)-1
 ## comment-start: "#"
 ## End:
 ##
-## Time-stamp: <2016-11-29 17:39:19 assman@faepop71.tu-graz.ac.at>
+## Time-stamp: <2016-12-03 21:59:33 ea@archpad>
 ##\---

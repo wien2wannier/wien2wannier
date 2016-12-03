@@ -39,9 +39,8 @@ UTILOBJ := $(UTILDIR)/util_w2w.o
 
 #######################################
 
-EXE_UTIL := write_win_backend findbands shifteig write_inwplot	\
-	    rephase w2waddsp join_vectorfiles vec2ascii		\
-	    convham
+EXE_UTIL := write_win_backend findbands shifteig rephase w2waddsp	\
+	    join_vectorfiles vec2ascii convham
 
 #.orig#EXE_SIMPLE := rhomb_in5 hex2rhomb rhomb2hex xyz2struct convert_in2	\
 #.orig#	      plane clminter struct2cif Pinver fmax add_columns	sub_columns
@@ -84,4 +83,4 @@ $(UTIL_USERS): FFLAGS += -I$(UTILDIR)
 	$(FC) $(FFLAGS) -c $<
 
 
-## Time-stamp: <2016-02-04 14:23:25 assman@faepop36.tu-graz.ac.at>
+## Time-stamp: <2016-12-03 21:59:52 ea@archpad>
