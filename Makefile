@@ -9,7 +9,7 @@
 SHELL=/bin/bash
 
 ifndef VERSION
-   VERSION = $(lastword '$version: v1.0.0-253-g79e427d$')
+   VERSION = $(lastword '$version: v1.0.0-254-gb809730$')
 endif
 
 SIMPLE      := SRC_trig doc test

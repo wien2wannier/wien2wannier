@@ -1347,7 +1347,7 @@ subroutine rotdef(stru, iop, pos)
         symop: do jop = 1, size(stru%rsym, 3)
 
 !!!           << find {Q|t}(r_1.atom) >>
-           R = matmul(transpose(imat(:,:,jOp)), pos0 + trans(:,jOp))
+           R = matmul(transpose(imat(:,:,jOp)), pos0) + trans(:,jOp)
 
 !!!           << check the difference modulo lattice translations >>
            D = abs(mod(abs(pos(:,index) - R) + HALF, 1._DPk) - HALF)
@@ -1554,7 +1554,7 @@ subroutine trans(pos, stru)
   real(DPk),      intent(inout) :: pos(:, :)
   type(struct_t), intent(in)    :: stru
 
-  real(DPk) :: F(3), S(3,3), T(3,3), Q(3,3)
+  real(DPk) :: S(3,3), T(3,3)
   integer   :: i, k, n
 
   ! trans() transforms real space vectors x and symmetry operations
@@ -1600,11 +1600,11 @@ subroutine trans(pos, stru)
 
   ! transform the symmetry operations
   do N=1, size(rtrans, 2)
-     F = matmul(T, rtrans(:, N))
-     Q = matmul(T, transpose(imat(:,:,N)))
+     rtrans(:, N) = matmul(T, rtrans(:, N))
 
-     rtrans(:, N) = F
-     imat (:,:,N) = nint(matmul(Q, S))
+     imat (:,:,N) = nint( &
+          transpose( matmul(matmul(T, transpose(imat(:,:,N))), &
+          &                 S) ))
   end do
 end subroutine trans
 end module     trans_m
@@ -1616,4 +1616,4 @@ end module     trans_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-12-03 13:48:38 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-12-03 17:04:54 assman@faepop71.tu-graz.ac.at>
