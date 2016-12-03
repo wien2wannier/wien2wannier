@@ -23,7 +23,7 @@ module     main_m
   end interface orth
 contains
 subroutine main()
-  use sym2,       only: rtrans=>trans, imat
+  use sym2,       only: init_sym2, rtrans=>trans, imat
   use lolog,      only: lapw, ilo, Nlo
   use loabc,      only: Alo
   use atspdt,     only: p, dp
@@ -42,7 +42,7 @@ subroutine main()
        &                unit_in, unit_out, unit_struct, unit_vector
   use wplot,      only: unit_inwf, unit_psink, unit_psiarg, unit_chk, &
        &                unit_rot, outfn, vecfn, psinkfn, psiargfn, gridfn, &
-       &                iproc, Lmax7, idx_wann, Nsym
+       &                iproc, Lmax7, idx_wann
 
   !! procedure includes
   use bessel_m
@@ -165,11 +165,8 @@ subroutine main()
   tot=0
 
   pos_sym = stru%pos
-  imat    = stru%rsym
-  rtrans  = stru%rtrans
 
-  ! FIXME: make Nsym dynamical
-  if(size(stru%rsym, 3) > Nsym) call croak('Nsym too small')
+  call init_sym2(stru)
 
   ! FIXME: Nrad could be replaced by max(stru%npt)
   if (any(stru%Npt > Nrad)) call croak('NRAD too small')
@@ -712,4 +709,4 @@ end module main_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-12-02 18:20:27 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-12-03 13:37:15 assman@faepop71.tu-graz.ac.at>

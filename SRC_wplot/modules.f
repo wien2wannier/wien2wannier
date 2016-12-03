@@ -5,7 +5,7 @@
 
 !!/=== Defined here: =============================
 !!
-!! wplot:     AddLoc, kconjg, mvatom, UseRot, Nsym, Lmax7, idx_wann, iproc,
+!! wplot:     AddLoc, kconjg, mvatom, UseRot, Lmax7, idx_wann, iproc,
 !!            unit_chk, unit_inwf, unit_grid, unit_psiarg, unit_psink,
 !!            unit_rot, vecfn, psinkfn, psiargfn, outfn
 !!
@@ -25,7 +25,7 @@
 !!
 !! struct:    POS(:,:), RMT(:)
 !!
-!! sym2:      imat(3,3,Nsym), trans(3,Nsym)
+!! sym2:      imat(3,3,Nsym), trans(3,Nsym), init_sym2()
 !!
 !! work:      aug(:,:,:)
 !!
@@ -66,7 +66,7 @@ module wplot
   integer, parameter :: unit_grid=7,  unit_psink=21, unit_psiarg=22
   integer, parameter :: unit_inwf=31, unit_chk  =32, unit_rot   =33
 
-  integer, parameter :: Nsym=48, Lmax7=8
+  integer, parameter :: Lmax7=8
 
 !!! The following is set by ‘wplot.f’ to be passed to ‘main.F’
   character(BUFSZ) :: vecfn, psinkfn, psiargfn, outfn, gridfn
@@ -501,13 +501,31 @@ end module radfu
 
 module sym2
   use const, only: DPk
-  use wplot, only: Nsym
 
   implicit none
   private; save
 
-  real(DPk), public :: TRANS(3,Nsym)
-  integer,   public :: IMAT(3,3,Nsym)
+  public :: trans, imat, init_sym2
+
+  real(DPk), allocatable :: TRANS(:,    :)
+  integer,   allocatable :: IMAT (:, :, :)
+
+contains
+  subroutine init_sym2(stru)
+    use structmod, only: struct_t
+
+    implicit none
+
+    type(struct_t), intent(in) :: stru
+    integer                    :: Nsym
+
+    Nsym = size(stru%rsym, 3)
+
+    allocate ( trans(3, Nsym), imat(3, 3, Nsym) )
+
+    trans = stru%rtrans
+    imat  = stru%rsym
+  end subroutine init_sym2
 end module sym2
 
 module work
@@ -1528,7 +1546,6 @@ end module     locdef_m
 module     trans_m; contains
 subroutine trans(pos, stru)
   use const,     only: DPk, TAU
-  use wplot,     only: Nsym
   use sym2,      only: rtrans=>trans, imat
   use structmod, only: struct_t
 
@@ -1582,7 +1599,7 @@ subroutine trans(pos, stru)
   end do
 
   ! transform the symmetry operations
-  do N=1,NSYM
+  do N=1, size(rtrans, 2)
      F = matmul(T, rtrans(:, N))
      Q = matmul(T, transpose(imat(:,:,N)))
 
@@ -1599,4 +1616,4 @@ end module     trans_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-12-02 18:14:07 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-12-03 13:48:38 assman@faepop71.tu-graz.ac.at>
