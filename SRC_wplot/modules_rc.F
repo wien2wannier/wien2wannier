@@ -244,11 +244,12 @@ subroutine main()
      end do
 
      write(unit_out, "(/'         cos(φ)        φ [°]')")
-     j=3
+     m=3
      do i=1,2
         do j=i+1,3
-           write(unit_out, "(' ∠(',A1,',',A1,') ',F10.7,3X,F8.3)") &
-                xyz(i), xyz(j), cos(inwp%grid%ang(3)), inwp%grid%ang(3)
+           write(unit_out, "(' ∠(',A1,',',A1,') ',F10.7,3X,F8.3)") xyz(i), &
+                xyz(j), cos(inwp%grid%ang(m)/360*TAU), inwp%grid%ang(m)
+           m=m-1
         end do
      end do
 
