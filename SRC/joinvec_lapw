@@ -49,4 +49,3 @@ if ($vector && $?so) $bin/vec2old -p -local $updn
 $exe $def.def $maxproc $cmplx
 exit 0
 
-## Time-stamp: <2016-01-27 16:29:55 assman@faepop36.tu-graz.ac.at>

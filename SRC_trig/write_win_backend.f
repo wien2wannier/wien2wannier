@@ -482,4 +482,3 @@ end program write_win
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-12-01 15:37:23 assman@faepop71.tu-graz.ac.at>

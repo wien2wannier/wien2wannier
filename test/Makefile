@@ -26,4 +26,3 @@ distclean:
 		$(MAKE) -C $$dir clean; \
 	done
 
-## Time-stamp: <2016-07-13 17:53:30 assman@faepop71.tu-graz.ac.at>

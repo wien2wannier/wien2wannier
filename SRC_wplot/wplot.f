@@ -74,4 +74,3 @@ end program wf_r
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-08-04 15:19:18 assman@faepop71.tu-graz.ac.at>

@@ -171,4 +171,3 @@ end program join_vectorfiles
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-01-27 16:10:16 assman@faepop36.tu-graz.ac.at>

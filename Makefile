@@ -100,4 +100,3 @@ wien-dist: dist-tmp
 	rm -rf $(dist-dir) $(Morig)
 
 
-## Time-stamp: <2016-12-03 12:59:59 assman@faepop71.tu-graz.ac.at>

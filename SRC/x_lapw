@@ -2886,4 +2886,3 @@ if (-e $running) rm $running
 exit(1)
 
 
-## Time-stamp: <2016-12-01 18:55:01 assman@faepop71.tu-graz.ac.at>

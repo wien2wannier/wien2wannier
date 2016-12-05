@@ -57,4 +57,3 @@ cp SRC_wplot/wplot{,c} .
 make -C SRC_trig clean all
 
 
-## Time-stamp: <2015-06-01 12:38:19 assman@faepop23.tu-graz.ac.at>

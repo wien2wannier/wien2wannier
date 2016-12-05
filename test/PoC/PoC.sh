@@ -43,4 +43,3 @@ fi
 x wplot -wf 1 -p                   2>&1
 wplot2xsf_lapw                     2>&1
 
-## Time-stamp: <2016-07-25 14:24:27 assman@faepop71.tu-graz.ac.at>

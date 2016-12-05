@@ -193,4 +193,3 @@ $(modw2w_users): $(MODOBJ)
 $(modw2w_users): FFLAGS += -I$(UTILDIR)
 
 
-## Time-stamp: <2016-07-20 15:17:46 assman@faepop71.tu-graz.ac.at>

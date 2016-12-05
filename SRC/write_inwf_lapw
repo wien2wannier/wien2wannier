@@ -961,4 +961,3 @@ if not args.batch and extant_inwf and not args.quiet:
         "' -- do not forget to change `win' file, if necessary +"
 
 
-## Time-stamp: <2016-12-01 19:35:49 assman@faepop71.tu-graz.ac.at>

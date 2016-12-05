@@ -918,4 +918,3 @@ end module read_vec_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-12-05 13:09:01 assman@faepop71.tu-graz.ac.at>

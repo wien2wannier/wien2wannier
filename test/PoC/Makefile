@@ -31,4 +31,3 @@ clean:
 
 	rm -rf */W
 
-## Time-stamp: <2016-07-14 12:40:22 assman@faepop71.tu-graz.ac.at>

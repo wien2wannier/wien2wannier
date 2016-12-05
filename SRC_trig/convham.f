@@ -94,4 +94,3 @@ end program convert_hamiltonian
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-07-06 16:18:50 assman@faepop71.tu-graz.ac.at>

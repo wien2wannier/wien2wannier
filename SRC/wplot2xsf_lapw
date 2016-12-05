@@ -437,4 +437,3 @@ for i, N, psink, psiarg, xsf, wplot in \
     print>>xsf, "END_BLOCK_DATAGRID_3D"
 
 
-## Time-stamp: <2016-12-03 18:51:13 assman@faepop71.tu-graz.ac.at>

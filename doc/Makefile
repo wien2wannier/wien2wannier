@@ -4268,4 +4268,3 @@ endef
 # vim: noet sts=0 sw=8 ts=8
 
 
-## Time-stamp: <2015-06-08 16:13:05 assman@faepop23.tu-graz.ac.at>

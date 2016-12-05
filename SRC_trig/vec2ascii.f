@@ -191,4 +191,3 @@ END PROGRAM vec2ascii
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>

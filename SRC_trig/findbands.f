@@ -106,4 +106,3 @@ end program find_bands
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-05-23 19:58:48 elias>

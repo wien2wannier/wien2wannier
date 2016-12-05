@@ -82,4 +82,3 @@ END PROGRAM combine_spinfiles
 !! End:
 !!\---
 !!
-!! Time-stamp: <2015-09-03 18:38:47 elias@hupuntu>

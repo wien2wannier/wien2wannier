@@ -78,4 +78,3 @@ END PROGRAM shift_energy
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-03-01 17:09:12 assman@faepop36.tu-graz.ac.at>

@@ -133,4 +133,3 @@ $_ = $1 . q('"$fermi"') .
      $4 . qq(\n)' $insp
 
 
-## Time-stamp: <2015-05-28 16:21:51 assman@faepop23.tu-graz.ac.at>

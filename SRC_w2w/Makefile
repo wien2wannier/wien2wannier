@@ -186,4 +186,3 @@ $(foreach o, $(modrc_users), $(R_DIR)/$o): $(R_DIR)/modules_rc.o
 $(foreach o, $(modrc_users), $(C_DIR)/$o): $(C_DIR)/modules_rc.o
 
 
-## Time-stamp: <2016-12-05 13:11:39 assman@faepop71.tu-graz.ac.at>

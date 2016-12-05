@@ -83,4 +83,3 @@ $(UTIL_USERS): FFLAGS += -I$(UTILDIR)
 	$(FC) $(FFLAGS) -c $<
 
 
-## Time-stamp: <2016-12-03 21:59:52 ea@archpad>
