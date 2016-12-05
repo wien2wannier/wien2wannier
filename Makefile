@@ -8,7 +8,7 @@
 
 SHELL=/bin/bash
 
-version = $(lastword '$version: v1.0.0-263-g61376a5$')
+version = $(lastword '$version: v1.0.0-264-gfdb4035$')
 
 VERSION = $(shell git describe 2>/dev/null || echo $(version))
 
@@ -64,12 +64,11 @@ Morig    := $(addsuffix /Makefile.orig,SRC_w2w SRC_wplot SRC_trig)
 dist-dir := wien2wannier-$(VERSION)-wiendist
 tarname  := wien2wannier-$(VERSION)-expand-in-wienroot
 scripts  := $(notdir $(wildcard SRC/*))
-w2wlinks := ../doc/wien2wannier_userguide.pdf \
-	    ../COPYING ../README ../NEWS ../doc/CHEATSHEET
+w2wlinks := ../doc/wien2wannier_userguide.pdf ../WIEN-VERSION		\
+	    ../compile_wien2wannier.sh ../COPYING ../README ../NEWS	\
+	    ../doc/CHEATSHEET
 
 ## Make a tarball for extracting directly in Wien2k root folder
-##
-## This should perhaps strip the time-stamps.
 dist-tmp: distclean doc/wien2wannier_userguide.pdf $(Morig)
 	mkdir $(dist-dir); \
 	cd $(dist-dir); \
