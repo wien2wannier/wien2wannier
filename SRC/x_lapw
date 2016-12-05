@@ -41,15 +41,20 @@ set grr
 set lcore
 set hf
 set diaghf
+set modehf
 set nonself
-set noibz
 set newklist
 set redklist
+set vnonloc
 set nmrhf
+set scratchnmrhf
 set gw
 set dftd3
 set ending
 set ending3
+set ending4
+set testmsr
+set testmsr1
 unset enefile
 unset orb                      # LDA+U in lapw1
 unset nmat_only                 # determines matrixsize in lapw1
@@ -74,6 +79,7 @@ unset help_files 		#for lapw2
 unset super                     # for dstart, creates new.clmsum
 unset rxes                      # for tetra, uses rxes-weight file
 unset rxesw                     # for tetra, writes rxes-weight file
+unset xspec                     # for broadening
 unset delta
 unset copy
 unset txt
@@ -119,8 +125,8 @@ while ($#argv)
     set updn = 'dn'
     set dnup = 'up'
     shift; breaksw
-  case -du:
-    set du = 'du'
+  case -ud:
+    set ud = 'ud'
     set updn = 'up'
     shift; breaksw
   case -sc:
@@ -244,17 +250,29 @@ while ($#argv)
   case -diaghf:
     set diaghf = 'diaghf'
     shift; breaksw
+  case -mode1:
+    set modehf = 'mode1'
+    shift; breaksw
+  case -mode2:
+    set modehf = 'mode2'
+    shift; breaksw
+  case -mode3:
+    set modehf = 'mode3'
+    shift; breaksw
   case -nonself:
     set nonself = 'nonself'
-    shift; breaksw
-  case -noibz:
-    set noibz = 'noibz'
     shift; breaksw
   case -newklist:
     set newklist = 'newklist'
     shift; breaksw
   case -redklist:
     set redklist = 'redklist'
+    shift; breaksw
+  case -slater:
+    set vnonloc = 'slater'
+    shift; breaksw
+  case -kli:
+    set vnonloc = 'kli'
     shift; breaksw
   case -nmrhf:
     set nmrhf = 'nmrhf'
@@ -301,6 +319,9 @@ while ($#argv)
   case -txt
     set txt
     shift; breaksw
+  case -xspec
+    set xspec
+    shift; breaksw
   case -scratch:
     shift;set scratch = $1
     set ncar=`echo $scratch |wc -m`
@@ -312,8 +333,9 @@ while ($#argv)
         set scratch=
         set scratchstring=
     else if(! -e "$scratch" ) then
-        makescratch_lapw $scratch
+        mkdir -p $scratch
     endif
+    setenv SCRATCH $scratch
     shift; breaksw
 ## w2w stuff ##
   case -pp:			# passed on to Wannier90
@@ -336,12 +358,20 @@ while ($#argv)
   endsw
 end
 
+if ($hf == hf) then
+  set scratch=
+  set scratchstring=
+  setenv SCRATCH $scratch
+endif
+
 continue:
 
 if !($?file) then
 set file    = `pwd`
 set file    = $file:t		#tail of file-names
 endif
+
+if ( $?help ) goto help
 
 touch $file.struct
 set cmplx1=`cut -b -6 $file.struct |awk 'BEGIN{c="c"};{if ($0 == "-1 0 0") {getline; {if ($0 == " 0-1 0"){getline; {if ($0 == " 0 0-1"){c= ""}}}}}};END{print c}'`
@@ -350,8 +380,6 @@ if !($?cmplx) then
   if($cmplx == c ) set cmplx2='-c'
 endif
 
-
-if ( $?help ) goto help
 
 if !($?command) then
   error no command
@@ -394,11 +422,6 @@ else if ($command == spinorbitc) then
 else if ($command == opticc) then
   set cmplx = c
   set command = optic
-#Clas-start
-else if ($command == lapwkpc) then
-   set cmplx = c
-   set command = lapwkp
- #Clas-end
 else if ($command == w2wc) then
   set cmplx = c
   set command = w2w
@@ -521,7 +544,7 @@ if ($grr == 'grr') then
     set grr2 = '_grr'
 endif
 echo "dynamical mixing for mbj from greed of *scfm" >$file.mbjmix
-if(-e $file.scfm ) grep :MIX *scfm  >> $file.mbjmix
+if(-e $file.scfm ) grep :MIX $file.scfm  >> $file.mbjmix
 cat << theend > $def
  3,'$file.rhopw',   'unknown','formatted',0
  4,'$file.inm',     'unknown','formatted',0
@@ -547,6 +570,8 @@ cat << theend > $def
 50,'$file.eeceup', 'unknown','formatted',0
 51,'$file.eecedn', 'unknown','formatted',0
 62,'$file.grr',    'unknown','formatted',0
+63,'$WIENROOT/SRC_lapw0/xc_funcs.h','unknown','formatted',0
+64,'$file.r2v_nonloc',     'unknown','unformatted',0
 theend
 if ($grr == '') then
   echo "61,'$file.in0abp',     'unknown','formatted',0" >>$def
@@ -556,65 +581,6 @@ else if ($grr == 'grr') then
 endif
 
 breaksw
-
-case lapw9:
-set exe = lapw9$para
-set dopara = 1
-set tmp = ($file.poissn $file.r2v $file.vcoul)
-if (-e $file.clmup &&  ! -z $file.clmup) then
-    set updn = 'up'
-endif
-set endup = 'up'
-set endvup = 'up'
-if ($eece == 'eece') then
-    set endup = 'valupeece'
-    set endvup = 'valup'
-endif
-set enddn = 'dn'
-set endvdn = 'dn'
-if ($eece == 'eece') then
-    set enddn = 'valdneece'
-    set endvdn = 'valdn'
-endif
-set grr2
-if ($grr == 'grr') then
-    set grr2 = '_grr'
-endif
-cat << theend > $def
- 3,'$file.rhopw',   'unknown','formatted',0
- 4,'$file.inm',     'unknown','formatted',0
- 5,'$file.in0$grr2$eece',     'old',    'formatted',0
- 6,'$file.output0$grr2', 'unknown','formatted',0
- 7,'$file.vorbup',  'unknown','formatted',0
- 8,'$file.clmsum',  'old',    'formatted',0
- 9,'$file.vtotal$grr2',  'unknown','formatted',0
-10,'$file.vcoul$grr2',   'unknown','formatted',0
-11,'$file.r2v$grr2',     'unknown','formatted',0
-12,'$file.clm$endup',   'unknown','formatted',0
-13,'$file.clm$enddn',   'unknown','formatted',0
-16,'$file.vsp$grr2$updn','unknown','formatted',0
-17,'$file.vsp${grr2}dn',   'unknown','formatted',0
-18,'$file.vns$grr2$updn','unknown','formatted',0
-19,'$file.vns${grr2}dn',   'unknown','formatted',0
-20,'$file.struct',  'old',    'formatted',0
-21,'$file.scf0$grr2',    'unknown','formatted',0
-28,'$file.vrespsum','unknown','formatted',0
-29,'$file.vresp$endvup', 'unknown','formatted',0
-30,'$file.vresp$endvdn', 'unknown','formatted',0
-50,'$file.eeceup', 'unknown','formatted',0
-51,'$file.eecedn', 'unknown','formatted',0
-62,'$file.grr',    'unknown','formatted',0
-theend
-if ($grr == '') then
-  echo "61,'$file.in0abp',     'unknown','formatted',0" >>$def
-else if ($grr == 'grr') then
-  echo "33,'$file.r2v',   'unknown','formatted',0" >>$def
-  echo "60,'$file.inhf',   'unknown','formatted',0" >>$def
-  echo "61,'$file.in0xy',  'unknown','formatted',0" >>$def
-endif
-
-breaksw
-
 
 case lapw1:
 #if ($?band) then
@@ -669,69 +635,46 @@ endif
 
 breaksw
 
-#Clas-start
-case lapwkp:
-set exe = $command$cmplx
-if ($hf == hf) then
-  set ending = '_fbz'
-endif
-cat << theend > $def
-3, '$file.inkp',                 'OLD',     'FORMATTED',  0
-6, '$file.outputkp$updn',        'UNKNOWN', 'FORMATTED',  0
-8, '$file.output1$updn',         'OLD',     'FORMATTED',  0
-10,'${scratch}$file.vector$hf$updn','OLD',     'UNFORMATTED',9000
-20,'$file.struct',               'OLD',     'FORMATTED',  0
-22,'$file.klist$ending',                'UNKNOWN', 'FORMATTED',  0
-30,'$file.energy$hf$updn',          'UNKNOWN', 'FORMATTED',  0
-40,'$file.pmat$updn',            'OLD',     'FORMATTED',  0
-theend
-breaksw
-#Clas-end
-
-
 case lapw2:
-if ($nmrhf != 'nmrhf') then
-  if ( $para == para && $hf == hf ) then
-    echo "Parallel lapw2 with HF-option is not allowed. Stop"
-    goto error
-  endif
-endif
-rm -f .oldin2 .oldin2a
+#rm -f .oldin2
+rm -f .oldin2a
+if(-e .oldin2) echo "WARNING: .oldin2 file exists, probably from spin-up or a previous crash"
 if ($?band) then
-  set old="`head -1 $file.in2$cmplx |cut -c1-5`"
-  cp $file.in2$cmplx .oldin2
+#  set old="`head -1 $file.in2$cmplx |cut -c1-5`"
+  if(! -e .oldin2) cp $file.in2$cmplx .oldin2
   sed "3s/^...../ROOT /" .oldin2 >.oldin2t
   sed "1s/^...../QTL  /" .oldin2t >$file.in2$cmplx
   rm .oldin2t
   unset qtl
 endif
 if ($?qtl) then
-  set old="`head -1 $file.in2$cmplx |cut -c1-5`"
+#  set old="`head -1 $file.in2$cmplx |cut -c1-5`"
   if(! -e .oldin2) cp $file.in2$cmplx .oldin2
   sed "1s/^...../QTL  /" .oldin2 >$file.in2$cmplx
 endif
 if ($?alm) then
-  set old="`head -1 $file.in2$cmplx |cut -c1-5`"
+#  set old="`head -1 $file.in2$cmplx |cut -c1-5`"
   if(! -e .oldin2) cp $file.in2$cmplx .oldin2
   sed "1s/^...../ALM  /" .oldin2 >$file.in2$cmplx
 endif
 if ($?almd) then
-  set old="`head -1 $file.in2$cmplx |cut -c1-5`"
+#  set old="`head -1 $file.in2$cmplx |cut -c1-5`"
   if(! -e .oldin2) cp $file.in2$cmplx .oldin2
-  sed "1s/^...../ALMD /" .oldin2 >$file.in2$cmplx
+  sed "1s/^...../ALMD /" $file.in2$cmplx > .oldin2_int
+  mv .oldin2_int $file.in2$cmplx
 endif
 if ($?qdmft) then
-  set old="`head -1 $file.in2$cmplx |cut -c1-5`"
+#  set old="`head -1 $file.in2$cmplx |cut -c1-5`"
   if(! -e .oldin2) cp $file.in2$cmplx .oldin2
   sed "1s/^...../QDMFT/" .oldin2 >$file.in2$cmplx
 endif
 if ($?efg) then
-  set old="`head -1 $file.in2$cmplx |cut -c1-5`"
+#  set old="`head -1 $file.in2$cmplx |cut -c1-5`"
   if(! -e .oldin2) cp $file.in2$cmplx .oldin2
   sed "1s/^...../EFG  /" .oldin2 >$file.in2$cmplx
 endif
 if ($?fermi) then
-  set old="`head -1 $file.in2$cmplx |cut -c1-5`"
+#  set old="`head -1 $file.in2$cmplx |cut -c1-5`"
   if(! -e .oldin2) cp $file.in2$cmplx .oldin2
   sed "1s/^...../FERMI/" .oldin2 >$file.in2$cmplx
 endif
@@ -749,29 +692,13 @@ if ($?emin1) then
     rm .oldin2a
   endif
 endif
-#if ($?emin1) then
-#  set old1=`head -2 $file.in2$cmplx |tail -1`
-#  if(! -e .oldin2) cp $file.in2$cmplx .oldin2
-#  sed "2s/$old1[1]/$emin/" .oldin2 >$file.in2$cmplx
-#  if ($?emax1) then
-#    cp $file.in2$cmplx .oldin2a
-#    set old2=`head -3 $file.in2$cmplx |tail -1`
-#    sed "3s/^...../ALL  /" .oldin2a >$file.in2$cmplx
-#    cp $file.in2$cmplx .oldin2a
-#    sed "3s/$old2[2]/$emax/" .oldin2a >$file.in2$cmplx
-#    rm .oldin2a
-#  endif
-#endif
 set exe = $command$cmplx$para
 set dopara = 1
 set ending = 'val'
 if ($sc == 's') set ending = 'sc'
-if ($hf == hf) then
-  if ($nmrhf == 'nmrhf') then
-    set ending3 = '_ibz'
-  else
-    set ending3 = '_fbz'
-  endif
+if (($hf == hf) && ($redklist == 'redklist')) then
+  set ending3 = '_ribz'
+  set ending4 = '_rbz'
 endif
 if ($sodum != 'dum') then
   set sodum=$dnup
@@ -785,7 +712,6 @@ cat << theend > $def
  7,'$file.vorb$updn','unknown','formatted',0
  8,'$file.clm$ending$updn$eece','unknown','formatted',0
 10,'${scratch}$file.vector$sc$hf$so$updn', 'unknown','unformatted',9000
-11,'$file.weight$sc$hf$updn',    'unknown','formatted',0
 13,'$file.recprlist',      'unknown','unformatted',9000
 14,'$file.kgen$sc$ending3',        'unknown','formatted',0
 15,'$file.tmp$updn',       'unknown','unformatted',0
@@ -797,13 +723,14 @@ cat << theend > $def
 21,'$file.scf2$sc$hf$updn','unknown','formatted',0
 922,'$file.rotlm',   'unknown',    'formatted',0
 23,'$file.radwf$updn',   'unknown',    'formatted',0
-26,'$file.weigh$hf$updn',   'unknown','unformatted',0
-27,'$file.weigh$hf$dnup',   'unknown','unformatted',0
-29,'$file.energy$sc$hf$sodum','unknown','formatted',0
-30,'$file.energy$sc$hf$so$updn', 'unknown','formatted',0
+26,'$file.weight$sc$hf$updn$ending4',   'unknown','formatted',0
+27,'$file.weight$sc$hf$dnup$ending4',   'unknown','formatted',0
+29,'$file.energy$sc$hf$sodum$ending4','unknown','formatted',0
+30,'$file.energy$sc$hf$so$updn$ending4', 'unknown','formatted',0
 32,'$file.qdmft$updn',   'unknown',    'formatted',0
 34,'$file.oubwin$updn',   'unknown',    'formatted',0
 231,'$file.dmftsym',   'unknown',    'formatted',0
+
 theend
 if ($so == so ) echo "12,'$file.norm$sc$so$updn',    'unknown','formatted',0" >>$def
 if ($?orb) echo "25,'$file.indm$cmplx',   'old','formatted',0" >>$def
@@ -820,33 +747,33 @@ set dnup1
 if ( $updn == up ) set dnup1=dn
 set exe = lapwso$para
 set dopara = 1
-set def = lapwso.def
+#set def = lapwso.def
 cat << theend > $def
 4 ,'$file.in1$cmplx$sc',   'old',    'formatted',0
 5 ,'$file.inso', 'old',    'formatted',0
 6 ,'$file.outputso',   'unknown','formatted',0
 8 ,'$file.scfso',       'unknown','formatted',0
-9 ,'${scratch}$file.vector$dnup1',    'old',    'unformatted',9000
-10 ,'${scratch}$file.vectorup',    'unknown',    'unformatted',9000
+9 ,'${scratch}$file.vector$sc$dnup1',    'old',    'unformatted',9000
+10 ,'${scratch}$file.vector${sc}up',    'unknown',    'unformatted',9000
 18,'$file.vsp$dnup1',  'old','formatted',0
 19,'$file.vspup',  'unknown','formatted',0
 20 ,'$file.struct',    'old',    'formatted',0
 22,'$file.vns$dnup1',  'old','formatted',0
 23,'$file.vnsup',  'unknown','formatted',0
-41,'${scratch}$file.vectorsodn',  'unknown','unformatted',9000
-42,'${scratch}$file.vectorso$updn',  'unknown','unformatted',9000
+41,'${scratch}$file.vector${sc}sodn',  'unknown','unformatted',9000
+42,'${scratch}$file.vector${sc}so$updn',  'unknown','unformatted',9000
 44,'$file.vect1',  'unknown','unformatted',9000
 45,'$file.normsodn',  'unknown','formatted',0
 46,'$file.normsoup',  'unknown','formatted',0
-51,'$file.energysodn',  'unknown','formatted',9000
-52,'$file.energyso$updn',  'unknown','formatted',9000
+51,'$file.energy${sc}sodn',  'unknown','formatted',9000
+52,'$file.energy${sc}so$updn',  'unknown','formatted',9000
 53,'$file.energydum',  'unknown','formatted',9000
-54,'$file.energy$dnup1',  'old','formatted',9000
-55 ,'$file.energyup',    'unknown',    'formatted',9000
+54,'$file.energy${sc}$dnup1',  'old','formatted',9000
+55 ,'$file.energy${sc}up',    'unknown',    'formatted',9000
 theend
 if($?orb) echo "11,'$file.vorbdn',  'unknown','formatted',0" >> $def
 if($?orb) echo "12,'$file.vorbup',  'unknown','formatted',0" >> $def
-if($?orb) echo "13,'$file.vorbdu',  'unknown','formatted',0" >> $def
+if($?orb) echo "13,'$file.vorbud',  'unknown','formatted',0" >> $def
 breaksw
 
 case lapwdm:
@@ -864,7 +791,7 @@ cat << theend > $def
 19,'$file.vsp$dnup',       'unknown','formatted',0
 20,'$file.struct',         'old',    'formatted',0
 21,'$file.scfdm$updn',   'unknown','formatted',0
-26,'$file.weigh$hf$updn',   'unknown','unformatted',0
+26,'$file.weight$hf$updn',   'unknown','formatted',0
 50,'$file.energy$sc$hf$so$updn', 'unknown','formatted',9000
 51,'$file.energy$sc$hf$so$dnup', 'unknown','formatted',9000
 12,'$file.vorb$updn',     'unknown','formatted',0
@@ -896,19 +823,19 @@ cat << theend > $def
 31,'$file.br1orb$updn',    'unknown','unformatted',0
 32,'$file.br2orb$updn',    'unknown','unformatted',0
 theend
-if ($?du) then
+if ($?ud) then
 cat << theend >> $def
 11,'$file.dmatud'     ,'unknown','formatted',0
-12,'$file.vorbdu',     'unknown','formatted',0
-13,'$file.vorbdu_old',     'unknown','formatted',0
+12,'$file.vorbud',     'unknown','formatted',0
+13,'$file.vorbud_old',     'unknown','formatted',0
 14,'$file.energyup$pip',      'unknown','formatted',0
 18,'$file.vspup',       'unknown','formatted',0
-21,'$file.scforbdu',      'unknown','formatted',0
+21,'$file.scforbud',      'unknown','formatted',0
 theend
 else
 cat << theend >> $def
 12,'$file.vorb$updn',     'unknown','formatted',0
-13,'$file.vorb$updn_old',     'unknown','formatted',0
+13,'$file.vorb${updn}_old',     'unknown','formatted',0
 14,'$file.energy$updn$pip',      'unknown','formatted',0
 18,'$file.vsp$updn',       'unknown','formatted',0
 21,'$file.scforb$updn',      'unknown','formatted',0
@@ -929,6 +856,7 @@ else
 endif
 if ($nmrhf == 'nmrhf') then
   set ending3 = '_nmr'
+  set scratchnmrhf=$scratch
 endif
 cat << theend > $def
  4,'$file.inhf',                               'old',    'formatted',0
@@ -938,32 +866,70 @@ cat << theend > $def
  8,'$file.clm$ending1',                        'unknown','formatted',0
  9,'$file.in1$cmplx$ending3',                  'old',    'formatted',0
 10,'${scratch}$file.vector$sc$so$updn',        'old',    'unformatted',9000
-11,'${scratch}$file.vectorhf$sc$so${updn}_old','old',    'unformatted',9000
-12,'${scratch}$file.vectorhf$sc$so$updn',      'unknown','unformatted',9000
-14,'$file.r2v_grr$ending2',                    'old',    'formatted',0
+11,'$file.vectorhf$sc$so${updn}_old','old',    'unformatted',9000
+12,'${scratchnmrhf}$file.vectorhf$sc$so$updn', 'unknown','unformatted',9000
+13,'$file.klist_ibz_all',                      'old',    'formatted',0
+14,'$file.r2v_grr$ending2',                    'unknown','formatted',0
 15,'$file.klist_fbz',                          'old',    'formatted',0
 16,'$file.klist_ibz',                          'old',    'formatted',0
 17,'$file.outputkgenhf',                       'old',    'formatted',0
+18,'$file.energyhf$so$updn',                   'unknown','formatted',0
 19,'$file.clmcor$updn',                        'old',    'formatted',0
 20,'$file.struct',                             'old',    'formatted',0
 21,'$file.scfhf$updn',                         'unknown','formatted',0
-26,'$file.weighhf$updn',                       'old',    'unformatted',0
-28,'$file.inc',                                'old',    'formatted',0
-29,'$file.corewf$updn',                        'old',    'formatted',0
-31,'$file.energyhf$so$updn',                   'unknown','formatted',0
-32,'$file.vsp$updn',                           'old',    'formatted',0
-33,'$file.vsp${updn}_old',                     'old',    'formatted',0
+22,'$file.inc',                                'old',    'formatted',0
+23,'$file.corewf$updn',                        'old',    'formatted',0
+24,'$file.vsp$updn',                           'old',    'formatted',0
+25,'$file.vsp${updn}_old',                     'old',    'formatted',0
+26,'$file.weighthf$updn',                      'old',    'formatted',0
 theend
-if ( $band1 == '_band' )                                  echo "40,'$file.klist_band'    ,'unknown','formatted',0" >>$def
-if ( $diaghf == 'diaghf' )                                echo "41,'$file.diaghf'        ,'unknown','formatted',0" >>$def
-if ( $newklist == 'newklist' )                            echo "42,'$file.klist_fbz_old' ,'unknown','formatted',0" >>$def
-if ( $noibz == 'noibz' )                                  echo "43,'$file.noibz'         ,'unknown','formatted',0" >>$def
-if ( $nonself == 'nonself' )                              echo "44,'$file.nonself'       ,'unknown','formatted',0" >>$def
-if ( $para == 'para' )                                    echo "45,'$file.para'          ,'unknown','formatted',0" >>$def
-if ( $redklist == 'redklist' && $newklist != 'newklist' ) echo "46,'$file.klist_rfbz'    ,'unknown','formatted',0" >>$def
-if ( $nmrhf == 'nmrhf' )                                  echo "47,'$file.qvec'          ,'unknown','formatted',0" >>$def
-if ( $gw == 'gw' )                                        echo "48,'$file.gw$updn'       ,'unknown','formatted',0" >>$def
-if ( $redklist == 'redklist' && $newklist == 'newklist' ) echo "49,'$file.klist_rfbz_old','unknown','formatted',0" >>$def
+if ($redklist == 'redklist') then
+  echo "40,'$file.klist_rfbz','unknown','formatted',0" >>$def
+  echo "41,'$file.klist_ribz','unknown','formatted',0" >>$def
+  echo "42,'$file.energyhf$so${updn}_rbz','unknown','formatted',0" >>$def
+  echo "43,'$file.weighthf${updn}_rbz','unknown','formatted',0" >>$def
+endif
+if ($newklist == 'newklist') then
+  echo "44,'$file.klist_fbz_old','unknown','formatted',0" >>$def
+  echo "45,'$file.klist_ibz_old','unknown','formatted',0" >>$def
+  echo "46,'$file.outputkgenhf_old','unknown','formatted',0" >>$def
+endif
+if (($redklist == 'redklist') && ($newklist == 'newklist')) then
+  echo "47,'$file.klist_rfbz_old','unknown','formatted',0" >>$def
+  echo "48,'$file.klist_ribz_old','unknown','formatted',0" >>$def
+endif
+if ($band1 == '_band') echo "49,'$file.klist_band','unknown','formatted',0" >>$def
+if ($diaghf == 'diaghf') echo "50,'$file.diaghf','unknown','formatted',0" >>$def
+if ($nonself == 'nonself') echo "51,'$file.nonself','unknown','formatted',0" >>$def
+if ($para == 'para') echo "52,'$file.para','unknown','formatted',0" >>$def
+if ($nmrhf == 'nmrhf') echo "53,'$file.qvec','unknown','formatted',0" >>$def
+if ($gw == 'gw') echo "54,'$file.gw$updn','unknown','formatted',0" >>$def
+if ($vnonloc == 'slater') then
+  if ($para != 'para') then
+    echo "55,'$file.r2v_nonloc${ending2}','unknown','unformatted',0" >>$def
+  else if ($para == 'para') then
+    echo "55,'$file.r2v_nonlocvv${ending2}','unknown','unformatted',0" >>$def
+    echo "56,'$file.r2v_nonlocvc${ending2}','unknown','unformatted',0" >>$def
+    echo "57,'$file.r2v_nonloccc${ending2}','unknown','unformatted',0" >>$def
+  endif
+else if ($vnonloc == 'kli') then
+  if ($para != 'para') then
+    echo "58,'$file.r2v_nonloc${ending2}','unknown','unformatted',0" >>$def
+  else if ($para == 'para') then
+    echo "58,'$file.r2v_nonlocvv${ending2}','unknown','unformatted',0" >>$def
+    echo "59,'$file.r2v_nonlocvc${ending2}','unknown','unformatted',0" >>$def
+    echo "60,'$file.r2v_nonloccc${ending2}','unknown','unformatted',0" >>$def
+  endif
+  echo "61,'$file.r2v${ending2}','old','formatted',0" >>$def
+endif
+if ($modehf == 'mode1') then
+  echo "62,'$file.modehf','unknown','formatted',0" >>$def
+else if ($modehf == 'mode2') then
+  echo "63,'$file.modehf','unknown','formatted',0" >>$def
+else if ($modehf == 'mode3') then
+  echo "64,'$file.modehf','unknown','formatted',0" >>$def
+endif
+
 breaksw
 
 case averx:
@@ -1021,11 +987,11 @@ theend
 breaksw
 
 case optic:
-if ( $para == para && $hf == hf ) then
-  echo "Parallel optic with HF-option is not allowed. Stop"
-  goto error
-endif
 set exe = $command$cmplx$para
+if !(-e $file.inop || -z $file.inop) then
+  cp $WIENROOT/SRC_templates/case.inop $file.inop
+  echo "default $file.inop generated from SRC_templates"
+endif
 set dopara = 1
 cat << theend > $def
 4, '${scratch}$file.mommat2$updn' ,  'UNKNOWN',    'FORMATTED',  0
@@ -1053,13 +1019,10 @@ breaksw
 
 case nlo_core:
 set exe = $command
-if ($hf == hf) then
-  set ending = '_fbz'
-endif
 cat << theend > $def
 3,'$file.mme$updn',  'OLD',   'FORMATTED', 0
-4,'$file.klist$ending'   ,  'OLD','FORMATTED',  0
-10,'$file.kgen$ending'   ,  'OLD','FORMATTED',  0
+4,'$file.klist'   ,  'OLD','FORMATTED',  0
+10,'$file.kgen'   ,  'OLD','FORMATTED',  0
 17,'$file.weight$hf$updn','OLD','FORMATTED',  0
 20,'$file.meta$updn' ,'UNKNOWN',    'FORMATTED',  0
 21,'$file.innlo_core'     ,'OLD',    'FORMATTED',  0
@@ -1083,8 +1046,9 @@ breaksw
 
 case joint:
 set exe = $command
-if ($hf == hf) then
-  set ending = '_fbz'
+if !(-e $file.injoint || -z $file.injoint) then
+  cp $WIENROOT/SRC_templates/case.injoint $file.injoint
+  echo "default $file.injoint generated from SRC_templates"
 endif
 cat << theend > $def
  3,'${scratch}$file.symmat$updn' ,  'OLD','FORMATTED',  0
@@ -1095,7 +1059,7 @@ cat << theend > $def
  8,'$file.sigma_intra2$updn'  ,  'UNKNOWN','FORMATTED',  0
  9, '${scratch}$file.mat_diag$updn' ,  'UNKNOWN',    'FORMATTED',  0
 11,'$file.intra2$updn'  ,  'UNKNOWN','FORMATTED',  0
-14,'$file.kgen$ending'   ,  'OLD','FORMATTED',  0
+14,'$file.kgen'   ,  'OLD','FORMATTED',  0
 20,'$file.struct' ,  'OLD',    'FORMATTED',  0
 23,'${scratch}$file.symmat1$updn' ,  'UNKNOWN','FORMATTED',  0
 24,'${scratch}$file.symmat2$updn' ,  'UNKNOWN','FORMATTED',  0
@@ -1114,6 +1078,10 @@ theend
 breaksw
 
 case kram:
+if !(-e $file.inkram || -z $file.inkram) then
+  cp $WIENROOT/SRC_templates/case.inkram $file.inkram
+  echo "default $file.inkram generated from SRC_templates"
+endif
 set exe = $command
 cat << theend > $def
  5,'$file.inkram'   ,  'OLD','FORMATTED',  0
@@ -1138,10 +1106,10 @@ cat << theend > $def
  8,'$file.scfdm$updn',    'unknown','formatted',0
 17,'$file.clmval$updn$eece',    'unknown','formatted',0
 20,'$file.struct',    'old',    'formatted',0
-21,'$file.scf2$updn',      'unknown','formatted',0
+21,'$file.scf2${sc}$hf$updn',      'unknown','formatted',0
 22,'$file.scf2p',       'unknown','formatted',0
 theend
-if ($?du) then
+if ($?ud) then
 cat << theend >> $def
 10,'$file.dmatup'     ,'unknown','formatted',0
 11,'$file.dmatdn'     ,'unknown','formatted',0
@@ -1171,18 +1139,33 @@ breaksw
 
 case sumhfpara:
 set exe = sumhfpara$cmplx
+if (($updn == '') || ($updn == 'up')) then
+  set ending = ''
+else
+  set ending = 'dn'
+endif
+if ($nmrhf == 'nmrhf') then
+  set scratchnmrhf=$scratch
+endif
 set deffile_only
 cat << theend > $def
- 6,'$file.outputhfsum$updn', 'unknown','formatted',0
-15,'$file.klist_fbz',        'old',    'formatted',0
-16,'$file.klist_ibz',        'old',    'formatted',0
-18,'$file.vectorhf$updn',    'unknown','unformatted',0
-19,'$file.energyhf$updn',    'unknown','formatted',0
-20,'$file.struct',           'old',    'formatted',0
+ 6,'$file.outputhfsum$updn',            'unknown','formatted',0
+ 7,'$file.klist_ibz',                   'old',    'formatted',0
+ 8,'${scratchnmrhf}$file.vectorhf$updn','unknown','unformatted',0
+ 9,'$file.energyhf$updn',               'unknown','formatted',0
+10,'$file.struct',                      'old',    'formatted',0
 theend
-if ( $band1 == '_band' )       echo "40,'$file.klist_band'   ,'unknown','formatted',0" >>$def
-if ( $nmrhf == 'nmrhf' )       echo "47,'$file.qvec'         ,'unknown','formatted',0" >>$def
-if ( $gw == 'gw' )             echo "48,'$file.gw$updn'      ,'unknown','formatted',0" >>$def
+if ($redklist == 'redklist') echo "11,'$file.klist_ribz'           ,'unknown','formatted',0" >>$def
+if (($redklist == 'redklist') && ($band1 != '_band') && ($nmrhf != 'nmrhf')) echo "12,'$file.energyhf${updn}_rbz','unknown','formatted',0" >>$def
+if ($band1 == '_band')       echo "13,'$file.klist_band'           ,'unknown','formatted',0" >>$def
+if ($nmrhf == 'nmrhf')       echo "14,'$file.qvec'                 ,'unknown','formatted',0" >>$def
+if ($gw == 'gw')             echo "15,'$file.gw$updn'              ,'unknown','formatted',0" >>$def
+if (($vnonloc == 'slater') || ($vnonloc == 'kli')) then
+  echo "16,'$file.r2v_nonlocvv${ending}','unknown','unformatted',0" >>$def
+  echo "17,'$file.r2v_nonlocvc${ending}','unknown','unformatted',0" >>$def
+  echo "18,'$file.r2v_nonloccc${ending}','unknown','unformatted',0" >>$def
+  echo "19,'$file.r2v_nonloc${ending}','unknown','unformatted',0" >>$def
+endif
 breaksw
 
 case lstart:
@@ -1263,6 +1246,7 @@ breaksw
 
 
 case mixer_vresp:
+mixer_vresp:
 set exe = mixer
 	if !(-e $file.clmvalup || -z $file.clmvalup) then
 cat << theend > $def
@@ -1306,6 +1290,7 @@ theend
 
 case mixer:
 case mixer_New:
+if($?vresp) goto mixer_vresp
 # cp case.struct for MSR1a
 set testmsr=`head -1 $file.inm | grep "MSR[12]a" | cut -c1-3`
 set testmsr1=`head -1 $file.inm | grep "MSECa" | cut -c1-5`
@@ -1369,8 +1354,6 @@ echo "73,'$file.vorbud','unknown','formatted',0" >> $def
 echo "74,'$file.vorbup_old','unknown','formatted',0" >> $def
 echo "75,'$file.vorbdn_old','unknown','formatted',0" >> $def
 echo "76,'$file.vorbud_old','unknown','formatted',0" >> $def
-#  sed 's/dmat/vorb/g' $def > help_1234
-#  mv help_1234 $def
 endif
 if ("$dftd3" == 'dftd3') then
 echo "80,'.EDISP',        'old','formatted',0" >> $def
@@ -1405,14 +1388,15 @@ breaksw
 
 case tetra:
 set exe = tetra
-if ($hf == hf) then
-  set ending = '_fbz'
+if !(-e $file.int || -z $file.int) then
+  cp $WIENROOT/SRC_templates/case.int $file.int
+  echo "default $file.int generated from SRC_templates"
 endif
 cat << theend > $def
 5 ,'$file.int',         'old','formatted',0
 6 ,'$file.outputt$updn','unknown','formatted',0
-3 ,'$file.kgen$ending',        'old',    'formatted',0
-2 ,'$file.klist$ending',        'unknown',    'formatted',0
+3 ,'$file.kgen',        'old',    'formatted',0
+2 ,'$file.klist',        'unknown',    'formatted',0
 7 ,'$file.dos1$updn',   'unknown','formatted',0
 57,'$file.dos1ev$updn', 'unknown','formatted',0
 theend
@@ -1592,7 +1576,7 @@ theend
 if(! $?enefile) then
   echo "7, '$file.output$typ$updnso',  'old','formatted',0" >>$def
 else
-  echo "8, '$file.energy$so$updn',  'old','formatted',0" >>$def
+  echo "8, '$file.energy$hf$so$updn',  'old','formatted',0" >>$def
 endif
 #endif
 breaksw
@@ -1661,11 +1645,8 @@ if (`grep -i xqtl .temp_making_elnes.def` != ) then
 else
   set number =
 endif
-if ($hf == hf) then
-  set ending = '_fbz'
-endif
 cat << theend > $def
-3, '$file.kgen$ending','unknown','formatted',0
+3, '$file.kgen','unknown','formatted',0
 5, '$file.innes',           'old',    'formatted',0
 6, '$file.outputelnes$updn',       'unknown','formatted',0
 7, '$file.inc',             'unknown',    'formatted',0
@@ -1692,11 +1673,8 @@ breaksw
 ## Remove the section for telnes2 and replace it by:
 case telnes3:
 set exe = $command
-if ($hf == hf) then
-  set ending = '_fbz'
-endif
 cat << theend > $def
-3, '$file.kgen$ending','unknown','formatted',0
+3, '$file.kgen','unknown','formatted',0
 5, '$file.innes',           'old',    'formatted',0
 6, '$file.outputelnes$updn',       'unknown','formatted',0
 7, '$file.inc',             'unknown',    'formatted',0
@@ -1723,13 +1701,21 @@ theend
 breaksw
 
 case broadening:
+if !(-e $file.inb || -z $file.inb) then
+  cp $WIENROOT/SRC_templates/case.inb $file.inb
+  echo "default $file.inb created, please check"
+endif
 set exe = broadening
 cat << theend > $def
  5,'$file.inb','old','formatted',0
  6,'$file.outputbroadening$updn','unknown','formatted',0
 46,'$file.broadspec$updn','unknown','formatted',0
-47,'$file.elnes$updn','old','formatted',0
 theend
+if($?xspec) then
+  echo "47,'$file.xspec$updn','old','formatted',0">>$def
+else
+  echo "47,'$file.elnes$updn','old','formatted',0">>$def
+endif
 breaksw
 
 case hex2rhomb:
@@ -1828,7 +1814,7 @@ if (!(-e $file.poscar) || (-z $file.poscar)) then
       echo "$file.poscar created"
 endif
 
-rm -f .EDISP dftd3_gradient dftd3_cellgradient dftd3.error
+rm -f $file.scfdftd3 .EDISP dftd3_gradient dftd3_cellgradient dftd3.error
 set dftd3_abc
 set line1=`grep -i abc $file.indftd3`
 if ($#line1 != 0) then
@@ -1909,11 +1895,16 @@ set exe = $command
 $t $bin/$command $file.$dftd3_format $dftd3_pbc $dftd3_method \
   $dftd3_func $dftd3_func_value $dftd3_grad $dftd3_abc \
   $dftd3_cutoff $dftd3_cutoff_value $dftd3_cnthr $dftd3_cnthr_value \
-  $dftd3_num > $file.scfdftd3
-if (!(-e .EDISP)) then
-   echo "Error in DFTD3: file .EDISP is not present" > dftd3.error
+  $dftd3_num | tee $file.scfdftd3 > $file.scfdftd3
+if (!(-e $file.scfdftd3) || (-z $file.scfdftd3)) then
+   echo "Error in DFTD3: file case.scfdftd3 is not present" > dftd3.error
    exit(9)
 else
+   grep "Edisp /kcal,au,eV:" $file.scfdftd3 | cut -c -43 | cut -c 31- > .EDISP
+   if (!(-e .EDISP) || (-z .EDISP)) then
+      echo "Error in DFTD3: file .EDISP is not present" > dftd3.error
+      exit(9)
+   endif
    touch dftd3.error
 endif
 rm $running
@@ -1946,12 +1937,29 @@ cat << theend > $def
 theend
 breaksw
 
+case pes:
+set exe = pes
+cat << theend > $def
+2, '$WIENROOT/SRC_pes/Crosssections/', 'unknown','formatted',0
+6, '$file.outputpes$updn',    'unknown','formatted',0
+11,'$file.dos1ev$updn',     'old',    'formatted',9000
+12,'$file.dos2ev$updn',     'unknown',    'formatted',9000
+13,'$file.dos3ev$updn',     'unknown',    'formatted',9000
+14,'$file.dos4ev$updn',     'unknown',    'formatted',9000
+15,'$file.dos5ev$updn',     'unknown',    'formatted',9000
+16,'$file.dos6ev$updn',     'unknown',    'formatted',9000
+20,'$file.struct',          'old',    'formatted',0
+21,'$file.outputst',         'old',    'formatted',0
+30,'$file.pes$updn',      'unknown','formatted',0
+theend
+breaksw
+
 case irrep:
 set exe = irrep$para
 set dopara = 1
 cat << theend > $def
 5, '$file.irrep$hf$so$updn',      'unknown','formatted',0
-6, '$file.outputir$hf$so$updn',    'unknown','formatted',0
+6, '$file.outputir$so$updn',    'unknown','formatted',0
 9, '${scratch}$file.vector$hf$so$dnup',      'unknown',    'unformatted',9000
 10,'${scratch}$file.vector$hf$so$updn',      'old',    'unformatted',9000
 20,'$file.struct',          'old',    'formatted',0
@@ -2005,7 +2013,7 @@ cat << theend > $def
 20,'$file.struct',         'old',    'formatted',0
 21,'$file.scfq$updn',   'unknown',    'formatted',0
 22,'$file.rotlm',   'unknown',    'formatted',0
-26,'$file.weigh$hf$updn',       'old',    'unformatted',9000
+26,'$file.weight$hf$updn',       'old',    'formatted',9000
 29,'$file.tmp$updn','unknown','unformatted',9000
 30,'$file.qtltext$updn','unknown','formatted',0
 31,'$file.qtlatom$updn','unknown','formatted',0
@@ -2452,7 +2460,12 @@ endsw
 
 if ($?deffile_only) then
   if($exe == lapw1para || $exe == lapw1cpara ) then
-     $t $bin/$exe -norun $cmplx2 $scratchstring  $def
+   if ( $updn == up ) then
+      set exe = ($exe -up)
+   else if ($updn == dn ) then
+      set exe = ($exe -dn)
+   endif
+   $t $bin/$exe -norun $cmplx2 $scratchstring  $def
   endif
   rm $running
   exit(0)
@@ -2469,6 +2482,9 @@ if ( $para == para && $dopara) then
    endif
    if ($cmplx == c ) then
       set exe = ($exe -c)
+   endif
+   if ($sc == s ) then
+      set exe = ($exe -sc)
    endif
    if ($hf == hf) then
       set exe = ($exe -hf)
@@ -2487,6 +2503,15 @@ if ( $para == para && $dopara) then
    endif
    if ($gw == 'gw') then
       set exe = ($exe -gw)
+   endif
+   if ($redklist == 'redklist') then
+      set exe = ($exe -redklist)
+   endif
+   if ($vnonloc == 'slater') then
+      set exe = ($exe -slater)
+   endif
+   if ($vnonloc == 'kli') then
+      set exe = ($exe -kli)
    endif
 endif
 
@@ -2523,7 +2548,18 @@ if("$lapw2test" == 'lapw2') then
 	    set eferm=`grep ':FER  :' $file.scf2$sc$updn|cut -f 2 -d=`
 	    set efold=`head -1 $file.in1$cmplx${sc}|cut -c11-17 | sed -e "s/[a-zA-Z(,=]//g"`
             if($#efold == 0 ) set efold=0.5
-	    set eferm=`echo " if($eferm > $efold) {if ($eferm > $efold + 0.2) {$efold + 0.2} else {$eferm} } else {if($eferm < $efold - 0.2) {$efold - 0.2} else ($eferm*0.75+$efold*0.25) }" | bc -l`    # allow for max change of ef-old +- 0.2, pratt mix
+#LDM Addition/change
+            set mixf=0.6666666666667
+            if(! (-e $file.inm && ! -z $file.inm)) then
+              set testmsr=`head -1 $file.inm | grep "MSR[12]a" | cut -c1-3`
+              set testmsr1=`head -1 $file.inm | grep "MSECa" | cut -c1-5`
+              if($testmsr1 == 'MSECa') set testmsr=MSR
+              if ($testmsr == 'MSR') set mixf=0.5
+            endif
+            # allow for max change of ef-old +- 0.2, pratt mix
+            set eferm=`echo " if ($eferm > $efold + 0.2) {$efold + 0.2}  \
+                              else if($eferm < $efold - 0.2) {$efold - 0.2} \
+                              else ($eferm*$mixf+$efold*(1-$mixf) ) " | bc -l`
 	    set modus=`head -1 $file.in1$cmplx${sc} | cut -c1-5`
 	    echo "$modus  EF=$eferm   (WFFIL, WFPRI, ENFIL, SUPWF) " >$file.in1$cmplx${sc}_tmp
 	    tail -n +2 $file.in1$cmplx${sc} >> $file.in1$cmplx${sc}_tmp
@@ -2564,7 +2600,7 @@ FLAGS:
 -d    ->	create only the def-file
 -up   ->	runs up-spin
 -dn   ->	runs dn-spin
--du   ->	runs up/dn-crossterm
+-ud   ->	runs up/dn-crossterm
 -sc   ->	runs semicore calculation
 -c    ->	complex calculation (no inversion symmetry present)
 -p    ->        run lapw0/1/2/hf/so/dm/optic in parallel (needs .machines or .processes file)
@@ -2580,27 +2616,34 @@ FLAGS:
 -nmat_only->	runs lapw1 and yields only the matrixsize
 -nmr  ->	runs lapw1 in NMR mode
 -in1orig  ->	runs lapw2 but does not modify case.in1
--emin X ->	runs lapw2 with EMIN=X (in $file.in2$cmplx)
--all X Y ->	runs lapw2 with ALL and E-window X-Y (in $file.in2$cmplx)
+-emin X ->	runs lapw2 with EMIN=X (in $file.in2$cmplx1)
+-all X Y ->	runs lapw2 with ALL and E-window X-Y (in $file.in2$cmplx1)
 -qtl  ->        runs lapw2 and calculates QTL
 -alm  ->        runs lapw2 and calculates ALM,BLM
 -almd  ->       runs lapw2 and calculates ALM,BLM in lapw2 for DMFT (Aichhorn)
 -qdmft ->       runs lapw2 and calculates charges including DMFT (Aichhorn)
 -help_files ->  runs lapw2 and creates case.helpXX files
--vresp->        runs lapw2 and creates case.vrespval (for TAU/meta-GGA)
+-vresp->        for lapw2 and mixer, creates case.vrespval/sum (TAU/meta-GGA)
 -fermi->        runs lapw2 with FERMI switch
 -efg  ->        runs lapw2 with EFG switch
 -so   ->	runs lapw2/optic/spaghetti with def-file for spin-orbit calc.
 -hf  ->         runs lapw2 with Hartree-Fock/hybrid vectors
 -diaghf  ->     calculates only the diagonal elements of HF Hamiltonian
+-mode1/2/3 ->   modes 2 and 3 calculate hf with a better MPI scaling for memory
 -nonself  ->    calculates hf with Ex only (no eigenvalues/vectors)
--fbz   ->	runs kgen and generates a full mesh in the BZ
+-newklist ->    HF/hybrid-DFT calculation starting from a different k-mesh
+-redklist ->    HF/hybrid-DFT calculation with reduced k-mesh for the potential
+-slater->       calculation of the Slater potential by the HF module
+-kli  ->        calculation of the KLI potential by the HF module
+-gw   ->        write in case.gw the diagonal matrix elements of the HF/hybrid Hamiltonian for GW
+-fbz  ->	runs kgen and generates a full mesh in the BZ
 -fft  ->        runs dstart only up to case.in0_std creation
 -super->        runs dstart and creates new_super.clmsum (and not $file.clmsum)
 -lcore->        runs dstart with $file.rsplcore (produces $file.clmsc)
 -sel  ->        use reduced vector file in lapw7
 -settol 0.000x -> run sgroup with different tolerance
 -sigma->        run lstart with case.inst_sigma (autogenerated) for diff.dens.
+-dftd3 ->       run mixer with dftd3 forces
 -rxes->         run tetra using case.rxes weight file for RXES-spectroscopy.
 -rxesw E1 E2->  run tetra and create case.rxes file for RXES for energies E1-E2
 -enefile    ->  spaghetti+tetra with case.energy instead case.qtl (only tot-DOS)
@@ -2608,6 +2651,7 @@ FLAGS:
 -delta->        run arrows program with difference between two structures
 -copy ->        runs pairhess and copies .minpair to .minrestart and .minhess
 -telnes  ->     run qtl after generating case.inq based on case.innes
+-xspec   ->     run broadening with case.xspec instead of case.elnes
 -txt  ->        runs cif2struct using case.txt (see UG)
 -pp   ->        run wannier90 in "preprocessing mode"
 -wf N ->        run wplot for Wannier function N
@@ -2630,7 +2674,7 @@ case arrows:
 echo 'x arrows |-delta] '
 breaksw
 case broadening:
-echo 'x broadening |-up/dn] '
+echo 'x broadening |-xspec -up/dn] '
 breaksw
 case cif2struct:
 echo 'x cif2struct [-txt]'
@@ -2694,10 +2738,10 @@ case lapw1:
 echo 'x lapw1 [-c -up/-dn -it -noHinv -noHinv0 -p -nohns -orb -band -nmat_only -nmr -scratch dir]'
 breaksw
 case lapw2:
-echo 'x lapw2 [-c -up/-dn -p -so -qtl -alm -almd -qdmft -fermi -efg -hf -band -eece -vresp -in1orig -help_files -emin X -all X Y -scratch dir ]'
+echo 'x lapw2 [-c -up/-dn -p -so -orb -qtl -alm -almd -qdmft -fermi -efg -hf -redklist -band -eece -vresp -in1orig -help_files -emin X -all X Y -scratch dir ]'
 breaksw
 case hf:
-echo 'x hf [-c -up/-dn -p -band -diaghf -gw -nonself -noibz -newklist -redklist -nmrhf -scratch dir]'
+echo 'x hf [-c -up/-dn -p -band -diaghf -gw -mode1/2/3 -nonself -newklist -redklist -slater -kli -nmrhf -scratch dir]'
 breaksw
 case lapw3:
 echo 'x lapw3 [-c]'
@@ -2730,7 +2774,7 @@ case mini:
 echo 'x mini'
 breaksw
 case mixer:
-echo 'x mixer [-eece -orb]'
+echo 'x mixer [-eece -orb -dftd3 -vresp]'
 breaksw
 case nn:
 echo 'x nn'
@@ -2742,10 +2786,13 @@ case optimize:
 echo 'x optimize'
 breaksw
 case orb:
-echo 'x orb [ -up/-dn/-du -eece]'
+echo 'x orb [ -up/-dn/-ud -eece]'
 breaksw
 case pairhess:
 echo 'x pairhess [-copy]'
+breaksw
+case pes:
+echo 'x pes [-up/-dn]'
 breaksw
 case plane:
 echo 'x plane  ( needs plane.input, see   head $WIENROOT/SRC_trig/plane.f )'
@@ -2766,7 +2813,7 @@ case struct_afm_check:
 echo 'x struct_afm_check '
 breaksw
 case sumpara:
-echo 'x sumpara -d [-up/-dn/-dui -eece]     and than '
+echo 'x sumpara -d [-up/-dn/-ud -eece]     and than '
 echo 'sumpara [up/dn]sumpara.def #_of_processors'
 breaksw
 case supercell:
