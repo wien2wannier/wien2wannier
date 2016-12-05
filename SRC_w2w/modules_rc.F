@@ -288,7 +288,7 @@ subroutine l2Mmn(stru, inwf, num_kpts, NNTOT)
      talm=0.
      tmeas1=0.
      tmeas2=0.
-     call cputim(t1)
+     call cpu_time(t1)
 
      if(jatom > 1) lfirst = lfirst + stru%mult(jatom-1)
      ITAP=30+JATOM
@@ -312,11 +312,11 @@ subroutine l2Mmn(stru, inwf, num_kpts, NNTOT)
         k2loop: do k2=1,NNTOT
            if (k2 > 1) pair_index=pair_index+1
            kkk=KPB(pair_index)
-           call cputim(tt0)
+           call cpu_time(tt0)
            call almgen(Blm, stru, jatom, lfirst, Nb, kkk)
            BLM=conjg(BLM)
 
-           call cputim(tt1)
+           call cpu_time(tt1)
 
            ! calculate b=k2-k1 add BQ if going around BZ
            BX=XK(kkk)-KX1+BQX(pair_index)
@@ -339,7 +339,7 @@ subroutine l2Mmn(stru, inwf, num_kpts, NNTOT)
                  YLB(indexj)=conjg(YLB(indexj))*(0,1)**LJ
               enddo
            enddo
-           call cputim(tt2)
+           call cpu_time(tt2)
            muloop: do mu=1, stru%mult(jatom)
               latom=lfirst-1+mu
               arg1=Bx * stru%pos(1,latom)*TAU
@@ -378,7 +378,7 @@ subroutine l2Mmn(stru, inwf, num_kpts, NNTOT)
                  enddo l2loop
               enddo l1loop
            enddo muloop
-           call cputim(tt3)
+           call cpu_time(tt3)
            talm=talm+tt1-tt0
            tmeas1=tmeas1+tt2-tt1
            tmeas2=tmeas2+tt3-tt2
@@ -390,7 +390,7 @@ subroutine l2Mmn(stru, inwf, num_kpts, NNTOT)
      end do k1loop
      deallocate(ALM,BLM)
 
-     call cputim(t2)
+     call cpu_time(t2)
      talm=talm*(NNTOT+1)/NNTOT
      write(unit_out,*) 'CPU time used for atom ',JATOM,' ='&
           ,t2-t1,talm,tmeas1,tmeas2
@@ -706,7 +706,7 @@ subroutine planew(stru, NB, num_kpts, Nntot, maxx, maxy, maxz)
   t_b=0.d0
   t_prod=0.d0
 
-  call cputim(t1)
+  call cpu_time(t1)
   A_=0
   a_null=.false.
   a_null_fin=.false.
@@ -767,7 +767,7 @@ subroutine planew(stru, NB, num_kpts, Nntot, maxx, maxy, maxz)
      end do
   end do
   FAC(0,0,0)=FAC(0,0,0)+1
-  call cputim(t2)
+  call cpu_time(t2)
   write(unit_out,*)'t_init=',t2-t1
 
   ! read in k-point and basis vectors
@@ -775,7 +775,7 @@ subroutine planew(stru, NB, num_kpts, Nntot, maxx, maxy, maxz)
   do k1=1,num_kpts
      pair_index=pair_index+1
      kkk=KP(pair_index)
-     call cputim(tt1)
+     call cpu_time(tt1)
      b_=0
      do J=0,max
         if (a_null_fin(J,kkk)) then
@@ -797,7 +797,7 @@ subroutine planew(stru, NB, num_kpts, Nntot, maxx, maxy, maxz)
            b_(1:nb,j)=sum
         end if
      end do
-     call cputim(tt2)
+     call cpu_time(tt2)
      do k2=1,NNTOT
         if (k2 > 1) pair_index=pair_index+1
         kkk=KPB(pair_index)
@@ -829,7 +829,7 @@ subroutine planew(stru, NB, num_kpts, Nntot, maxx, maxy, maxz)
            end do
         end do
      end do
-     call cputim(tt3)
+     call cpu_time(tt3)
      t_b=t_b+tt2-tt1
      t_prod=t_prod+tt3-tt2
      if (k1 == 1) write(unit_out,*)'PLANEW TIME PER k-point:',t_b+t_prod
@@ -918,4 +918,4 @@ end module read_vec_m
 !! End:
 !!\---
 !!
-!! Time-stamp: <2016-11-24 14:41:18 assman@faepop71.tu-graz.ac.at>
+!! Time-stamp: <2016-12-05 13:09:01 assman@faepop71.tu-graz.ac.at>

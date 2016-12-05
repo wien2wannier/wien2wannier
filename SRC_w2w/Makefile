@@ -83,10 +83,6 @@ distclean: clean
 
 .PHONY: real complex all clean distclean
 
-# Comment about ‘cputim.o’: ‘siteconfig’ will copy one of the
-# ‘cputim_*.[fc]’ to ‘cputim.[fc]; the pattern rules below will then
-# make ‘cputim.o’
-
 #........................................................................
 #
 #  These object files have REAL and COMPLEX versions
@@ -110,10 +106,9 @@ RC_OBJS = $(filter-out $(R_OBJS), $(modrc_users))
 #  Object files common to both REAL and COMPLEX version
 #  (i.e., these are the same for REAL and COMPLEX)
 #
-OBJS = $(filter-out $(R_OBJS) $(RC_OBJS) cputim_%, \
+OBJS = $(filter-out $(R_OBJS) $(RC_OBJS), \
 	$(patsubst %.F, %.o, $(wildcard *.F)) \
-	$(patsubst %.f, %.o, $(wildcard *.f)) \
-	cputim.o)
+	$(patsubst %.f, %.o, $(wildcard *.f)))
 
 #........................................................................
 #
@@ -191,4 +186,4 @@ $(foreach o, $(modrc_users), $(R_DIR)/$o): $(R_DIR)/modules_rc.o
 $(foreach o, $(modrc_users), $(C_DIR)/$o): $(C_DIR)/modules_rc.o
 
 
-## Time-stamp: <2016-07-21 15:17:00 assman@faepop71.tu-graz.ac.at>
+## Time-stamp: <2016-12-05 13:11:39 assman@faepop71.tu-graz.ac.at>
