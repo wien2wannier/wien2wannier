@@ -36,7 +36,7 @@ The usual procedure
         - convergence of disentanglement and wannierization
         - under ``Final State´´: Wannier centers, spreads
    6.2) compare band structures, e.g. in gnuplot        CASE_band.dat
-        p 'CASE.spaghetti_ene' u ($4/.53):5, 'CASE_band.dat' w l
+        p 'CASE.spaghetti_ene' u ($4*1.89):5, 'CASE_band.dat' w l
    6.3) hopping amplitudes (CASE.win: `hr_plot=T´)      CASE_hr.dat
         real?  decaying fast enough?  symmetries?
 
