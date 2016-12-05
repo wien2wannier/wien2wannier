@@ -8,7 +8,7 @@
 
 SHELL=/bin/bash
 
-version = $(lastword '$version: v1.0.0-264-gfdb4035$')
+version = $(lastword '$version: v1.0.0-265-g625ba77$')
 
 VERSION = $(shell git describe 2>/dev/null || echo $(version))
 
