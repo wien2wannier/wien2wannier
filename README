@@ -10,8 +10,8 @@ obtain maximally localized Wannier functions from Wien2k calculations.
 In any published  papers arising from the use  of Wien2Wannier, please
 cite:
 
-   J.Kuneš, R.Arita, P.Wissgott, A.Toschi, H.Ikeda, K.Held,
-   Comp.Phys.Commun. 181, 1888 (2010)
+   J. Kuneš, R. Arita, P. Wissgott, A. Toschi, H. Ikeda, K. Held,
+   Comp. Phys. Commun. 181, 1888 (2010)
 
 If you  use additional codes  to process wien2wannier output,  such as
 Wannier90 or BerryPI, do not forget  to cite the appropriate papers as
