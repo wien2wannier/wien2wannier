@@ -9,7 +9,7 @@
 SHELL=/bin/bash
 
 ifndef VERSION
-   VERSION = $(lastword '$version: v1.0.0-262-gd80d6f1$')
+   VERSION = $(lastword '$version: v1.0.0-246-g3766a18$')
 endif
 
 SIMPLE      := SRC_trig doc test
@@ -50,7 +50,7 @@ distclean:
 ###
 ### This is a bare-bones install procedure for updating wien2wannier
 ### in an existing Wien2k directory.  Use with caution.
-target-dir ?= $(WIENROOT_TEST)
+target-dir ?= $(WIENROOT)
 install: exe = $(shell find SRC* -type f -perm /a+x)
 install: all
 	install -t$(target-dir) $(exe)
@@ -98,5 +98,3 @@ wien-dist: dist-tmp
 
 	for l in $(notdir $(w2wlinks)); do rm SRC_w2w/$$l; done
 	rm -rf $(dist-dir) $(Morig)
-
-
