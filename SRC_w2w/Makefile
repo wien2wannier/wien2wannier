@@ -73,13 +73,11 @@ complex: $(C_EXEC)
 
 all: real complex
 
-# we remove ‘*’ because ifort tends to leave other stuff than .mod and
-# .o files
 clean:
-	rm -f $(O_DIR)/* $(R_DIR)/* $(C_DIR)/*
+	rm -f $(objs) $(r_objs) $(c_objs) $(O_DIR)/*.mod $(R_DIR)/*.mod $(C_DIR)/*.mod
 
 distclean: clean
-	rm -f $(R_EXEC) $(C_EXEC)
+	rm -df $(R_EXEC) $(C_EXEC) f $(O_DIR) $(R_DIR) $(C_DIR)
 
 .PHONY: real complex all clean distclean
 
