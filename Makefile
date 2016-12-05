@@ -8,9 +8,9 @@
 
 SHELL=/bin/bash
 
-ifndef VERSION
-   VERSION = $(lastword '$version: v1.0.0-246-g3766a18$')
-endif
+version = $(lastword '$version: v1.0.0-263-g61376a5$')
+
+VERSION = $(shell git describe 2>/dev/null || echo $(version))
 
 SIMPLE      := SRC_trig doc test
 REALCOMPLEX := SRC_w2w SRC_wplot
