@@ -2230,6 +2230,24 @@ theend
    endif
 breaksw
 
+case join_vectorfiles: # for backwards-compatibility
+case joinvec:
+set exe=joinvec
+set dopara=1 para=para
+cat <<EOF >$def
+  4,'$file.klist',                          'old',    'formatted',  0
+ 20,'$file.struct',   	     		    'old',    'formatted',  0
+ 50,'$file.energy$so$updn',                 'old',    'formatted',  0
+ 51,'$file.energy$so$updn',                 'unknown','formatted',  0
+EOF
+if (! $?enefile) then
+  cat <<EOF >>$def
+ 10,'${scratch}$file.vector$sc$hf$so$updn', 'old',    'unformatted',0
+ 11,'$file.vector$sc$hf$so$updn',	    'unknown','unformatted',0
+EOF
+endif
+breaksw
+
 ### wien2wannier stuff ###
 case w2w:
 set exe = w2w$cmplx$para
@@ -2368,24 +2386,6 @@ if ( ! $?efermi ) then
 endif
 echo $emin $emax $efermi > $file.infind
 set exe = findbands
-breaksw
-
-case join_vectorfiles: # for backwards-compatibility
-case joinvec:
-set exe=joinvec
-set dopara=1 para=para
-cat <<EOF >$def
-  4,'$file.klist',                          'old',    'formatted',  0
- 20,'$file.struct',   	     		    'old',    'formatted',  0
- 50,'$file.energy$so$updn',                 'old',    'formatted',  0
- 51,'$file.energy$so$updn',                 'unknown','formatted',  0
-EOF
-if (! $?enefile) then
-  cat <<EOF >>$def
- 10,'${scratch}$file.vector$sc$hf$so$updn', 'old',    'unformatted',0
- 11,'$file.vector$sc$hf$so$updn',	    'unknown','unformatted',0
-EOF
-endif
 breaksw
 
 case combine_spinfiles:
