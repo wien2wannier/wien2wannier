@@ -2237,8 +2237,8 @@ set dopara=1 para=para
 cat <<EOF >$def
   4,'$file.klist',                          'old',    'formatted',  0
  20,'$file.struct',   	     		    'old',    'formatted',  0
- 50,'$file.energy$so$updn',                 'old',    'formatted',  0
- 51,'$file.energy$so$updn',                 'unknown','formatted',  0
+ 50,'$file.energy$hf$so$updn',              'old',    'formatted',  0
+ 51,'$file.energy$hf$so$updn',              'unknown','formatted',  0
 EOF
 if (! $?enefile) then
   cat <<EOF >>$def
