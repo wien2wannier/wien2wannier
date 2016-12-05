@@ -6,7 +6,7 @@
 
 -include ../make.sys
 
-SUBDIRS := PoC repl
+SUBDIRS := PoC
 
 .PHONY: all clean $(SUBDIRS) dist
 
