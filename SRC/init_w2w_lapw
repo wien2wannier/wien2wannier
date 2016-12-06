@@ -7,7 +7,7 @@
 ###    Based on ‘init_lapw’.
 ###
 ### Copyright 2009-2012 Philipp Wissgott
-###           2013-2015 Elias Assmann
+###           2013-2016 Elias Assmann
 
 #---> path- and file-names
 set file    = `pwd`
@@ -251,15 +251,15 @@ if ( -e $out1 && ! -z $out1 ) then
   if (! $?batch) then
     echo '-----> found `'"$out1' from a previous lapw1 run"
 
-    set b=r
-    while ($b == 'r')
+    set b=e
+    while ($b == 'e')
       echo "-----> enter energy window for findbands [Emin Emax] (eV):"
       set b=($<)
       total_exec findbands $sof $spf -all $b
       head -n8 $file.outputfind$updn
       echo ' . . .'
       tail $file.outputfind$updn
-      echo "-----> continue with write_inwf or rerun findbands (c/r)"
+      echo "-----> continue with write_inwf or rerun findbands (c/e)"
       set b=($<)
     end
   else if ( $?emin ) then
@@ -282,7 +282,10 @@ if (! $?batch) then
   if (! -e $file.inwf$dnup || -z $file.inwf$dnup) then
     echo "-----> copy inwf$updn to inwf$dnup (y/n)?"
     set b=($<)
-    if ($b != 'n') cp -v $file.inwf$updn $file.inwf$dnup
+    if ($b != 'n') then
+        cp -v $file.inwf$updn $file.inwf$dnup
+        editor $file.inwf$dnup
+    endif
   endif
 else
   if ($?mmn) then
