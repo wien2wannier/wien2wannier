@@ -21,7 +21,9 @@ Exit status:
 else  an error occurred
 '''
 
-__version__ = "$version: v1.0.0-284-gcef43d1$"
+import sys, argparse, re
+
+__version__ = "$version: v2.0.0$"
 
 try:
     __version__ = re.search(":\s*(.*?)\s*\$", __version__).group(1)
@@ -31,10 +33,10 @@ except:
 class InvalidError (ValueError):
     pass
 
-import sys, argparse, re
-
 P = argparse.ArgumentParser(description=__doc__,
                             formatter_class=argparse.RawDescriptionHelpFormatter)
+P.add_argument('-V', '-version', action='version',
+               version="checkinwplot_lapw "+__version__)
 P.parse_args()
 
 inwf = sys.stdin.readlines()
