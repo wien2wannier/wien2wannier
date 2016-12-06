@@ -24,6 +24,12 @@ wplot' calls this script automatically.
 
 Bugfixes and enhancements include:
 
+* In spin-polarized cases, `w2w' now expects separate input files
+  `case.inwfup' and `case.inwfdn'.
+
+* `init_w2w -b -all E1 E2' will now chose all bands which cross the
+  interval, not only those which remain in it over all k-points.
+
 * In `write_win':
 
   - fixed calculation of atom positions; `atoms_cart' is the default
