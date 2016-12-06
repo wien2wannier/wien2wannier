@@ -12,6 +12,7 @@ defwin=$bin/SRC_templates/case.win
 name=$(basename $0)
 file=$(basename $PWD)
 fresh=
+updn=
 
 usage () {
     cat <<EOF
@@ -26,6 +27,7 @@ FLAGS:
 -h,-H	->	this message
 -v,-verbose ->	be verbose about copying &c.
 -q,-quiet ->	do not warn or ask questions
+-up/-dn	->	spin-polarized
 -f	->	override  \`case'
 -fresh	->	write new \`case.win', do not update an existing one
 -tmpl	->	choose alternative \`win' template
@@ -69,7 +71,7 @@ while true; do
 
 	-tmpl)   tmpl=$2;   shift;;
 
-	-inwf)   inwf=$2;  shift;;
+	-inwf)   inwf=$2;   shift;;
 	-struct) struct=$2; shift;;
 	-klist)  klist=$2;  shift;;
 	-band)   band=$2;   shift;;
@@ -77,6 +79,8 @@ while true; do
 	-win)    win=$2;    shift;;
 
 	-fresh) fresh=true;;
+	-up)    updn=up;;
+	-dn)    updn=dn;;
 
 	--) shift; break;;
 
@@ -88,7 +92,7 @@ while true; do
     shift
 done
 
-inwf=${inwf:-$file.inwf}
+inwf=${inwf:-$file.inwf$updn}
 struct=${struct:-$file.struct}
 klist=${klist:-$file.klist}
 band=${band:-$file.klist_band}

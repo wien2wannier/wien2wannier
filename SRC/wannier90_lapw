@@ -128,11 +128,16 @@ fi
 ## Set up files ##
 
 ## check if required files exist
-reqfiles="amn mmn eig"
-[[ $so ]] && reqfiles="amnup amndn mmnup mmndn"
-[[ $pp ]] && reqfiles=
+if [[ $pp ]]; then
+    reqfiles=
+elif [[ $so ]]; then
+    reqfiles="amnup amndn mmnup mmndn win"
+else
+    reqfiles="amn$updn mmn$updn eig$updn win"
+fi
+
 for r in $reqfiles; do
-    req=$file.$r$updn
+    req=$file.$r
 
     [[ -s $req ]] || croak required file $req does not exist
 done
@@ -149,7 +154,7 @@ fi
 ## link “spin-polarized” files required by Wannier90 to the names it
 ## expects
 spfiles=
-[[ $updn && ! $so ]] && spfiles="amn mmn eig chk"
+[[ $updn && ! $so ]] && spfiles="amn mmn eig"
 for s in $spfiles; do
     new=$file.$s
     old=$file.$s$updn
@@ -161,6 +166,14 @@ done
 ## Call wannier90 ##
 $W90 $pp $file
 status=$?
+
+
+## remove links again
+for s in $spfiles; do
+    f=$file.$s
+
+    [[ -L $f ]] && rm $q $v $f
+done
 
 
 ## Manage output files ##

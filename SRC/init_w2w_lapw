@@ -39,6 +39,10 @@ alias	total_exec	'output \!:*;'\
 			'exec  \!:*;'\
 			'teststop \!:*'
 
+alias   run_cmd         'output \!:*;'\
+                        '($bin/\!:*);'\
+                        'teststatus'
+
 alias 	warn            'echo ${0}: \!:* >/dev/stderr'
 
 alias	croak		'echo ${0}: \!:* >/dev/stderr; exit (1)'
@@ -70,7 +74,8 @@ unset bmin bmax
 unset proj
 set w90opt
 
-if ( -e $file.clmup && ! -z $file.clmup ) set sp updn=up
+if ( -e $file.vspdn && ! -z $file.vspdn ) set sp updn=dn
+if ( -e $file.vspup && ! -z $file.vspup ) set sp updn=up
 if ( -e $file.inso  && ! -z $file.inso  ) set so
 
 #---> handling of input options
@@ -159,6 +164,10 @@ end
 
 if ($?sp) set spf = -$updn
 if ($?so) set sof = -so
+
+set dnup
+if ($updn == "up") set dnup = dn
+if ($updn == "dn") set dnup = up
 
 if ($?batch) then
   if (  $?emin ^ $?emax) then
@@ -255,10 +264,8 @@ if ( -e $out1 && ! -z $out1 ) then
     end
   else if ( $?emin ) then
     total_exec findbands $sof $spf -all $emin $emax
-    set bmin=`tail -n2 $file.outputfind$updn | head -n1 \
-	| cut -d: -f2 | awk '{print $1}'`
-    set bmax=`tail -n2 $file.outputfind$updn | head -n1 \
-	| cut -d: -f2 | awk '{print $2}'`
+    set bmin=`tail -n1 $file.outputfind$updn | cut -d: -f2 | awk '{print $1}'`
+    set bmax=`tail -n1 $file.outputfind$updn | cut -d: -f2 | awk '{print $2}'`
   endif
 endif
 
@@ -266,29 +273,28 @@ endif
 write_inwf:
 inwf:
 if (! $?batch) then
-  output write_inwf -f $file
-  $bin/write_inwf -f $file
-  teststatus
+  run_cmd write_inwf -f $file $spf
   echo "-----> check $file.inwf for bands, ljmax and projections"
-  editor $file.inwf
-  echo "-----> continue with write_win or execute write_inwf again (c/e)?"
+  editor $file.inwf$updn
+  echo "-----> continue or execute write_inwf again (c/e)?"
   set b=($<)
   if ($b == 'e') goto inwf
+  if (! -e $file.inwf$dnup || -z $file.inwf$dnup) then
+    echo "-----> copy inwf$updn to inwf$dnup (y/n)?"
+    set b=($<)
+    if ($b != 'n') cp -v $file.inwf$updn $file.inwf$dnup
+  endif
 else
   if ($?mmn) then
     set proj=(-mode mmn)
   endif
-  output $bin/write_inwf -f $file -bands $bmin $bmax $proj:q
-  $bin/write_inwf -f $file -bands $bmin $bmax $proj:q
-  teststatus
+  run_cmd write_inwf -f $file -bands $bmin $bmax $proj:q $spf
 endif
 
 
 write_win:
 win:
-output write_win $w90opt:q
-$bin/write_win $w90opt:q
-teststatus
+run_cmd write_win $w90opt:q $spf
 if (! $?batch) then
   echo "-----> check $file.win for relevant options (disentanglement?)"
   editor $file.win
