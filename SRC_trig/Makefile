@@ -39,7 +39,7 @@ UTILOBJ := $(UTILDIR)/util_w2w.o
 
 #######################################
 
-EXE_UTIL := write_win_backend findbands shifteig rephase w2waddsp	\
+EXE_UTIL := write_win_backend findbands shifteig w2waddsp	\
 	    join_vectorfiles vec2ascii convham
 
 #.orig#EXE_SIMPLE := rhomb_in5 hex2rhomb rhomb2hex xyz2struct convert_in2	\
