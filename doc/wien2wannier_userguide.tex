@@ -420,7 +420,8 @@ plotted; \file{\textit{m}} above overrides this.  Output goes to
 
 \wplot is based on \file{lapw7} and shares the general structure of
 the input file.  A sample input file for \file{wplot} is given below.
-A template can be found in \file{\wienroot/SRC\_templates}.
+A template can be found in
+\file{\wienroot/SRC\_templates/case.inwplot}.
 %
 \Template{inwplot}
 %
@@ -562,9 +563,9 @@ invoking the command
   x \joinvec [-up|-dn -c -so]
 \end{usage}
 %
-All \file{.vector\_*} files are merged into one \file{.vector} file
-containing the header of the first file \file{.vector\_1}~(and
-correspondingly for the \file{.energy} files).
+All \file{\case.vector\_*} files are merged into one
+\file{\case.vector} file containing the header from
+\file{\case.vector\_1}~(and correspondingly for the \file{.energy} files).
 
 
 \ProgSec[copy required files]{prepwiiw}
@@ -630,7 +631,7 @@ command
   \wiiwaddsp \deffile
 \end{usage}
 %
-after running \file{x \wiiw -up} and \file{-dn}.
+after running \file{x \wiiw{} -up} and \file{-dn}.
 
 
 \ProgSec[wrapper for \wannierxHd]{xwannier}
@@ -665,8 +666,8 @@ This program converts the files \file{\case{}\_\textit{m}.psink} and
 \xcrys \cite{xcrys} or \vesta \cite{vesta}.
 
 Note that only real data can be represented in the \file{xsf} file.
-Therefore, $|w(\mb r)|^2 \sgn \Re w(\mb r)$ is saved by default.  (In
-most cases the Wannier functions are real anyway.)
+Therefore, $|w(\mb r)|^2 \sgn\left\{\Re w(\mb r)\right\}$ is saved by
+default.  (In most cases the Wannier functions are real.)
 
 \file{wplot2xsf} has a number of options (see \file{wplot2xsf -h}),
 but usually it is executed by invoking the command
@@ -691,7 +692,7 @@ Fermi energy read from \file{\case.scf2} in the input file for
 \file{spaghetti}, \file{\case.insp}. It is invoked by
 %
 \begin{usage}
-  \writeinsp [-up/-dn]
+  \writeinsp [-up|-dn]
 \end{usage}
 
 
@@ -701,9 +702,9 @@ This program prepares the main input file \file{\case.inwf} for
 \wiiw.  It is executed by invoking the command
 %
 \begin{usage}
-  \writeinwf \usgrem{(interactive)} |
+  \writeinwf [-up|-dn] \usgrem{(interactive)} |
   \\
-  \writeinwf{} -bands Nmin Nmax PROJ [PROJ ...]
+  \writeinwf{} [-up|-dn] -bands Nmin Nmax [PROJ [PROJ ...]]
   \usgrem{(noninteractive)}
 \end{usage}
 %
@@ -744,12 +745,14 @@ other files, and produces \file{\case.win}, the input file for
 \wannierx.  It is executed by invoking the command
 %
 \begin{usage}
-  \writewin [-fresh]
+  \writewin [-up|-dn] [-fresh]
 \end{usage}
 
 If \file{\case.win} already exists, \file{write\_win} updates it.
-Otherwise (or if \file{-fresh} is given), the template in
-\file{\wienroot/SRC\_templates} is used.
+Otherwise (or if \file{-fresh} is given), the template
+\file{\wienroot/SRC\_templates/case.win} is used.  Note that the spin
+flag \file{-up|-dn} only serves to choose \file{\case.inwfup} or
+\file{\case.inwfdn}; there is normally only one \file{\case.win}.
 
 
 \chapter{Getting help}
