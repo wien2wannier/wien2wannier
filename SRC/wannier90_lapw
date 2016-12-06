@@ -154,7 +154,7 @@ fi
 ## link “spin-polarized” files required by Wannier90 to the names it
 ## expects
 spfiles=
-[[ $updn && ! $so ]] && spfiles="amn mmn eig"
+[[ $updn && ! $so ]] && spfiles="amn mmn eig chk"
 for s in $spfiles; do
     new=$file.$s
     old=$file.$s$updn
