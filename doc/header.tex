@@ -5,8 +5,8 @@
 
 \documentclass[
    a4paper,
-%   oneside,
-   twoside,
+   oneside,
+%   twoside,
 %   draft
 ]{wien}
 \usepackage[utf8]{inputenc}
@@ -165,8 +165,7 @@
     \VerbatimInput[%
     codes={ \setCatCode },
     label={%
-      [\raisebox{-.5\height}{\case.#2}]%
-      \raisebox{-.5\height}{end of \case.#2}%
+      \raisebox{-.5\height}{\case.#2}%
     },
     frame=lines, framesep=3mm,
     numbers=left,
