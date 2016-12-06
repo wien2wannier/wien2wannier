@@ -2441,7 +2441,7 @@ breaksw
 
 case convert_Hamiltonian:
 case convert_hamiltonian:
-case convham
+case convham:
 cat >$def <<EOF
   4, '$file.klist$band1',   'unknown',    'formatted', 0
   8, '$file.struct',        'old',        'formatted', 0

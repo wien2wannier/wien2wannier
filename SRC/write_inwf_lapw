@@ -26,7 +26,7 @@ import numpy as np
 import re
 import traceback
 
-__version__ = "$version: v1.0.0-274-g4940634$"
+__version__ = "$version: v1.0.0-275-g804e932$"
 
 try:
     __version__ = re.search(":\s*(.*?)\s*\$", __version__).group(1)
@@ -786,7 +786,7 @@ def argmunge(parser, args):
         args.struct_file = args.case + '.struct'
 
     if args.inwf_file is None:
-        args.inwf_file = args.case + '.inwf'
+        args.inwf_file = args.case + '.inwf' + args.updn
 
     sf = open(args.struct_file, 'r')
     struct = Struct(sf)
@@ -863,7 +863,7 @@ try:
     arg_w2w.add_argument('-struct-file', metavar='STRUCT',
                          help="`struct' file to read instead of `CASE.struct'")
     arg_w2w.add_argument('-inwf-file', metavar='INWF',
-                         help="write w2w input here (default: `CASE.inwf')")
+                         help="write w2w input here (default: `CASE.inwf[up|dn]')")
     modes = ['AMN', 'MMN', 'BOTH']
     arg_w2w.add_argument('-mode', choices=modes,
                          type=Abbrev(modes), default='both',
@@ -872,6 +872,9 @@ try:
                          help="lowest, highest band to include")
     arg_w2w.add_argument('-ljmax', type=int, default=3,
                          help="max. LJ in exp(i b.r) expansion")
+    updn = arg_w2w.add_mutually_exclusive_group()
+    updn.add_argument('-up', dest='updn', action='store_const', const='up', default='')
+    updn.add_argument('-dn', dest='updn', action='store_const', const='dn')
 
     args = parser.parse_args()
 

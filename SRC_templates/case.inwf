@@ -4,8 +4,8 @@ BOTH      # compute  Amn | Mmn | both
 2         # #(terms)  [d-xy orbital]
  2  2 -2  0 +1   # IAT;  l, m;  Re(coeff), Im(coeff)
  2  2 +2  0 -1
-2         #           [d-(x2-y2) orbital]
+2         #        [d-(x2-y2) orbital]
  2  2 -1  1  0
  2  2 +1  1  0
-1         #           [d-z2 orbital]
+1         #        [d-z2 orbital]
  2  2  0  1  0
