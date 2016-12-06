@@ -54,12 +54,12 @@
 In the solid state theorist's tool kit, algorithms based on density
 functional theory~(\dft) represent the backbone applications.  One of
 the more popular codes available is the \wien
-package~\cite{wien2k_orig,wien2k}.  It is based on dividing the real
-space unit cell into ``muffin-tin'' spheres centered on the ionic
-cores and an interstitial region.  On the former, basis function with
-more or less atomic features are employed, while on the latter plain
-waves are used.  The combined basis functions are called (linearized)
-augmented plane waves (\lapw).
+package~\cite{wien2k_orig,wien2k}.  It is based on dividing the unit
+cell into ``muffin-tin'' spheres centered on the ions on one hand and
+an interstitial region on the other.  In the former, basis function
+with more or less atomic features are employed, while in the latter,
+plain waves are used.  The combined basis functions are called
+(linearized) augmented plane waves (\lapw).
 
 While in \wien a k-space representation of wave functions is
 convenient, there are many applications where a real-space picture is
@@ -72,7 +72,7 @@ from the \dft calculation, yielding
 %
 \begin{gather*}
   w_{m\mb{R}}(\mb{r})=
-  \frac{V}{(2\pi)^3}
+  \frac{V}{\text\tau^3}
   \int_{BZ} dk\ \ee^{-\ii\mb{k}\cdot\mb{R}}
   \left(\sum_nU^{(\mb{k})}_{nm}
     \psi_{n\mb{k}}(\mb{r})\right).
@@ -135,8 +135,8 @@ Frohner, Philipp Hansmann, Nico Parragh and Giorgio Sangiovanni.
 
 This section outlines the procedure for a ``standard'' \wtow
 calculation.  A detailed description of the individual programs can be
-found in Section~\ref{sec:detaileddescription}.  For a quick
-reference, see the plain-text file \file{CHEATSHEET}.
+found in Section~\ref{sec:detaileddescription}.  For an even more
+condensed reference, see the plain-text file \file{doc/CHEATSHEET}.
 
 
 \section{Preparatory steps}
@@ -149,8 +149,10 @@ taken into account will have to be specified, and the main character
 
 To obtain this information, a combination of partial DOS and
 bandstructure, or a ``band character'' plot is often expedient
-(e.g. \file{spaghetti}'s ``fat bands'' option, or
-\file{SpaghettiPrimavera} and \file{prima.py}, available in the
+(e.g. \file{x spaghetti}'s ``fat bands'' option, or
+\href{http://www.cpfs.mpg.de/haverkort/spaghetti_primavera}{\file{SpaghettiPrimavera}}
+and \href{https://eassmann.github.io/prima.py}{\file{prima.py}},
+available in the
 \href{http://www.wien2k.at/reg_user/unsupported/}{\textit{unsupported
     software}} section of the \wien website).
 
@@ -178,8 +180,8 @@ The script \initwiiw takes the following steps:
 \begin{description}
 \item[\file{x kgen -fbz}] generates the non-symmetrized k-mesh that
   \wannier requires.  The density of the mesh influences the quality
-  of localization and visualization of the Wannier functions.  Remark:
-  The interface was only tested with unshifted k-meshes.
+  of localization and visualization of the Wannier functions.
+  Normally, you should use and unshifted k-mesh.
 \item[\file{x \findbands}] looks in \file{\case.output1} for bands in a
   given energy range $[E_\text{min}, E_\text{max}]$, and outputs the
   corresponding band indices $b_\text{min}, b_\text{max}$.  To choose
@@ -202,9 +204,9 @@ After running \initwiiw, one can proceed:
 \item[\file{x lapw1}] before the actual interface run, the
   eigenvectors and eigenvalues for the new (non-symmetrized) k-mesh
   have to be computed.
-\item[\file{x w2w}] computes the overlaps $M_{mn}$, initial
-  projections $A_{mn}$ and eigenvalues $E_n$, and writes them to
-  \file{\case.mmn}, \file{\case.amn}, and \file{\case.eig}.
+\item[\file{x w2w}] computes the overlaps $M_{mn}$ and initial
+  projections $A_{mn}$, and writes them, together with the eigenvalues
+  $E_n$, to \file{\case.mmn}, \file{\case.amn}, and \file{\case.eig}.
 \end{description}
 
 
@@ -244,15 +246,16 @@ computed by \file{spaghetti}, e.g.\ in \file{gnuplot}, use the command
   Wannier functions should be plotted.
 \item[\file{x wplot -wf \textit{m}}] evaluates Wannier function number
   $m$ on the real-space grid, and writes the density $|w_m(\mb r)|^2$
-  to \file{\case{}\_\textit{m}.psink} and the phase $\arg w_m(\mb r)$
-  to \file{\case{}\_\textit{m}.psiarg}.
+  to \file{\case{}\_\textit{m}.psink} and the phase $\arg\left\{w_m(\mb
+  r)\right\}$ to \file{\case{}\_\textit{m}.psiarg}.
 \item [\wplottoxsf] converts all \file{\case{}*.psink} plus
-  \file{\case{}*.psiarg} files in the directory to \file{xsf} files
-  which can be opened by \xcrys.
-\item [\file{xcrysden --xsf \case{}\_\textit{m}.xsf.gz}] ; pick
-  ``Tools $\rightarrow$ Data Grid'' from the menu and press OK. In the
-  isosurface controls window choose an appropriate isovalue, e.g. 0.1,
-  and check the ``Render +/- isovalue'' box.
+  \file{\case{}*.psiarg} files in the directory to \xcrys-style
+  \file{xsf} files.
+\item [\file{xcrysden -{}-xsf \case{}\_\textit{m}.xsf}] opens the
+  \file{xsf} file; pick ``Tools $\rightarrow$ Data Grid'' from the
+  menu and press OK. In the isosurface controls window choose an
+  appropriate isovalue, e.g. $0.1$, and check the ``Render +/-
+  isovalue'' box.
 \end{description}
 
 
@@ -290,9 +293,9 @@ functions $\psi_{n\mb k}(r)$ in the entire unit cell (using
 appropriate boundary conditions on the muffin-tin spheres).
 
 In addition to standard \wien files, a file \file{\case.nnkp} is
-required which defines the ${\mb b}$ vectors for each ${\mb k}$ in
-Eq.~(\ref{eq:mmn2}).  \wannierx delivers this file when called with
-the flag \file{-pp}.
+required which gives the ${\mb b}$ vectors linking each ${\mb k}$ to
+its nearest neighbors in Eq.~(\ref{eq:mmn2}).  This file is written by
+\file{\wannierx{} -pp}.
 
 \subsection{Execution}
 
@@ -307,17 +310,22 @@ The program \wiiw is executed by invoking the command:
 \end{usage}
 
 While \wiiw itself is not parallelized, like \file{x lapw2 -qtl}, it
-accepts a \file{-p} switch (or \file{\#proc}) to read parallel
-\file{vector} and \file{energy} files.
+accepts a \file{-p} switch (or \file{\#proc} argument) to read
+parallel \file{vector} and \file{energy} files.
 
-With spin-orbit coupling (\file{-so}), \wiiw must be called separately
-for \file{-up} and \file{-dn}, resulting in\linebreak[4]
-\file{\case.mmn\{up,dn\}}, \file{\case.amn\{up,dn\}}, and
-\file{\case.eig\{up,dn\}}.  In a second step, the $M_{mn}$ and
+With spin-orbit coupling, \wiiw must be called separately for the two
+spins,
+\begin{usage}
+  x \wiiw -so -up; x \wiiw -so -dn
+\end{usage}
+resulting in \file{\case.mmn\{up,dn\}}, \file{\case.amn\{up,dn\}}, and
+\file{\case.eig\{up,dn\}}.  For the Wannierization, the $M_{mn}$ and
 $A_{mn}$ must be added (and the eigenvalues copied) to produce
-\file{\case.mmn}, \file{\case.amn}, and \file{\case.eig}, on which
-\wannier may be run.  This step is done by the program \wiiwaddsp,
-which is automatically invoked by \file{x \xwannier{} -so}.
+\file{\case.mmn}, \file{\case.amn}, and \file{\case.eig}.  This is
+done automatically by \file{x \xwannier{} -so}.  Note: it does not
+make sense to run \file{x w2w -so} without either \file{-up} or
+\file{-dn}; conversely, \file{x \xwannier{} -so} does not accept
+\file{-up} or \file{-dn}.
 
 
 \subsection{Input}
@@ -748,9 +756,9 @@ Otherwise (or if \file{-fresh} is given), the template in
 
 Online help for all programs can be requested via the option
 \code{-h}.  In addition to the pointers below, the \wtow distribution
-also includes a file \file{CHEATSHEET}, which concisely summarizes the
-usual steps of a calculation.  If this does not help, send questions
-relating to the usage of \wtow to the Wien2k mailing list at
+also includes a file \file{doc/CHEATSHEET}, which concisely summarizes
+the usual steps of a calculation.  If this does not help, send
+questions relating to the usage of \wtow to the Wien2k mailing list at
 \url{http://www.wien2k.at/reg_user/mailing_list/}.
 
 For help on updating \wtow, see the file \file{INSTALL}.  Comments on
