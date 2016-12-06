@@ -73,7 +73,7 @@ warn () {
 
 myln () {
     # link already in place, or non-sp
-    [[ $1 -ef $2 ]] && continue
+    [[ $1 -ef $2 ]] && return
 
     lnopt=f
     if [[ ! $q && -s $new && ! -L $new ]]; then
