@@ -5,15 +5,14 @@
 ###    Wrapper script for ‘write_win_backend’ to prepare the input
 ###    file for Wannier90 on the basis of ‘w2w’s input file
 ###
-### Copyright 2013 Elias Assmann
-###
-### $Id: write_win_lapw 287 2014-10-09 14:11:17Z assmann $
+### Copyright 2013-2015 Elias Assmann
 
 bin=$(dirname $0)
 defwin=$bin/SRC_templates/case.win
 name=$(basename $0)
 file=$(basename $PWD)
 fresh=
+updn=
 
 usage () {
     cat <<EOF
@@ -28,6 +27,7 @@ FLAGS:
 -h,-H	->	this message
 -v,-verbose ->	be verbose about copying &c.
 -q,-quiet ->	do not warn or ask questions
+-up/-dn	->	spin-polarized
 -f	->	override  \`case'
 -fresh	->	write new \`case.win', do not update an existing one
 -tmpl	->	choose alternative \`win' template
@@ -71,7 +71,7 @@ while true; do
 
 	-tmpl)   tmpl=$2;   shift;;
 
-	-inwf)   inwf=$2;  shift;;
+	-inwf)   inwf=$2;   shift;;
 	-struct) struct=$2; shift;;
 	-klist)  klist=$2;  shift;;
 	-band)   band=$2;   shift;;
@@ -79,6 +79,8 @@ while true; do
 	-win)    win=$2;    shift;;
 
 	-fresh) fresh=true;;
+	-up)    updn=up;;
+	-dn)    updn=dn;;
 
 	--) shift; break;;
 
@@ -90,19 +92,25 @@ while true; do
     shift
 done
 
-inwf=${inwf:-$file.inwf}
+inwf=${inwf:-$file.inwf$updn}
 struct=${struct:-$file.struct}
 klist=${klist:-$file.klist}
 band=${band:-$file.klist_band}
 win=${win:-$file.win}
 
-if [[ ! $fresh && -s $file.win ]]; then
-    tmpl=${tmpl:-$file.win}
-elif [[ -s $defwin ]]; then
-    tmpl=${tmpl:-$defwin}
+## Set/check template $tmpl
+if   [[ ${tmpl+x} ]]; then        # test if $tmpl is set
+    [[ -s $tmpl ]] || croak "template file \`$tmpl' not found"
+elif [[ $fresh || ! -s $file.win ]]; then
+    if [[ -s $defwin ]]; then
+        tmpl=$defwin
+    else
+        [[ $q ]] || warn "template file \`$defwin' not found," \
+                         "will use empty template"
+        tmpl=/dev/null
+    fi
 else
-    [[ $q ]] || warn "template file \`$defwin' not found, will use empty template"
-    tmpl=${tmpl:-/dev/null}
+    tmpl=$file.win
 fi
 
 if [[ $v ]]; then
@@ -130,6 +138,9 @@ if [[ $win != '-' ]]; then
     fi
 
     mv $temp $win
+    chmod +rw $win        # these permissions are subject to the umask
 else
     $bin/write_win_backend $inwf $struct $klist $band "$@" <$tmpl
 fi
+
+

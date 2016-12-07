@@ -1,8 +1,8 @@
-                     //==========================\\
-                    ||                            ||
-                    ||  The Wien2Wannier Package  ||
-                    ||                            ||
-                     \\==========================//
+                    //==========================\\
+                   ||                            ||
+                   ||  The Wien2Wannier Package  ||
+                   ||                            ||
+                    \\==========================//
 
 
 Wien2Wannier is an  interface program between Wien2k  and Wannier90 to
@@ -10,23 +10,23 @@ obtain maximally localized Wannier functions from Wien2k calculations.
 In any published  papers arising from the use  of Wien2Wannier, please
 cite:
 
-   J.Kunes, R.Arita, P.Wissgott, A.Toschi, H.Ikeda, K.Held,
-   Comp.Phys.Commun. 181, 1888 (2010)
+   J. Kuneš, R. Arita, P. Wissgott, A. Toschi, H. Ikeda, K. Held,
+   Comp. Phys. Commun. 181, 1888 (2010)
 
 If you  use additional codes  to process wien2wannier output,  such as
 Wannier90 or BerryPI, do not forget  to cite the appropriate papers as
 well.
 
 For wien2wannier updates and further information, see
-<http://www.ifp.tuwien.ac.at/forschung/arbeitsgruppen/cms/software-download/wien2wannier/>
+<https://wien2wannier.github.io>
 
 Questions relating to the usage of  wien2wannier should be sent to the
 Wien2k mailing list <http://www.wien2k.at/reg_user/mailing_list/>.  As
 regards Wannier90 and  the MLWF procedure, there is a  mailing list at
 <http://www.wannier.org/forum.html>.
 
-Finally, comments  to the  maintainer of wien2wannier  can be  sent to
-<wien2wannier@ifp.tuwien.ac.at>.
+Finally, bug reports, feature requests, etc.  can be submitted at
+<https://github.com/wien2wannier/wien2wannier/issues>.
 
 
 Installation
@@ -34,8 +34,8 @@ Installation
 
 If this version of wien2wannier came with your Wien2k distribution, it
 will be configured and compiled automatically by `siteconfig'.  If you
-downloaded wien2wannier yourself,  see the file INSTALL  or the user's
-guide for installation instructions.
+wish to  upgrade wien2wannier, see  the file INSTALL  for installation
+instructions.
 
 To construct maximally localized Wannier functions, your will need the
 Wannier90 program,  available from <http://wannier.org>.  In  order to

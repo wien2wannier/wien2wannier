@@ -1,5 +1,11 @@
 #!/bin/bash
 
+### wien2wannier/compile_wien2wannier.sh
+###
+###    A primitive compile script for wien2wannier
+###
+### Copyright 2014-2016 Elias Assmann
+
 w2wdir=$(dirname $0)
 
 ask_continue () {
@@ -9,13 +15,7 @@ ask_continue () {
     echo
 }
 
-if [[ ! -d SRC_w2w ]]; then
-    echo "./SRC_w2w/ not found.  Have you extracted \`wien2wannier.tar'?"
-
-    ask_continue
-fi
-
-if [[ ! -s OPTIONS ]]; then
+if [[ ! -s OPTIONS || ! -d SRC_w2w ]]; then
     echo "This script is meant to be run from your \`\$WIENROOT' directory"
     echo "after Wien2k has been configured.  It seems this is not the case"
     echo "[file ./OPTIONS not found]."
@@ -49,3 +49,5 @@ make -C SRC_wplot all || exit
 cp SRC_wplot/wplot{,c} .
 
 make -C SRC_trig clean all
+
+

@@ -1,59 +1,111 @@
                           Wien2Wannier News
                           *****************
 
-Version 1.0 represents a major overhaul of the user interface.  The
-goal was to integrate it better into Wien2k and make it conform more
-to the expectations of the Wien2k user, as well as to improve
-usability in a more general sense.
+Version 2.0 introduces backward-incompatible changes in the format of
+`case.inwplot':
 
-To this end, backwards compatibility was sacrificed in several places.
-In particular:
+  - Removed the `switch' and `iseig' options.  They were leftovers
+    from `lapw7', unused in `wplot' (`switch' had to equal `WAN' and
+    `iseig' was ignored).
 
- * Wien2k integration:
+  - Added a boolean option `wfrot'.  If set, `wplot' reads a unitary
+    matrix from `case.wfrot' to be applied to the WFs before plotting.
 
-   - (most) wien2wannier programs are now called via Wien2k's `x'
-     script
+  - Removed the `nD' grid types for n=0,1,2 a redundant; i.e., only
+    the options `ANY' and `3D' remain.  Lower-dimensional grids can
+    easily be generated as special cases of `3D', or using `ANY'.
 
-   - wien2wannier is set up to be installed inside the $WIENROOT
-     directory.
+In addition, `write_inwplot` (which was broken by this change) and
+`rephase` (which had been broken for a while) have been removed.
 
- * some names changed to conform to Wien2k conventions, e.g. the
-   `w2win' file is now called `inwf', and the program that produces it
-   is `write_inwf'
+A script `checkinwplot' is provided that checks an input file for
+conformance to the new format and converts old-style input files.  `x
+wplot' calls this script automatically.
 
-Please refer to the user's guide for details on the commands and
-procedures in the new version.
+Bugfixes and enhancements include:
+
+* In spin-polarized cases, `w2w' now expects separate input files
+  `case.inwfup' and `case.inwfdn'.
+
+* `init_w2w -b -all E1 E2' will now chose all bands which cross the
+  interval, not only those which remain in it over all k-points.
+
+* In `write_win':
+
+  - fixed calculation of atom positions; `atoms_cart' is the default
+    over `atoms_frac' because it appears to behave better numerically
+
+  - fixed handling of Wannier90 options given on the command line
+
+  - fixed bugs related to `mp_grid', `bands_plot', and
+    `guiding_centres'
+
+  - implemented support for both old-format (5-digit integers) and
+    new-format (10-digit integers) `klist' files
+
+* In `w2w':
+
+  - depending on the details of your calculation, you may see a
+    significant speedup with respect to 1.0.
+
+  - adapted `w2w' to work with `-p -so'
+
+  - fixed crashes with an error ``read statement [from vectorso]
+    requires too much data'' in the presence of SOC
+
+  - fixed spurious complex conjugation in `case.mmn'
+
+  - fixed a bug resulting in segmentation faults for some cases
+
+* Fixed the normalization of real-space Wannier functions in
+  `case.psink' by number of k-points (previously, the WFs as printed
+  included a factor of `N_k')
+
+* Fixed a Makefile bug affecting `w2w' and `wplot' where real and
+  complex modules were mixed (cf. mailing list <goo.gl/WbMb0w>).
+
+Many thanks to Marc Höppner, Hong Jiang, Okan Köksal, Gernot
+Kraberger, Laurence Marks, Oleg Rubel, Liang Si, Yundi Quan, Ulrich
+Wedig, Jiaxu Yan, Jianxin Zhu, and Manuel Zingl for their valuable
+comments on past versions.
+
+================
+
+Version 1.0 represents a major overhaul of the user interface.  In
+particular:
+
+* Wien2k integration:
+
+  - (most) wien2wannier programs are now called via Wien2k's `x'
+    script
+
+  - wien2wannier is set up to be installed inside the $WIENROOT
+    directory.
+
+* some names changed to conform to Wien2k conventions, e.g. the
+  `w2win' file is now called `inwf', and the program that produces it
+  is `write_inwf'
 
 Other changes and new features include:
 
- * `write_inwf' brings many new features over the old `write_w2win',
-   e.g.
+* `write_inwf' brings many new features over the old `write_w2win',
+  e.g.
 
-   - flexible selection of initial projections [real-valued spherical
-     harmonics (s through f), s/p/d hybrids, and certain
-     symmetry-related groups (e.g. d-t2g)]
+  - flexible selection of initial projections [real-valued spherical
+    harmonics (s through f), s/p/d hybrids, and certain
+    symmetry-related groups (e.g. d-t2g)]
 
-   - an arbitrary rotation can be applied to each initial projection
+  - an arbitrary rotation can be applied to each initial projection
 
-   - tab-completion, readline, and history support
+  - tab-completion, readline, and history support
 
- * fix handling of k-points for various lattice types
+* fix handling of k-points for various lattice types
 
- * `shift_energy' and `join_vectorfiles' are no longer needed (setting
-   the Fermi energy is done by `w2w'; `w2w' and `wplot' can read
-   parallel vector files)
+* `shift_energy' and `join_vectorfiles' are no longer needed (setting
+  the Fermi energy is done by `w2w'; `w2w' and `wplot' can read
+  parallel vector files)
 
- * wien2wannier may now be used under the GNU GPL (see file `COPYING')
-
-One part of the package has been removed: `woptic', for the
-calculation of the optical conductivity.  If you want to use this
-program, please download wien2wannier 0.97 from
-<http://www.ifp.tuwien.ac.at/forschung/arbeitsgruppen/cms/software-download/wien2wannier/>.
-`woptic' will be released as a package of its own once outstanding
-issues have been resolved.
-
-
-Changes in 1.0 (Wien2k_14.2) include:
+* wien2wannier may now be used under the GNU GPL (see file `COPYING')
 
 * removed all Unicode (non-ASCII) characters from the messages printed
   by wien2wannier, they were causing problems for some users
@@ -108,11 +160,7 @@ Changes in 1.0-β2 include:
 * renamed convert_hamiltonian -> convham
 
 
-Many thanks to Marc Höppner, Hong Jiang, Oleg Rubel, Yundi Quan, Jiaxu
-Yan, and Jianxin Zhu for their valuable comments on the beta versions.
-
-
-=== Older version information follows.
+=== Older version information follows ===============================
 
 +++Version 0.97(08/07/13)
 1) fixed detection of real/complex case in w2w (it checks the struct file now)
@@ -205,10 +253,19 @@ to
 4) capability to run spin-orbit(complex) problems
 
 +++Version: 0.3(09/28/09) #some bug fixes for utility programs from P.Wissgott
-+++Version: 0.2(7/23/09) #bug fix from J. Kunes 
++++Version: 0.2(7/23/09) #bug fix from J. Kunes
 in planew.frc in w2w
   bug fix
 old:       id=-(BQZ(pair_index)*m2y+BQY(pair_index))*m2z-BQX(pair_index)-1
 replaced by
 new:       id=-(BQZ(pair_index)*m2y+BQY(pair_index))*m2x-BQX(pair_index)-1
 +++Version: 0.1 #first preliminary testversion, no logging or specified output
+
+
+##/---
+## Local Variables:
+## mode:          text
+## comment-start: "#"
+## End:
+##
+##\---

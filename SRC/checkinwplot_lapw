@@ -1,0 +1,127 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+### wien2wannier/SRC/checkinwplot_lapw
+###
+###    Check a case.inwplot file for conformance to the new format,
+###    and try to convert old format to new
+###
+### Copyright 2016 Elias Assmann
+
+'''
+Check a case.inwplot file (read from STDIN) for conformance to the new
+format, and try to convert old format to new (written to STDOUT).  The
+only output to STDOUT will be the converted file, diagnostic output goes
+to STDERR.
+
+Exit status:
+   0  new-style input found
+   2  old-style input converted to new style
+   3  input is invalid as a `case.inwplot' file
+else  an error occurred
+'''
+
+import sys, argparse, re
+
+__version__ = "$version: v2.0.0$"
+
+try:
+    __version__ = re.search(":\s*(.*?)\s*\$", __version__).group(1)
+except:
+    __version__ = "unknown"
+
+class InvalidError (ValueError):
+    pass
+
+P = argparse.ArgumentParser(description=__doc__,
+                            formatter_class=argparse.RawDescriptionHelpFormatter)
+P.add_argument('-V', '-version', action='version',
+               version="checkinwplot_lapw "+__version__)
+P.parse_args()
+
+inwf = sys.stdin.readlines()
+
+newstyle = True
+ln = 0
+
+try:
+    try:
+        mode = inwf[ln][0:3].lower()
+        inwf[ln][3]
+    except IndexError as i:
+        raise InvalidError(i)
+
+    def checkflag(opts):
+        global inwf, ln, newstyle
+        flag = inwf[ln][3].lower()
+
+        if flag == ' ':
+            inwf[ln] = inwf[ln][0:3] + opts[0] + inwf[ln][4:]
+            newstyle = False
+        elif flag not in opts:
+            raise InvalidError("FLAG is '"+flag+"' for MODE="+mode)
+
+    if mode == 'any':
+        checkflag('cf')
+
+        ln += 3
+
+    elif mode[1] == 'd':
+        checkflag('on')
+
+        dim = int(mode[0])
+
+        if dim != 3:
+            newstyle = False
+
+            # transform to pseudo-3d
+            inwf[ln] = '3' + inwf[ln][1:]
+
+            ln += 1
+            orig = inwf[ln]
+
+            ln += 1+dim
+
+            for i in range(3-dim):
+                inwf.insert(ln, orig)
+                ln += 1
+
+            if dim == 0:
+                inwf.insert(ln, '1 1 1\n')
+            else:
+                pat = '(\s*' + '\s+'.join(['\d+'] * dim) + ')' + '(.*)'
+                m = re.match(pat, inwf[ln])
+                if m is None:
+                    raise InvalidError("cannot find number of points in `"
+                                       +inwf[ln]+"'")
+                inwf[ln] = m.group(1) + ' 1'*(3-dim) + m.group(2)
+
+            ln += 2
+
+        else:
+            ln += 7
+
+    def repl(pat, rep):
+        global inwf, ln, newstyle
+
+        sn = re.subn(pat, rep, inwf[ln], flags=re.I)
+        if sn[1]: # replacement made
+            inwf[ln] = sn[0]
+            newstyle = False
+
+    repl('wan',                  '   '); ln += 1
+    repl('(\s*\d+\s+)\d+', '\\1F')
+
+except InvalidError as i:
+    print>>sys.stderr, P.prog + ": invalid input at line %i: %s" %(ln+1, i)
+    sys.exit(3)
+
+if newstyle:
+    sys.exit(0)
+else:
+    ln=0
+    for l in inwf:
+        print l,
+        ln+=1
+
+    sys.exit(2)

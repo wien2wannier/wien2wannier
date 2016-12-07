@@ -1,11 +1,9 @@
-!!! wien2wannier/SRC_trig/find_bands.f
+!!! wien2wannier/SRC_trig/findbands.f
 !!!
 !!!    Finds the bands which are within an energy interval
 !!!
 !!! Copyright 2009-2012 Philipp Wissgott
-!!!           2013-2014 Elias Assmann
-!!!
-!!! $Id: findbands.f 191 2014-03-03 09:16:46Z assmann $
+!!!           2013-2015 Elias Assmann
 
 program find_bands
   use const,  only: BUFSZ, DPk, Ryd_eV
@@ -32,7 +30,7 @@ program find_bands
      read(1, *, END=110) iunit, fname, status, form
      open(iunit, FILE=fname, STATUS=status, FORM=form)
   end do
-110 continue 
+110 continue
 
   read(unit_in,*) emin, emax, efermi
 
@@ -70,7 +68,7 @@ program find_bands
 
            if (eband > emax) goto 130
 
-           if (eband >= emin) then 
+           if (eband >= emin) then
               nband = nband+1
            else
               loband = loband+1
@@ -101,8 +99,10 @@ program find_bands
   call errclr(errfn)
 end program find_bands
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!

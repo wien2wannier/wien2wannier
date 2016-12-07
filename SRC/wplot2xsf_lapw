@@ -7,9 +7,7 @@
 ###    wploutout/psink/struct/wout/xyz file
 ###
 ### Copyright 2010 Nikolaus Frohner, Philipp Wissgott
-###      2011,2014 Elias Assmann
-###
-### $Id: wplot2xsf_lapw 287 2014-10-09 14:11:17Z assmann $
+### 2011,2014-2015 Elias Assmann
 
 '''
 Translate `psink'/`psiarg' files from `wplot' to XCrysDen's `xsf'
@@ -26,7 +24,12 @@ import math
 import glob
 import numpy as np
 
-__version__ = '1.1 $Rev: 287 $'
+__version__ = "$version: v2.0.0$"
+
+try:
+    __version__ = re.search(":\s*(.*?)\s*\$", __version__).group(1)
+except:
+    __version__ = "unknown"
 
 #####################
 # Argument Handling #
@@ -173,7 +176,7 @@ verbalize(" + wplot2xsf converting", nwf, "Wannier function"
           + ('s' if nwf>1 else ''), '+')
 verbalize()
 
-if args.struct_file is None: 
+if args.struct_file is None:
     args.struct_file = open("%s.struct"%(args.case))
 
 ## The following two are needed for the shift and are useful only
@@ -327,7 +330,7 @@ def printVectors(file,pattern,readLines=3,waitLines=0,printIndices=(2,3,4),
                         continue
                     if convB2A is True:
                         print>>out, str(b2a(float(lineArr[i])))+' ',
-                    else: 
+                    else:
                         print>>out, str(int(lineArr[i]))+' ',
                 wfOffset=None
                 print>>out
@@ -372,11 +375,10 @@ for i, N, psink, psiarg, xsf, wplot in \
 
     verbalize("   reading `"+psink.name+"'")
 
-    if psink.readline().split()[0] != '3D':
-        raise AssertionError("only 3D grids are supported")
-    nx = int(psink.readline().split()[0])
-    ny = int(psink.readline().split()[0])
-    nz = int(psink.readline().split()[0])
+    psink.readline()
+    nx = int(psink.readline()[3:8])
+    ny = int(psink.readline()[3:8])
+    nz = int(psink.readline()[3:8])
     psink.readline()            # “order”
     data = np.fromfile(psink, sep=' ')
     psink.close()
@@ -393,6 +395,8 @@ for i, N, psink, psiarg, xsf, wplot in \
     # XSF file output #
     ###################
     print>>xsf, "## XSF file written by wplot2xsf version " + __version__
+    print>>xsf, "##"
+    print>>xsf, "##", title.strip()
     print>>xsf, "##"
     print>>xsf, "## command line:"
     print>>xsf, "## ", " ".join(sys.argv)
@@ -431,3 +435,5 @@ for i, N, psink, psiarg, xsf, wplot in \
 
     print>>xsf, "  END_DATAGRID_3D"
     print>>xsf, "END_BLOCK_DATAGRID_3D"
+
+

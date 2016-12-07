@@ -1,8 +1,4 @@
 ### wien2wannier/SRC_trig/Makefile
-###
-### Copyright 2013 Elias Assmann
-###
-### $Id: Makefile 287 2014-10-09 14:11:17Z assmann $
 
 ####### Configuration variables #######
 
@@ -43,9 +39,8 @@ UTILOBJ := $(UTILDIR)/util_w2w.o
 
 #######################################
 
-EXE_UTIL := write_win_backend findbands shifteig write_inwplot	\
-	    rephase w2waddsp join_vectorfiles vec2ascii		\
-	    convham
+EXE_UTIL := write_win_backend findbands shifteig w2waddsp	\
+	    join_vectorfiles vec2ascii convham
 
 #.orig#EXE_SIMPLE := rhomb_in5 hex2rhomb rhomb2hex xyz2struct convert_in2	\
 #.orig#	      plane clminter struct2cif Pinver fmax add_columns	sub_columns
@@ -86,3 +81,5 @@ $(UTIL_USERS): FFLAGS += -I$(UTILDIR)
 
 %.o: %.f
 	$(FC) $(FFLAGS) -c $<
+
+

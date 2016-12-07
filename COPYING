@@ -14,7 +14,7 @@ additional requirement that you cite
 in any scientific  publications arising from the  use of wien2wannier.
 
 When  using wien2wannier  in  conjunction with  other  codes (such  as
-Wannier90 or BerryPI), be sure to respect the appropriate licenses and
+Wannier90 or BerryPI),  be sure to respect the  respecive licenses and
 cite the appropriate papers as well.
 
 When wien2wannier is distributed as  part of the Wien2k package, these

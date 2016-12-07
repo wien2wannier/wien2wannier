@@ -1,11 +1,9 @@
 !!! wien2wannier/SRC_wplot/wplot.f
-!!! 
+!!!
 !!!    Main program ‘wplot’
 !!!
 !!! Copyright 2010-2012 Jan Kuneš, Philipp Wissgott
-!!!                2014 Elias Assmann
-!!!
-!!! $Id: wplot.f 206 2014-05-13 17:44:31Z assmann $
+!!!           2014-2016 Elias Assmann
 
 !!/--- Files expected in ‘def’ ---
 !!  5 inwplot	  'old'		'formatted'
@@ -20,11 +18,18 @@
 !! 32 chk	  'old'		'unformatted'
 !!\---
 
-PROGRAM WPLOT
+program wf_r
   use const, only: BUFSZ
   use clio,  only: fetcharg, argstr
-  use param
-  IMPLICIT none
+  use param, only: unit_def, unit_vector, unit_out
+  use wplot, only: vecfn, idx_wann, iproc,             &
+       &           unit_psink, unit_psiarg, unit_grid, &
+       &           psinkfn, psiargfn, outfn, gridfn
+
+  !! procedure includes
+  use main_m
+
+  implicit none
 
   type(argstr)     :: defname
   character(BUFSZ) :: fname
@@ -48,8 +53,9 @@ PROGRAM WPLOT
         psiargfn = fname
      case(unit_out)
         outfn    = fname
-     case(unit_tmp)
-        tmpfn    = fname
+     case(unit_grid)
+        gridfn   = fname
+        open(iunit, FILE=fname, STATUS=status, FORM=form)
      case default
         open(iunit, FILE=fname, STATUS=status, FORM=form)
      end select
@@ -58,11 +64,13 @@ PROGRAM WPLOT
 8001 close(unit_def)
 
   !     << start wave function evaluation >>
-  CALL MAIN2(iproc)
-END PROGRAM WPLOT
+  call main()
+end program wf_r
+
 
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!

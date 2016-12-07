@@ -4,14 +4,12 @@
 !!!    amn,mmn by entrywise summation
 !!!
 !!! Copyright 2009-2012 Philipp Wissgott
-!!!                2014 Elias Assmann
-!!!
-!!! $Id: w2waddsp.f 195 2014-03-14 14:37:24Z assmann $
+!!!           2014-2015 Elias Assmann
 
 PROGRAM combine_spinfiles
-  use const, only: DPk, bufsz
+  use const,  only: DPk, bufsz
   use wien2k, only: gtfnam, errflg, errclr
-  use util, only: string
+  use util,   only: string
 
   implicit none
 
@@ -33,7 +31,7 @@ PROGRAM combine_spinfiles
      read(1, *, END=110) iunit, fname, status, form
      open(iunit, FILE=fname, STATUS=status, FORM=form)
   end do
-110 continue 
+110 continue
 
   inquire(unit_mmn1, OPENED=doMmn)
   inquire(unit_amn1, OPENED=doAmn)
@@ -53,7 +51,7 @@ PROGRAM combine_spinfiles
 
         mmnline: do iline = 1,num_bands**2
            read (unit_mmn1, *)          val1
-           read (unit_mmn2, *)          val2      
+           read (unit_mmn2, *)          val2
            write(unit_mmn, '(2F18.12)') val1+val2
         end do mmnline
      end do mmnblock
@@ -77,8 +75,10 @@ PROGRAM combine_spinfiles
   call errclr(errfn)
 END PROGRAM combine_spinfiles
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!

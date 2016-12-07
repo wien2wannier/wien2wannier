@@ -1,0 +1,78 @@
+### wien2wannier/make.sys.example                                    ###
+#
+#   Default options for Makefiles in subdirectories
+#
+# The main purpose of this file is to allow compilation in a non-WIEN
+# environment (i.e., the placeholders in Makefile.orig have not been
+# replaced to create Makefile)
+#
+# Copyright 2014-2016 Elias Assmann
+
+### Select Fortan compiler
+ifeq "$(origin FC)" "default"
+#FC      = ifort
+FC      = gfortran
+endif
+
+
+### default FC options
+FOPT ?= -O3
+
+
+### These options enable some code that uses semi-recent Fortran
+### features.  Remove if you use an old compiler that does not support
+### them.
+FOPT += -DHAVE_PTR_ALLOC_GENERICS -DHAVE_VARLEN_STR
+
+
+### Wien2k library options
+#R_LIBS 	?= -lmkl_lapack -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -openmp -lpthread -lguide
+#R_LIBS 	?= -lmkl_lapack95_lp64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -openmp -lpthread
+R_LIBS ?= -llapack -lf77blas -lcblas -latlas
+#R_LIBS 	?= -llapack
+
+
+### Compiler-specific suggestions.
+###
+### $(MODOPT) should be the option that tells the compiler where to put
+### .mod files
+###
+### gfortran: -J
+### ifort:    -module
+ifneq "$(findstring gfortran,$(FC))" ""
+FFLAGS += -ffree-form -g -pedantic -Wcharacter-truncation # -Wall -fcheck=all
+# suppress gfortran's stupid warnings about uninitialized array bounds
+FFLAGS += -Wno-maybe-uninitialized -ffree-line-length-0
+MODOPT ?= -J
+
+else ifneq "$(findstring ifort,$(FC))" ""
+FFLAGS += -free -gen-interface nosource -traceback -g #-debug all -check format,uninit,output_conversion -warn all
+#FOPT   += -ipo
+MODOPT ?= -module
+
+### If you use a different compiler, you need to specify $(MODOPT)
+### manually.
+else ifndef MODOPT
+$(error unknown compiler ``$(FC)'', please specify variables manually)
+endif
+
+
+### Options for those few C files we have
+ifneq "$(findstring gcc,$(CC))" ""
+CFLAGS 	+= -Wall -O3
+else ifneq "$(findstring icc,$(CC))" ""
+CFLAGS 	+= -Wall -O3
+endif
+
+
+### To run wien2wannier tests, define a ‘WIENROOT’ directory where the
+### new version will be installed.
+# WIENROOT_TEST ?=
+
+
+## /---
+##| Local Variables:
+##| mode: makefile-gmake
+##| End:
+## \---
+##

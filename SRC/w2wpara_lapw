@@ -5,9 +5,7 @@
 ###    Wrapper script for ‘w2w’ when using ‘vector’ files from a
 ###    parallel calculation
 ###
-### Copyright 2014 Elias Assmann
-###
-### $Id: w2wpara_lapw 174 2014-02-03 10:05:36Z assmann $
+### Copyright 2014-2015 Elias Assmann
 
 onintr exit
 set name	= $0
@@ -15,21 +13,22 @@ set bin		= $name:h	#default directory for WIEN-executables
 if !(-d $bin) set bin = .
 
 if ($#argv < 1) then
-	echo usage: $0 deffile
-	exit
+  echo usage: $0 deffile
+  exit
 endif
 
-set updn cmplx
+set updn cmplx so
 
 while ($#argv)
   switch ($1)
   case -up:
-    set updn = up
-    set dnup = dn
+    set updn = -up
     shift; breaksw
   case -dn:
-    set updn = 'dn'
-    set dnup = 'up'
+    set updn = -dn
+    shift; breaksw
+  case -so:
+    set so   = so
     shift; breaksw
   case -c:
     set cmplx = c
@@ -44,6 +43,8 @@ set exe = $bin/w2w$cmplx
 
 set maxproc = `grep : .processes | grep  -v -e init: -e residue: | wc -l`
 
-$bin/vec2old -p -local -$updn
+if (! $?so) $bin/vec2old -p -local $updn
 $exe $def.def $maxproc
 exit 0
+
+

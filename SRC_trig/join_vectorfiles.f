@@ -1,17 +1,15 @@
 !!! wien2wannier/SRC_trig/join_vectorfiles.f
-!!! 
+!!!
 !!!    Joins multiple WIEN2K vector files to one for further processing
 !!!
 !!!    Usage: join_vectorfiles [-up/-dn] [-c] <case> <numberofparallelfiles>
 !!!
 !!! Copyright 2010-2012 Philipp Wissgott
-!!!           2013-2014 Elias Assmann
-!!!
-!!! $Id: join_vectorfiles.f 224 2014-05-30 14:56:29Z assmann $
+!!!           2013-2016 Elias Assmann
 
-PROGRAM join_vectorfiles
+program join_vectorfiles
   use const,     only: R8, C16, BUFSZ
-  use structmod, only: struct, struct_read
+  use structmod, only: struct_t, struct_read
   use util,      only: paropen
   use clio,      only: argstr, fetcharg, croak
   use kpoints,   only: count_kmesh_klist
@@ -23,21 +21,24 @@ PROGRAM join_vectorfiles
   integer, parameter :: unit_klist = 4, unit_energy=50, unit_energy2=51
   integer, parameter :: lmax=13, lomax=3, nloat=3
 
+  character(*), parameter :: fmt_header = '(100(f9.5))'
+  character(*), parameter :: fmt_kpt    = '(3e19.12,a10,2i6,f5.1,a3)'
+
   integer          :: iproc=0
-  character(BUFSZ) :: vecfn, enefn
-  logical          :: complex=.false.
+  character(BUFSZ) :: vecfn='', enefn=''
+  logical          :: complex=.false., do_vector=.false.
 
-  real(R8),     allocatable :: EIGVAL(:), E(:,:), ELO(:,:,:)
+  real(R8),     allocatable :: E(:), ELO(:,:)
   integer,      allocatable :: KZZ(:,:)
-  real(R8),     allocatable :: Z (:,:)
-  complex(C16), allocatable :: ZC(:,:)
+  real(R8),     allocatable :: Z  (:)
+  complex(C16), allocatable :: ZC (:)
 
-  integer       :: nkpoints, NE, NV
-  integer       :: jatom,i,j,jl,jj,jk
-  real(R8)      :: SX, SY, SZ, weight, eorb_ind
-  CHARACTER(3)  :: IPGR
-  CHARACTER(10) :: KNAME
-  type(struct)  :: stru
+  integer        :: nkpoints, NE, NV
+  integer        :: jatom,i,j,jj,jk
+  real(R8)       :: SX, SY, SZ, weight, eorb_ind, eigval
+  CHARACTER(3)   :: IPGR
+  CHARACTER(10)  :: KNAME
+  type(struct_t) :: stru
 
   type(argstr)     :: defname, cmplxarg
   character(BUFSZ) :: fname
@@ -48,7 +49,7 @@ PROGRAM join_vectorfiles
   if (command_argument_count() > 1) then
      call fetcharg(2, iproc)
   end if
-  if (command_argument_count() > 2) then 
+  if (command_argument_count() > 2) then
      call fetcharg(3, cmplxarg)
      if (cmplxarg%s == '-c') then
         complex = .true.
@@ -64,6 +65,7 @@ PROGRAM join_vectorfiles
      select case (iunit)
      case (unit_vector)
         vecfn = fname
+        do_vector = .true.
      case (unit_energy)
         enefn = fname
      case default
@@ -79,75 +81,93 @@ PROGRAM join_vectorfiles
  nkpoints = count_kmesh_klist(unit_klist)
  close(unit_klist)
 
- allocate( E(LMAX,stru%nneq) )
- allocate( ELO(0:LOMAX,nloat,stru%nneq) )
- 
- files: do j=1,iproc
-    call paropen(unit_vector, vecfn, iproc, j, FORM='unformatted')
-    call paropen(unit_energy, enefn, iproc, j, FORM=  'formatted')
- 
-   atoms: do jatom= 1,stru%nneq
-       read(unit_vector) (E(jl,jatom),jl=1,LMAX)
-       read(unit_vector) ((ELO(jl,jk,jatom),jl=0,LOMAX),jk=1,nloat)
-       read(unit_energy,'(100(f9.5))') (E(jl,jatom),jl=1,LMAX),eorb_ind
-       read(unit_energy,'(100(f9.5))') ((ELO(jl,jk,jatom),jl=0,LOMAX),jk=1,nloat)
+ allocate( E  (LMAX) )
+ allocate( ELO(0:LOMAX,nloat) )
+
+ files_ene: do j=1,iproc
+    call paropen(unit_energy, enefn, iproc, j, FORM='formatted')
+
+   atoms_ene: do jatom= 1,stru%nneq
+       read(unit_energy, fmt_header) E, eorb_ind
+       read(unit_energy, fmt_header) ELO
        if (j.eq.1) then
-          write(unit_vector2) (E(jl,jatom),jl=1,LMAX)
-          write(unit_vector2) ((ELO(jl,jk,jatom),jl=0,LOMAX),jk=1,nloat)
-          write(unit_energy2,'(100(f9.5))') (E(jl,jatom),jl=1,LMAX),eorb_ind
-          write(unit_energy2,'(100(f9.5))') ((ELO(jl,jk,jatom),jl=0,LOMAX),jk=1,nloat)
+          write(unit_energy2, fmt_header) E, eorb_ind
+          write(unit_energy2, fmt_header) ELO
        endif
-    enddo atoms
+    enddo atoms_ene
 
-    k_points: do jk=1,nkpoints ! /nfiles
-       read(unit_vector,end=888,err=888) SX, SY, SZ, KNAME, NV, NE, WEIGHT!, IPGR
-       allocate( KZZ(3,NV) )
-       read(unit_energy,'(3e19.12,a10,2i6,f5.1,a3)') SX, SY, SZ, KNAME, NV, NE, WEIGHT, IPGR 
-       !        write(*,*)SX, SY, SZ, KNAME, NV, NE, WEIGHT, IPGR 
-       read(unit_vector) (KZZ(1,I),KZZ(2,I),KZZ(3,I),I=1,NV)
+    k_points_ene: do jk=1,nkpoints
+       read (unit_energy,  fmt_kpt, end=101) &
+            SX, SY, SZ, KNAME, NV, NE, WEIGHT, IPGR
+       write(unit_energy2, fmt_kpt) &
+            SX, SY, SZ, KNAME, NV, NE, WEIGHT, IPGR
 
-       write(unit_vector2)SX, SY, SZ, KNAME, NV, NE, WEIGHT!, IPGR
-       write(unit_energy2,'(3e19.12,a10,2i6,f5.1,a3)') &
-            SX, SY, SZ, KNAME, NV, NE, WEIGHT, IPGR 
-       write(unit_vector2) (KZZ(1,I),KZZ(2,I),KZZ(3,I),I=1,NV)
-       if (complex) then
-          allocate(ZC(NV,NE))
-       else
-          allocate(Z (NV,NE))
-       end if
-       allocate(EIGVAL(NE))
+       eig_ene: do jj = 1, NE
+          read (unit_energy, *) I, EIGVAL
+          write(unit_energy2,*) I, EIGVAL
+       end do eig_ene
+    end do k_points_ene
+101 close(unit_energy)
+ end do files_ene
 
-       do jj = 1, NE
-          read(unit_vector) I, EIGVAL(I)
-          write(unit_vector2)I,EIGVAL(I)
+ do_vec: if (do_vector) then
+    files_vec: do j=1,iproc
+       call paropen(unit_vector, vecfn, iproc, j, FORM='unformatted')
 
-          read(unit_energy,*) I, EIGVAL(I)
-          write(unit_energy2,*)I,EIGVAL(I)
+       atoms_vec: do jatom= 1,stru%nneq
+          read(unit_vector) E
+          read(unit_vector) ELO
+
+          if (j.eq.1) then
+             write(unit_vector2) E
+             write(unit_vector2) ELO
+          endif
+       end do atoms_vec
+
+       k_points_vec: do jk=1,nkpoints
+          read (unit_vector, end=102)  SX, SY, SZ, KNAME, NV, NE, WEIGHT
+          write(unit_vector2)          SX, SY, SZ, KNAME, NV, NE, WEIGHT
+
+          allocate( KZZ(3,NV) )
 
           if (complex) then
-             read(unit_vector) (ZC(jl,I),jl=1,NV)
-             write(unit_vector2) (ZC(jl,I),jl=1,NV)
+             allocate(ZC(NV))
           else
-             read(unit_vector) (Z(jl,I),jl=1,NV)
-             write(unit_vector2) (Z(jl,I),jl=1,NV)
-          endif
-       enddo
+             allocate(Z (NV))
+          end if
 
-       deallocate(EIGVAL,KZZ)
-       if (complex) then
-          deallocate(ZC)
-       else
-          deallocate(Z)
-       end if
-888    continue
-    enddo k_points
-    close(unit_vector)
-    close(unit_energy)
- enddo files
-END PROGRAM
+          read (unit_vector)  KZZ
+          write(unit_vector2) KZZ
+
+          do jj = 1, NE
+             read (unit_vector)  I, EIGVAL
+             write(unit_vector2) I, EIGVAL
+
+             if (complex) then
+                read  (unit_vector)  ZC
+                write (unit_vector2) ZC
+             else
+                read (unit_vector)  Z
+                write(unit_vector2) Z
+             endif
+          end do
+
+          deallocate(KZZ)
+          if (complex) then
+             deallocate(ZC)
+          else
+             deallocate(Z)
+          end if
+       end do k_points_vec
+102    close(unit_vector)
+    end do files_vec
+ end if do_vec
+end program join_vectorfiles
+
 
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!

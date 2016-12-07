@@ -5,9 +5,7 @@
 ###
 ###     Generate input file for ‘w2w’
 ###
-### Copyright 2013-2014 Elias Assmann <elias.assmann@gmail.com>
-###
-### $Id: write_inwf_lapw 287 2014-10-09 14:11:17Z assmann $
+### Copyright 2013-2015 Elias Assmann <elias.assmann@gmail.com>
 
 '''
 Generate input file for `w2w' interactively or from command line
@@ -28,7 +26,13 @@ import numpy as np
 import re
 import traceback
 
-__version__ = "0.2 $Rev: 287 $"
+__version__ = "$version: v2.0.0$"
+
+try:
+    __version__ = re.search(":\s*(.*?)\s*\$", __version__).group(1)
+except:
+    __version__ = "unknown"
+
 
 class Struct(object):
     '''Class representing a crystal structure'''
@@ -123,7 +127,6 @@ def Site(struct, string):
             except ValueError: pass
         m = re.match('Z[\s=-_]*([\deE+.-]+)', s, re.I)
         if m:
-            print "`"+m.group(1)+"'"
             try:
                 return AtomicNumber(float(m.group(1)))
             except ValueError: pass
@@ -140,7 +143,7 @@ def Site(struct, string):
 
         key = str2key(s)
 
-        try: 
+        try:
             ineq |= struct.sites[key]
         except KeyError as e:
             raise ValueError("`" + s + "' is not a valid site")
@@ -240,7 +243,7 @@ class Axis(np.ndarray):
         return s
 
 ## Definition of Orbitals ##
-## 
+##
 ## if you change this, do not forget to change the orbital help
 ## accordingly
 
@@ -511,7 +514,7 @@ class YlmRotator(object):
         u2 = [(2*r6*r7+r4*r9)*r9 - (3*r4*r62 + 2*r1*r3*r6 + r4*r32)/4,
               (2*r6*r8+r5*r9)*r9 - (3*r5*r62 + 2*r2*r3*r6 + r5*r32)/4,
               -r6*(r32 + r62 - 4*r92)/2,
-              -2*((3*r4*r5 + r1*r2)*r6 + (r2*r4 + r1*r5)*r3 - 
+              -2*((3*r4*r5 + r1*r2)*r6 + (r2*r4 + r1*r5)*r3 -
                       4*(r6*r7*r8 + r5*r7*r9 + r4*r8*r9)),
               r5*( 4*r22+  r32+4*r52+3*r62-16*r82- 4*r92)/4 + r6*(r2*r3-4*r8*r9)/2,
               r4*(-4*r12-  r32-4*r42-3*r62+16*r72+ 4*r92)/4 - r6*(r1*r3-4*r7*r9)/2,
@@ -599,7 +602,7 @@ class Orbital(list):
                         first = False
                     else:
                         yield line
-                
+
 
 class Projection(object):
     def __str__(self):
@@ -742,7 +745,7 @@ projections will be placed on each of the resulting sites'''
                         ks = str(k[0]) + str(k[1])
 
                     print ' %-10s-> %s' % (ks, ', '.join(str(x) for x in v))
-            
+
         elif choice == 'A':
             print " ++ "+parser.prog+": help on axis specifications ++"
             print '''
@@ -783,7 +786,7 @@ def argmunge(parser, args):
         args.struct_file = args.case + '.struct'
 
     if args.inwf_file is None:
-        args.inwf_file = args.case + '.inwf'
+        args.inwf_file = args.case + '.inwf' + args.updn
 
     sf = open(args.struct_file, 'r')
     struct = Struct(sf)
@@ -860,7 +863,7 @@ try:
     arg_w2w.add_argument('-struct-file', metavar='STRUCT',
                          help="`struct' file to read instead of `CASE.struct'")
     arg_w2w.add_argument('-inwf-file', metavar='INWF',
-                         help="write w2w input here (default: `CASE.inwf')")
+                         help="write w2w input here (default: `CASE.inwf[up|dn]')")
     modes = ['AMN', 'MMN', 'BOTH']
     arg_w2w.add_argument('-mode', choices=modes,
                          type=Abbrev(modes), default='both',
@@ -869,6 +872,9 @@ try:
                          help="lowest, highest band to include")
     arg_w2w.add_argument('-ljmax', type=int, default=3,
                          help="max. LJ in exp(i b.r) expansion")
+    updn = arg_w2w.add_mutually_exclusive_group()
+    updn.add_argument('-up', dest='updn', action='store_const', const='up', default='')
+    updn.add_argument('-dn', dest='updn', action='store_const', const='dn')
 
     args = parser.parse_args()
 
@@ -891,7 +897,7 @@ try:
             os.stat(args.inwf_file).st_size > 0
         if extant_inwf:
             print "  + `"+args.inwf_file+ \
-                "' already exists, hit Ctrl-D now to keep it +"
+                "' already exists, press Ctrl-D now to keep it +"
             print
 
         try:
@@ -907,7 +913,7 @@ try:
         readline.set_completer_delims(' \t\n:,')
         if args.mode != 'MMN':
             while nproj < args.nband:
-                try: 
+                try:
                     p = ask_proj(struct, args.nband-nproj)
                 except EOFError:
                     break
@@ -921,7 +927,7 @@ try:
                     (": " if p.N==1 else "s: ")+str(p)
 
             print
-            print "--> %i band%s, %i Wannier function%s"%(
+            print "--> %i band%s, %i initial projection%s"%(
                 args.nband, '' if args.nband==1 else 's',
                 nproj, '' if nproj==1 else 's'
                 )
@@ -946,7 +952,7 @@ else:
 print >>wf, "%-4s             # AMN, MMN, or BOTH"%args.mode
 print >>wf, "%3d %3d          # min band, max band" % \
     (args.bands[0], args.bands[1])
-print >>wf, "%3d %3d          # LJMAX in exp(ibr) expansion, #WF" % \
+print >>wf, "%3d %3d          # LJMAX in exp(ibr) expansion, #proj" % \
     (args.ljmax, nproj)
 
 for p in proj:
@@ -956,3 +962,5 @@ for p in proj:
 if not args.batch and extant_inwf and not args.quiet:
     print "  + updated `"+args.inwf_file+\
         "' -- do not forget to change `win' file, if necessary +"
+
+

@@ -5,9 +5,7 @@
 ###    Wrapper script for ‘wplot’ when using ‘vector’ files from a
 ###    parallel calculation
 ###
-### Copyright 2014 Elias Assmann
-###
-### $Id: wplotpara_lapw 196 2014-03-25 15:45:48Z assmann $
+### Copyright 2014-2015 Elias Assmann
 
 onintr exit
 set name	= $0
@@ -19,17 +17,18 @@ if ($#argv < 1) then
   exit
 endif
 
-set updn cmplx
+set updn cmplx so
 
 while ($#argv)
   switch ($1)
   case -up:
-    set updn = up
-    set dnup = dn
+    set updn = -up
     shift; breaksw
   case -dn:
-    set updn = 'dn'
-    set dnup = 'up'
+    set updn = -dn
+    shift; breaksw
+  case -so:
+    set so   = so
     shift; breaksw
   case -c:
     set cmplx = c
@@ -45,6 +44,8 @@ set exe = $bin/wplot$cmplx
 
 set maxproc = `grep : .processes | grep  -v -e init: -e residue: | wc -l`
 
-$bin/vec2old -p -local -$updn
+if (! $?so) $bin/vec2old -p -local $updn
 $exe $def.def $wf $maxproc
 exit 0
+
+

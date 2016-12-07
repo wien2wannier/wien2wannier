@@ -7,9 +7,7 @@
 ###    Based on ‘init_lapw’.
 ###
 ### Copyright 2009-2012 Philipp Wissgott
-###           2013-2014 Elias Assmann
-###
-### $Id: init_w2w_lapw 287 2014-10-09 14:11:17Z assmann $
+###           2013-2016 Elias Assmann
 
 #---> path- and file-names
 set file    = `pwd`
@@ -34,12 +32,16 @@ alias	output		'set date = `date +"(%T)"`;'\
 			'printf ">   %s\t%s \n" "\!:*" "$date" ;'\
 			'printf "\n>   %s\t%s " "\!:*" "$date" >> $dayfile'
 
-alias	exec		'($bin/x \!:*) ;'\
+alias	exec		'($bin/x_lapw \!:*) ;'\
 			'teststatus'
 
 alias	total_exec	'output \!:*;'\
 			'exec  \!:*;'\
 			'teststop \!:*'
+
+alias   run_cmd         'output \!:*;'\
+                        '($bin/\!:*);'\
+                        'teststatus'
 
 alias 	warn            'echo ${0}: \!:* >/dev/stderr'
 
@@ -60,6 +62,7 @@ set updn
 #---> default flags
 unset quiet
 unset verbose
+unset mmn
 
 # options for batch usage
 unset batch
@@ -71,8 +74,9 @@ unset bmin bmax
 unset proj
 set w90opt
 
-if (-s $file.clmup) set sp updn=up
-if (-s $file.inso)  set so
+if ( -e $file.vspdn && ! -z $file.vspdn ) set sp updn=dn
+if ( -e $file.vspup && ! -z $file.vspup ) set sp updn=up
+if ( -e $file.inso  && ! -z $file.inso  ) set so
 
 #---> handling of input options
 echo ">   ($name) options: $argv" >> $logfile
@@ -102,6 +106,8 @@ while ($#argv)
 
     case -b:
       set batch; sb
+    case -mmn:
+      set mmn; sb
 
     case -emin:
       shift; set emin=$1; sb
@@ -134,7 +140,16 @@ while ($#argv)
       end
       breaksw
 
-    case -e: 
+    case -numk:
+      set numk=
+      shift;
+      while ( $#argv && "$1" !~ '-*' )
+        set numk=( $numk:q "$1" )
+        shift
+      end
+      breaksw
+
+    case -e:
       shift; set stopafter = $1; sb
     case -s:
       shift; set next  = $1; sb
@@ -143,12 +158,16 @@ while ($#argv)
       set stopafter; sb
 
     default:
-      croak 'option `$1'"' does not exist"
+      croak 'option `'"$1' does not exist"
   endsw
 end
 
 if ($?sp) set spf = -$updn
 if ($?so) set sof = -so
+
+set dnup
+if ($updn == "up") set dnup = dn
+if ($updn == "dn") set dnup = up
 
 if ($?batch) then
   if (  $?emin ^ $?emax) then
@@ -158,10 +177,10 @@ if ($?batch) then
     croak "bmin and bmax must appear paired"
   endif
   if (! $?emin ^ $?bmin) then
-    croak "either energy or band range must be given"
+    croak "energy range xor band range must be given"
   endif
-  if (! $?proj         ) then
-    croak "initial projections must be given"
+  if (! $?proj ^ $?mmn ) then
+    croak "initial projections xor -mmn must be given"
   endif
 endif
 
@@ -177,13 +196,13 @@ if ($next == "") then
   set next = 'kgen'		#default start with kgen
 else if ($next == 'stop' ) then
   set next = 'kgen'	        #default start with kgen
-else if !($next == 'kgen') then 
+else if !($next == 'kgen') then
   set b=r
   if (! $?batch) then
     echo "continue with " $next  "or restart with kgen?  (c/r)"
     set b=($<)
   endif
-  if ($b == 'r') then 
+  if ($b == 'r') then
     set next='kgen'
   endif
 endif
@@ -191,27 +210,30 @@ endif
 
 start:
 printf "\n\n    start \t(%s) " "`date`"	> $dayfile
-echo next is $next 
+echo next is $next
 goto $next
 
 
 kgen:
 if (! $?batch) then
   total_exec kgen -fbz
-  echo "-----> check $file.klist for generated K-points" 
-  editor $file.klist 
+  echo "-----> check $file.klist for generated K-points"
+  editor $file.klist
   echo "-----> continue with findbands or execute kgen again (c/e)?"
   set b=($<)
   if ($b == 'e') goto kgen
 else
   output kgen -fbz ($numk 0)
-  $bin/x kgen -fbz <<EOF
+  set numk = ( $numk )
+  if ($#numk > 1) then
+  set numk = "0\
+    $numk"
+  endif
+  $bin/x_lapw kgen -fbz <<EOF
 $numk
 0
 EOF
   teststatus
-  cp $file.klist $file.klist_w90
-  cp $file.kgen $file.kgen_w90
 endif
 
 
@@ -225,27 +247,25 @@ else
   set out1=$file.output1
 endif
 
-if (-s $out1) then
+if ( -e $out1 && ! -z $out1 ) then
   if (! $?batch) then
     echo '-----> found `'"$out1' from a previous lapw1 run"
 
-    set b=r
-    while ($b == 'r')
+    set b=e
+    while ($b == 'e')
       echo "-----> enter energy window for findbands [Emin Emax] (eV):"
       set b=($<)
       total_exec findbands $sof $spf -all $b
       head -n8 $file.outputfind$updn
       echo ' . . .'
       tail $file.outputfind$updn
-      echo "-----> continue with write_inwf or rerun findbands (c/r)"
+      echo "-----> continue with write_inwf or rerun findbands (c/e)"
       set b=($<)
     end
   else if ( $?emin ) then
     total_exec findbands $sof $spf -all $emin $emax
-    set bmin=`tail -n2 $file.outputfind$updn | head -n1 \
-	| cut -d: -f2 | awk '{print $1}'`
-    set bmax=`tail -n2 $file.outputfind$updn | head -n1 \
-	| cut -d: -f2 | awk '{print $2}'`
+    set bmin=`tail -n1 $file.outputfind$updn | cut -d: -f2 | awk '{print $1}'`
+    set bmax=`tail -n1 $file.outputfind$updn | cut -d: -f2 | awk '{print $2}'`
   endif
 endif
 
@@ -253,26 +273,31 @@ endif
 write_inwf:
 inwf:
 if (! $?batch) then
-  output write_inwf -f $file
-  $bin/write_inwf -f $file
-  teststatus
-  echo "-----> check $file.inwf for bands, ljmax and projections" 
-  editor $file.inwf
-  echo "-----> continue with write_win or execute write_inwf again (c/e)?"
+  run_cmd write_inwf -f $file $spf
+  echo "-----> check $file.inwf for bands, ljmax and projections"
+  editor $file.inwf$updn
+  echo "-----> continue or execute write_inwf again (c/e)?"
   set b=($<)
   if ($b == 'e') goto inwf
+  if (! -e $file.inwf$dnup || -z $file.inwf$dnup) then
+    echo "-----> copy inwf$updn to inwf$dnup (y/n)?"
+    set b=($<)
+    if ($b != 'n') then
+        cp -v $file.inwf$updn $file.inwf$dnup
+        editor $file.inwf$dnup
+    endif
+  endif
 else
-  output $bin/write_inwf -f $file -bands $bmin $bmax $proj:q
-  $bin/write_inwf -f $file -bands $bmin $bmax $proj:q
-  teststatus
+  if ($?mmn) then
+    set proj=(-mode mmn)
+  endif
+  run_cmd write_inwf -f $file -bands $bmin $bmax $proj:q $spf
 endif
 
 
 write_win:
 win:
-output write_win $w90opt:q
-$bin/write_win $w90opt:q
-teststatus
+run_cmd write_win $w90opt:q $spf
 if (! $?batch) then
   echo "-----> check $file.win for relevant options (disentanglement?)"
   editor $file.win
@@ -286,7 +311,7 @@ wannier90.x:
 wannier90:
 w90:
 nnkp:
-if (! $?batch) echo "-----> wannier90.x -pp computes kmesh..." 
+if (! $?batch) echo "-----> wannier90.x -pp computes kmesh..."
 total_exec wannier90 -pp
 if (! $?batch) echo "-----> wannier90.x done"
 
@@ -294,13 +319,13 @@ if (! $?batch) echo "-----> wannier90.x done"
 stop:					#normal exit
 printf "%s\n\n" "init_w2w finished" 	>> $dayfile
 printf "\n   stop\n"			>> $dayfile
-exit 0 
+exit 0
 
-error:					#error exit	
+error:					#error exit
 printf "\n   stop error\n"		>> $dayfile
 exit 1
 
-help:					#help exit 
+help:					#help exit
 cat << theend
 PROGRAM:	$0
 
@@ -334,3 +359,5 @@ sp/so  switches  are  usually  unnecessary  (detected  automatically).
 theend
 
 exit 0
+
+

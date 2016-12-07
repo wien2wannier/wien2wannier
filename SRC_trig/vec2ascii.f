@@ -1,19 +1,17 @@
-!!! wien2wannier/SRC_trig/vec2ascii.f90
-!!! 
+!!! wien2wannier/SRC_trig/vec2ascii.f
+!!!
 !!!    Translates WIEN2k vector files to plain text.  Based on
 !!!    join_vectorfiles.
 !!!
 !!!    Usage: vec2ascii [-up/-dn] [-c] <case> <numberofparallelfiles>
 !!!
-!!! Copyright 2013-2014 Elias Assmann
-!!!
-!!! $Id: vec2ascii.f 224 2014-05-30 14:56:29Z assmann $
+!!! Copyright 2013-2015 Elias Assmann
 
 PROGRAM vec2ascii
   use util,      only: line_count
-  use structmod, only: struct, struct_read
+  use structmod, only: struct_t, struct_read
   use const,     only: BUFSZ, R8, C16
-  
+
   implicit none
 
  character(50) seedname
@@ -33,7 +31,7 @@ PROGRAM vec2ascii
  INTEGER, pointer :: KZZ(:,:)
  REAL(R8), allocatable ::  Z(:,:)
  COMPLEX(C16), allocatable ::  ZC(:,:)
- type(struct) stru
+ type(struct_t) stru
  character(bufsz) :: vectorfileend, targetvectorfileend
  character(bufsz) :: energyfileend, targetenergyfileend
  character(bufsz) :: suf
@@ -61,33 +59,33 @@ PROGRAM vec2ascii
   !command line argument read-in
   iarg=command_argument_count()
   argcount = 1
-    
+
 
   usecomplex = .false.
   if ((iarg.ge.1)) then
     do j=1,iarg
         call get_command_argument(j,argdummy)
         if (argdummy(1:1).eq.'-') then
-            if ((argdummy(2:3).eq.'up').or.(argdummy(2:3).eq.'dn')) then     
+            if ((argdummy(2:3).eq.'up').or.(argdummy(2:3).eq.'dn')) then
                !for spin-polarized calc. the fileendings have additional up/dn
               vectorfileend = ".vector"//argdummy(2:3)
               energyfileend = ".energy"//argdummy(2:3)
               startmessage = "++ join vector files of spin-polarized input files:"//argdummy(2:3)//" ++"
-            elseif ((argdummy(2:5).eq.'soup').or.(argdummy(2:5).eq.'sodn')) then  
+            elseif ((argdummy(2:5).eq.'soup').or.(argdummy(2:5).eq.'sodn')) then
                vectorfileend = ".vectorso"//argdummy(4:5)
                energyfileend = ".energyso"//argdummy(4:5)
                usecomplex = .true.
                startmessage = "++ ascii'ize vector files of spin-polarized spin-orbit input files:"//argdummy(4:5)//" ++"
-            elseif (argdummy(2:2).eq.'c') then  
+            elseif (argdummy(2:2).eq.'c') then
                usecomplex = .true.
             elseif (argdummy(2:2).eq.'h') then
                write(*,*) 'joins multiple WIEN2K vector files to one for further processing'
                write(*,*) 'Usage: vec2ascii [-up/-dn/-soup/-sodn/-c] case numberofparallelfiles'
-               stop    
+               stop
             else
                write(*,*) 'Unknown option'
                write(*,*) 'Usage: vec2ascii [-up/-dn/-soup/-sodn/-c] case numberofparallelfiles'
-               stop    
+               stop
             endif
          else
             if (argcount.eq.1) then
@@ -117,11 +115,11 @@ PROGRAM vec2ascii
 
  allocate( E(LMAX,stru%nneq) )
  allocate( ELO(0:LOMAX,nloat,stru%nneq) )
- 
+
  open(unit=unittargetvector,file=trim(seedname)//trim(targetvectorfileend), &
       & status='unknown',form='formatted')
  open(unit=unittargetenergy,file=trim(seedname)//trim(targetenergyfileend), &
-      & status='unknown',form='formatted')    
+      & status='unknown',form='formatted')
 
  do j=1,nfiles
     if (nfiles == 1) then
@@ -153,11 +151,11 @@ PROGRAM vec2ascii
 
        read(unitvector,end=888,err=888) SX, SY, SZ, KNAME, NV, NE, WEIGHT!, IPGR
        allocate( KZZ(3,NV) )
-       read(unitenergy,'(3e19.12,a10,2i6,f5.1,a3)') SX, SY, SZ, KNAME, NV, NE, WEIGHT, IPGR 
+       read(unitenergy,'(3e19.12,a10,2i6,f5.1,a3)') SX, SY, SZ, KNAME, NV, NE, WEIGHT, IPGR
        read(unitvector) (KZZ(1,I),KZZ(2,I),KZZ(3,I),I=1,NV)
        write(unittargetvector,*) SX, SY, SZ, KNAME, NV, NE, WEIGHT!, IPGR
        write(unittargetenergy,'(3e19.12,a10,2i6,f5.1,a3)') &
-            & SX, SY, SZ, KNAME, NV, NE, WEIGHT, IPGR 
+            & SX, SY, SZ, KNAME, NV, NE, WEIGHT, IPGR
        write(unittargetvector,*) (KZZ(1,I),KZZ(2,I),KZZ(3,I),I=1,NV)
        allocate(Z(NV,NE),ZC(NV,NE))
        allocate(EIGVAL(NE))
@@ -186,8 +184,10 @@ PROGRAM vec2ascii
  write(*,*)"++ joining vector files(+energy files) complete ++"
 END PROGRAM vec2ascii
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!

@@ -1,12 +1,10 @@
-!!! wien2wannier/SRC_trig/shifteig.f90
+!!! wien2wannier/SRC_trig/shifteig.f
 !!!
 !!!    Shifts the energy within the seed.eig file to account for the
 !!!    Fermi energy
 !!!
 !!! Copyright 2009-2012 Philipp Wissgott
-!!!                2014 Elias Assmann
-!!!
-!!! $Id: shifteig.f 208 2014-05-14 12:29:09Z assmann $
+!!!           2014-2015 Elias Assmann
 
 PROGRAM shift_energy
   use reallocate, only: realloc
@@ -14,7 +12,7 @@ PROGRAM shift_energy
   use wien2k,     only: gtfnam, errflg, errclr
   use util,       only: string
   use const,      only: DPk, BUFSZ
-  
+
   implicit none
 
   integer, parameter :: unit_eig=11, Ninit=10, Ninc=10
@@ -46,7 +44,7 @@ PROGRAM shift_energy
   readeig: do
      read(unit_eig, *, END=120) kpt, band, energies(iline)
      if (iline >= nbuf) then
-        call realloc(energies, nbuf+Ninc)
+        call realloc(energies, (/ nbuf+Ninc /))
         nbuf = nbuf+Ninc
      end if
      iline = iline+1
@@ -73,8 +71,10 @@ PROGRAM shift_energy
   call errclr(errfn)
 END PROGRAM shift_energy
 
+
 !!/---
 !! Local Variables:
 !! mode: f90
 !! End:
 !!\---
+!!

@@ -26,9 +26,7 @@
 ###    advised to use it whenever using wien2wannier, to make sure
 ###    certain files will be where other programs expect them.
 ###
-### Copyright 2013-2014 Elias Assmann
-###
-### $Id: wannier90_lapw 287 2014-10-09 14:11:17Z assmann $
+### Copyright 2013-2015 Elias Assmann
 
 # Wannier90 executable
 W90=wannier90.x
@@ -73,6 +71,19 @@ warn () {
     echo >&2 "$name: $@"
 }
 
+myln () {
+    # link already in place, or non-sp
+    [[ $1 -ef $2 ]] && return
+
+    lnopt=f
+    if [[ ! $q && -s $new && ! -L $new ]]; then
+        warn $new already exists
+        lnopt=i
+    fi
+
+    ln -s$lnopt $v $1 $2
+}
+
 
 ## Option handling ##
 while true; do
@@ -104,12 +115,12 @@ while true; do
 done
 
 if [[ $pp && $updn ]]; then
-    warn -pp is used without -up/-dn
+    warn -pp should be used without -up/-dn
     updn=
 fi
 
 if [[ $so && $updn ]]; then
-    warn -so is used without -up/-dn
+    warn -so should be used without -up/-dn
     updn=
 fi
 
@@ -117,18 +128,27 @@ fi
 ## Set up files ##
 
 ## check if required files exist
-reqfiles="amn mmn eig"
-[[ $so ]] && reqfiles="amnup amndn eigup eigdn"
-[[ $pp ]] && reqfiles=
+if [[ $pp ]]; then
+    reqfiles=
+elif [[ $so ]]; then
+    reqfiles="amnup amndn mmnup mmndn win"
+else
+    reqfiles="amn$updn mmn$updn eig$updn win"
+fi
+
 for r in $reqfiles; do
-    req=$file.$r$updn
+    req=$file.$r
 
     [[ -s $req ]] || croak required file $req does not exist
 done
 
-# spin-summation for SO + SP
+## spin-summation for SO + SP
 if [[ $so ]]; then
-    $bin/x w2waddsp
+    if [[ -s $file.eigup ]]; then
+        myln $file.eigup $file.eig
+    fi
+
+    $bin/x -f $file w2waddsp
 fi
 
 ## link “spin-polarized” files required by Wannier90 to the names it
@@ -139,16 +159,7 @@ for s in $spfiles; do
     new=$file.$s
     old=$file.$s$updn
 
-    # link already in place, or non-sp
-    [[ $new -ef $old ]] && continue
-
-    lnopt=f
-    if [[ ! $q && -s $new && ! -L $new ]]; then
-        warn $new already exists
-        lnopt=i
-    fi
-
-    ln -s$lnopt $v $old $new
+    myln $old $new
 done
 
 
@@ -157,8 +168,16 @@ $W90 $pp $file
 status=$?
 
 
+## remove links again
+for s in $spfiles; do
+    f=$file.$s
+
+    [[ -L $f ]] && rm $q $v $f
+done
+
+
 ## Manage output files ##
-spfiles=".wout .werr _band.dat _centres.xyz .chk"
+spfiles=".wout .werr _band.dat _hr.dat _centres.xyz .chk"
 [[ $pp ]] && spfiles=
 [[ $updn ]] || spfiles=
 for s in $spfiles; do
@@ -174,3 +193,5 @@ done
 ## Exit with wannier90's exit status
 ## (though currently it always returns 0)
 exit $status
+
+

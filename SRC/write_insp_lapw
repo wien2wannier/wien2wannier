@@ -5,9 +5,7 @@
 ###    Writes Fermi energy from scf or scf2 file to insp file
 ###
 ### Copyright 2009-2012 Philipp Wissgott
-### Copyright 2013-2014 Elias Assmann
-###
-### $Id: write_insp_lapw 287 2014-10-09 14:11:17Z assmann $
+### Copyright 2013-2015 Elias Assmann
 
 bin=$(dirname $0)
 definsp=$bin/SRC_templates/case.insp
@@ -133,3 +131,5 @@ m/^(\s*\S*\s+)(\S+)(\s*)(.*)$/;
 $_ = $1 . q('"$fermi"') .
      q( ) x (length($2) + length($3) - '${#fermi}') .
      $4 . qq(\n)' $insp
+
+
