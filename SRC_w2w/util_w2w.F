@@ -1294,7 +1294,6 @@ contains
     subroutine make_ksym()
 !!! This is from SRC_kgen/sdefl.f
 
-      real(DPk), dimension(3,3) :: a
       logical                   :: addinv
       integer                   :: i, Nrsym, Nksym
 

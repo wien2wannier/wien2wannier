@@ -749,7 +749,7 @@ subroutine auggen(stru, large)
   use atspdt,    only: P, DP
   use radfu,     only: rrad
   use uhelp,     only: A, B
-  use const,     only: DPk
+  use const,     only: DPk, clight
   use param,     only: NLOat, Nrad, Nrf, LOmax, &
        &               unit_out, unit_vsp, unit_vector
   use wplot,     only: Lmax7
@@ -769,7 +769,7 @@ subroutine auggen(stru, large)
   logical   :: rlo(1:nloat,0:lomax)
   integer   :: i, k, l, m, jatom, jlo, jrf, irf, nodes, kappa
   real(DPk) :: cfac, RMT2, rnorm, uve, duve, uv, uvb, duvb, duv
-  real(DPk) :: dele, delei, fl, ei, e1, cross, clight, r_m
+  real(DPk) :: dele, delei, fl, ei, e1, cross, r_m
   real(DPk) :: pi12lo, pe12lo, xac, xbc, xcc, alonorm
   real(DPk) :: E(0:LMAX7), ELO(0:LOMAX,NLOAT), PEI(0:LMAX7)
 
@@ -903,8 +903,8 @@ subroutine auggen(stru, large)
                  call dergl(stru, jatom, a, b)
                  do m=1,stru%Npt(jatom)
                     r_m=stru%R0(JATOM)*exp(stru%dx(jatom)*(m-1))
-                    b(m)=b(m)*r_m/(2.d0*clight+(elo(l,jlo)- &
-                         2.d0*vr(m)/r_m)/(2.d0*clight))
+                    b(m)=b(m)*r_m/(2*clight+(elo(l,jlo)- &
+                         2*vr(m)/r_m)/(2*clight))
                     b(m)=b(m)*clight
                  enddo
               else
@@ -1259,7 +1259,6 @@ end module     wavsph_m
 module     bessel_m; contains
 subroutine bessel(Npw, BK, NMT, rad, F, DF)
   use const, only: DPk
-  use wplot, only: Lmax7
 
   !! procedure includes
   use sphbes_m
@@ -1402,7 +1401,7 @@ subroutine findmt(P, atms, stru, pos, iAt, iLat, iR, R)
   integer,        intent(out) :: iAt, iLat(3), iR
   real(DPk),      intent(out) :: R(3)
 
-  integer   :: i, j, jatom, jx, jy, jz, ilow, iup
+  integer   :: i, jatom, jx, jy, jz, ilow, iup
   real(DPk) :: RR, R2, RMT2, T
 
 !
@@ -1555,7 +1554,7 @@ subroutine trans(pos, stru)
   type(struct_t), intent(in)    :: stru
 
   real(DPk) :: S(3,3), T(3,3)
-  integer   :: i, k, n
+  integer   :: n
 
   ! trans() transforms real space vectors x and symmetry operations
   ! {Q|t} from conventional into primitive fractional coordinates

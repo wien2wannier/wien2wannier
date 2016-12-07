@@ -23,7 +23,7 @@ module     main_m
   end interface orth
 contains
 subroutine main()
-  use sym2,       only: init_sym2, rtrans=>trans, imat
+  use sym2,       only: init_sym2, imat
   use lolog,      only: lapw, ilo, Nlo
   use loabc,      only: Alo
   use atspdt,     only: p, dp
