@@ -45,6 +45,9 @@ Bugfixes and enhancements include:
 
 * In `w2w':
 
+  - depending on the details of your calculation, you may see a
+    significant speedup with respect to 1.0.
+
   - adapted `w2w' to work with `-p -so'
 
   - fixed crashes with an error ``read statement [from vectorso]
