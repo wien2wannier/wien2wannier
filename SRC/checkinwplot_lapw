@@ -23,7 +23,7 @@ else  an error occurred
 
 import sys, argparse, re
 
-__version__ = "$version: v1.0.0-288-g407f2fd$"
+__version__ = "$version: v2.0.0$"
 
 try:
     __version__ = re.search(":\s*(.*?)\s*\$", __version__).group(1)
