@@ -2278,7 +2278,7 @@ unset vecso vecsoup suf
 
 cat <<EOF >$def
   5,'$file.inwf$updn',       'old',    'formatted',  0
-  6,'$file.outputwf$updn',   'unknown','formatted',  0
+  6,'$file.outputwf$w90updn','unknown','formatted',  0
   7,'$file.amn$w90updn',     'unknown','formatted',  0
   8,'$file.mmn$w90updn',     'unknown','formatted',  0
  10,'${scratch}$file.vector$sc$hf$soupdn','old','unformatted',0
