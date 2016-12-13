@@ -191,5 +191,3 @@ $(util_users): FFLAGS += -I$(UTILDIR)
 
 $(modw2w_users): $(MODOBJ)
 $(modw2w_users): FFLAGS += -I$(UTILDIR)
-
-

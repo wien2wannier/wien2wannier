@@ -856,5 +856,3 @@
 %%%% fin macro %%%%
 
 \endinput
-
-

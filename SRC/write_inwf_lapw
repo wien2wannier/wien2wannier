@@ -962,5 +962,3 @@ for p in proj:
 if not args.batch and extant_inwf and not args.quiet:
     print "  + updated `"+args.inwf_file+\
         "' -- do not forget to change `win' file, if necessary +"
-
-

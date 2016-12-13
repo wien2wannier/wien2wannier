@@ -73,4 +73,3 @@ end program wf_r
 !! mode: f90
 !! End:
 !!\---
-!!

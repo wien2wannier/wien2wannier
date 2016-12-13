@@ -131,5 +131,3 @@ m/^(\s*\S*\s+)(\S+)(\s*)(.*)$/;
 $_ = $1 . q('"$fermi"') .
      q( ) x (length($2) + length($3) - '${#fermi}') .
      $4 . qq(\n)' $insp
-
-

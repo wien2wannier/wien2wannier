@@ -81,5 +81,3 @@ $(UTIL_USERS): FFLAGS += -I$(UTILDIR)
 
 %.o: %.f
 	$(FC) $(FFLAGS) -c $<
-
-

@@ -2884,5 +2884,3 @@ endsw
 if (-e $running) rm $running
 
 exit(1)
-
-

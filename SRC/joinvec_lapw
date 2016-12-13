@@ -48,4 +48,3 @@ set vector=`grep -c '^ *10 *,' $def.def`
 if ($vector && $?so) $bin/vec2old -p -local $updn
 $exe $def.def $maxproc $cmplx
 exit 0
-

@@ -2206,4 +2206,3 @@ end module reallocate
 !! mode: f90
 !! End:
 !!\---
-!!

@@ -77,4 +77,3 @@ END PROGRAM shift_energy
 !! mode: f90
 !! End:
 !!\---
-!!

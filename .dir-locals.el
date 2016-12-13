@@ -12,6 +12,3 @@
   (TeX-master . "wien2wannier_userguide"))
  (makefile-mode
   (indent-tabs-mode . t)))
-
-
-;; Time-stamp: <2015-08-13 16:08:52 elias@hupuntu>

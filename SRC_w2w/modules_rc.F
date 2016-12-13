@@ -917,4 +917,3 @@ end module read_vec_m
 !! mode: f90
 !! End:
 !!\---
-!!

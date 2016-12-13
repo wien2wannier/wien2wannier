@@ -81,4 +81,3 @@ END PROGRAM combine_spinfiles
 !! mode: f90
 !! End:
 !!\---
-!!

@@ -763,4 +763,3 @@ end module radint_m
 !! mode: f90
 !! End:
 !!\---
-!!

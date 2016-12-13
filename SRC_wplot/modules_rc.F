@@ -116,13 +116,13 @@ subroutine main()
        & /' UNIT CELL ANGLES:',3F12.7,' [°]')") &
        stru%a, stru%alpha(:)
 
-  write(unit_out,"(/' REAL SPACE LATTICE VECTORS a1, a2, a3 (in bohr)' &
+  write(unit_out,"(/' REAL SPACE LATTICE VECTORS a1, a2, a3 (in Bohr)' &
        &           /' -----------------------------------------------' &
        &    /' CONVENTIONAL UNIT CELL :'/(' a_',I1,'    = ',3F12.7))") &
        ( i, stru%conv_dir(:,i), i=1,3 )
   write(unit_out,"(/' PRIMITIVE UNIT CELL :'/(' a_',I1,'    = ',3F12.7))") &
        ( i, stru%prim_dir(:,i), i=1,3 )
-  write(unit_out,"(/' RECIPROCAL LATTIC VECTORS b1, b2, b3 (in 1/bohr)' &
+  write(unit_out,"(/' RECIPROCAL LATTIC VECTORS b1, b2, b3 (in 1/Bohr)' &
        &           /' ------------------------------------------------' &
        &     /' CONVENTIONAL UNIT CELL :'/(' b_',I1,'/τ  = ',3F12.7))") &
        ( i, stru%conv_rec(:,i)/TAU, i=1,3 )
@@ -708,4 +708,3 @@ end module main_m
 !! mode: f90
 !! End:
 !!\---
-!!

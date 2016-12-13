@@ -193,5 +193,3 @@ done
 ## Exit with wannier90's exit status
 ## (though currently it always returns 0)
 exit $status
-
-

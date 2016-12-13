@@ -49,5 +49,3 @@ make -C SRC_wplot all || exit
 cp SRC_wplot/wplot{,c} .
 
 make -C SRC_trig clean all
-
-

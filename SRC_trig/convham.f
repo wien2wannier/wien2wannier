@@ -93,4 +93,3 @@ end program convert_hamiltonian
 !! mode: f90
 !! End:
 !!\---
-!!

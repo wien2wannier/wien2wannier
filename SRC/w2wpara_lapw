@@ -46,5 +46,3 @@ set maxproc = `grep : .processes | grep  -v -e init: -e residue: | wc -l`
 if (! $?so) $bin/vec2old -p -local $updn
 $exe $def.def $maxproc
 exit 0
-
-

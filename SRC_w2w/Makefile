@@ -182,5 +182,3 @@ $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
 ## real/complex versions
 $(foreach o, $(modrc_users), $(R_DIR)/$o): $(R_DIR)/modules_rc.o
 $(foreach o, $(modrc_users), $(C_DIR)/$o): $(C_DIR)/modules_rc.o
-
-

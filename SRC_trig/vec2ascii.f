@@ -190,4 +190,3 @@ END PROGRAM vec2ascii
 !! mode: f90
 !! End:
 !!\---
-!!

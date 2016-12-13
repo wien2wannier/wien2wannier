@@ -435,5 +435,3 @@ for i, N, psink, psiarg, xsf, wplot in \
 
     print>>xsf, "  END_DATAGRID_3D"
     print>>xsf, "END_BLOCK_DATAGRID_3D"
-
-
