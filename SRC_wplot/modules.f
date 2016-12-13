@@ -76,7 +76,7 @@ end module wplot
 
 !---------------- Reading ‘inwplot’ files              ----------------------
 module inwplotmod
-  use const, only: DPk
+  use const, only: DPk, BUFSZ
 
   implicit none
   private
@@ -100,10 +100,11 @@ module inwplotmod
   end type grid
 
   type inwplot_t
-     logical      :: checkortho, dephas, WFrot, large, extgrid
-     integer      :: WFidx
-     real(DPk)    :: unit
-     character(3) :: unit_name
+     logical          :: checkortho, dephas, WFrot, large, extgrid
+     integer          :: WFidx
+     real(DPk)        :: unit
+     character(BUFSZ) :: unit_name
+     character(3)     :: unit_option
 
      type(grid), allocatable :: grid ! defined for 3D grids but not ANY
 
@@ -248,10 +249,12 @@ contains
     select case ( uppercase(adjustl(unit)) )
     case ('', 'AU', 'ATU');
        inw%unit = unit_ATU
-       inw%unit_name ='ATU'
+       inw%unit_name   = 'Bohr⁻³'
+       inw%unit_option = 'ATU'
     case ('ANG');
        inw%unit = unit_ANG
-       inw%unit_name ='ANG'
+       inw%unit_name   = 'Å⁻³'
+       inw%unit_option = 'ANG'
     case default
        call croak("unknown units option `"//unit//"'")
     end select

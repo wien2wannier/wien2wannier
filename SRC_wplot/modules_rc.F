@@ -261,8 +261,11 @@ subroutine main()
      write(unit_psink, fmt_grid) &
           xyz(3), inwp%grid%N(2), inwp%grid%len(3), inwp%grid%ang(2:1:-1)
 
-     write(unit_psink, &
-          "('#order: (((w(x,y,z), z=1,#z), y=1,#y), x=1,#x)')")
+     write(unit_psink,                                            &
+          "('#order: (((w(x,y,z), z=1,#z), y=1,#y), x=1,#x);   ', &
+          & 'units: ', A)")                                       &
+          trim(inwp%unit_option)
+
   endif extgrid
 
   call inwf_read(unit_inwf, inwf)
@@ -410,7 +413,7 @@ subroutine main()
        "(/' WANNIER FUNCTION OPTIONS'                         &
        & /' ------------------------'                         &
        & /' evaluation of the ',A,' relativistic component',  &
-       &  ' of the wave functions in ',A,' units')")          &
+       &  ' of the wave functions in  units of ', A)")          &
        merge('large', 'small', inwp%large), trim(inwp%unit_name)
 
   if(inwp%dephas) &
