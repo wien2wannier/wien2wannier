@@ -22,7 +22,14 @@ A script `checkinwplot' is provided that checks an input file for
 conformance to the new format and converts old-style input files.  `x
 wplot' calls this script automatically.
 
-Bugfixes and enhancements include:
+
+Changes in 2.0.1 include:
+
+* Improved handling and documentation of ORIGIN and TARGET options to
+  `prepare_w2wdir' and set W/ as default for TARGET
+
+
+Changes in 2.0 (included in Wien2k 16.1) include:
 
 * In spin-polarized cases, `w2w' now expects separate input files
   `case.inwfup' and `case.inwfdn'.
@@ -64,12 +71,8 @@ Bugfixes and enhancements include:
 * Fixed a Makefile bug affecting `w2w' and `wplot' where real and
   complex modules were mixed (cf. mailing list <goo.gl/WbMb0w>).
 
-Many thanks to Marc Höppner, Hong Jiang, Okan Köksal, Gernot
-Kraberger, Laurence Marks, Oleg Rubel, Liang Si, Yundi Quan, Ulrich
-Wedig, Wenhu Xu, Jiaxu Yan, Jianxin Zhu, and Manuel Zingl for their
-valuable comments on past versions.
 
-================
+=== Older version information follows ================================
 
 Version 1.0 represents a major overhaul of the user interface.  In
 particular:
@@ -86,7 +89,8 @@ particular:
   `w2win' file is now called `inwf', and the program that produces it
   is `write_inwf'
 
-Other changes and new features include:
+
+Changes in 1.0 (included in Wien2k 14.2) include:
 
 * `write_inwf' brings many new features over the old `write_w2win',
   e.g.
@@ -159,8 +163,6 @@ Changes in 1.0-β2 include:
 
 * renamed convert_hamiltonian -> convham
 
-
-=== Older version information follows ===============================
 
 +++Version 0.97(08/07/13)
 1) fixed detection of real/complex case in w2w (it checks the struct file now)
