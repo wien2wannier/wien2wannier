@@ -265,7 +265,6 @@ subroutine main()
           "('#order: (((w(x,y,z), z=1,#z), y=1,#y), x=1,#x);   ', &
           & 'units: ', A)")                                       &
           trim(inwp%unit_option)
-
   endif extgrid
 
   call inwf_read(unit_inwf, inwf)

@@ -16,32 +16,11 @@ sp=
 c=
 p=
 
-file=$(basename $PWD)
 name=$(basename $0)
-
-if [[ -s $file.inso ]]; then
-    so=so
-fi
-
-if [[ -s $file.clmup ]]; then
-    sp="up dn"
-fi
 
 if [[ -s .processes ]]; then
     p=p
 fi
-
-# copied from x_lapw
-c=$(cut -b -6 "$file.struct" 2>/dev/null |
-    awk 'BEGIN{c="c"};
-         {if ($0 == "-1 0 0") {
-            getline;
-            {if ($0 == " 0-1 0"){
-               getline;
-               {if ($0 == " 0 0-1")
-                  {c= ""}
-         }}}}};
-         END{print c}')
 
 usage () {
     cat <<EOF
@@ -50,12 +29,16 @@ PROGRAM:        $0
 PURPOSE:        prepare a separate working directory for wien2wannier
                 copies necessary files
 
-USAGE:          $name [OPTIONS] TARGET
+USAGE:          $name [OPTIONS] [ [ORIGIN] TARGET ]
+
+ARGUMENTS:
+ ORIGIN ->      directory to copy FROM (default: ./)
+ TARGET ->      directory to copy TO   (default: W/)
 
 FLAGS:
 -efermi ->      give Fermi energy directly
 -scf    ->      alternative \`scf' file (for Fermi energy)
--f FILE ->      set casename
+-f FILE ->      set casename for ORIGIN
 -hf     ->      for Hartree-Fock calculations
 -[no]c	->	complex [real] calculation
 -[no]sp	->	[non-] spin-polarized calculation
@@ -75,10 +58,13 @@ croak () {
     echo >&2 "$name: $@"
     exit 1
 }
-
-warn () {
+carp () {
     [[ $q ]] && return
     echo >&2 "$name: $@"
+}
+blab () {
+    [[ $q ]] && return
+    echo     "$name: $@"
 }
 
 mycp () {
@@ -107,7 +93,7 @@ fermigrep () {
             s=( $(addsp $file.scf2$hf) )
 
             if [[ -s $s ]]; then    # if sp, this probes the first file
-                warn "taking Fermi energy from ${s[@]} -- make sure it is correct [caveat: -band]"
+                carp "taking Fermi energy from ${s[@]} -- make sure it is correct [caveat: -band]"
 
             # reverse order of up/dn so that it comes out right at the
             # end
@@ -117,17 +103,17 @@ fermigrep () {
             fi
         fi
 
-        [[ $v ]] && echo -n "taking Fermi energy from \`$s': "
+        [[ $v ]] && blab -n "taking Fermi energy from \`$s': "
 
         if [[ -s $s ]]; then
             fermi=( $(tac ${s[@]} | grep -m $n -e ":FER" | cut -d= -f2 | tac) )
         else
-            warn "\`$s' not found, setting Fermi energy to 0"
+            carp "\`$s' not found, setting Fermi energy to 0"
             fermi=( $(yes 0 | head -$n) )
-            [[ ! $q ]] && myv=1
+            myv=1
         fi
 
-        [[ $myv ]] && echo ${fermi[@]}
+        [[ $myv ]] && blab ${fermi[@]}
     else # -efermi not given
         # Convert $fermi to array.  If only one word was given, it is
         # repeated; if two words, they are converted to an array (and
@@ -178,32 +164,32 @@ while true; do
             hf=hf;;
 
         # things that are normally autodetected
-        -sp)
-            sp="up dn";;
-        -so)
-            so=so;;
-        -c)
-            c=c;;
-        -p)
-            p=p;;
+        -sp) spset=true
+             sp="up dn";;
+        -so) soset=true
+             so=so;;
+        -c)  cset=true
+             c=c;;
+        -p)  pset=true
+             p=p;;
         # and the converse
-        -nosp)
-            sp=;;
-        -noso)
-            so=;;
-        -noc)
-            c=;;
-        -nop)
-            p=;;
+        -nosp) spset=true
+               sp=;;
+        -noso) soset=true
+               so=;;
+        -noc)  cset=true
+               c=;;
+        -nop)  pset=true
+               p=;;
 
         # these are supported for backward-compatibility
-        -spc)
-            sp="up dn"
-            c=c;;
-        -spso)
-            sp="up dn"
-            so=so
-            c=c;;
+        -spc)  spset=true; cset=true
+               sp="up dn"
+               c=c;;
+        -spso) spset=true; soset=true
+               sp="up dn"
+               so=so
+               c=c;;
 
         --) shift
             break;;
@@ -217,11 +203,39 @@ while true; do
 done
 
 case $# in
-    1)  target=$1;;
-    2)  target=$2
-        file=$1;;
-    *)  croak "bad arguments (try --help)";;
+    0) carp Copying to W/ …
+       target=W;;
+    1) target=$1;;
+    2) target=$2
+
+       if [[ $file ]]; then
+           file=$1/$file
+       else
+           file=$1/$(basename $1)
+       fi;;
+    *) croak "bad arguments (try --help)";;
 esac
+
+
+## detect settings unless set explicitly
+[[ ! $file  ]] && file=$(basename $PWD)
+
+[[ ! $soset ]] && [[ -s $file.inso  ]] && so=so
+
+[[ ! $spset ]] && [[ -s $file.clmup ]] && sp="up dn"
+
+# copied from x_lapw
+[[ ! $cset  ]] && \
+    c=$(cut -b -6 "$file.struct" 2>/dev/null |
+        awk 'BEGIN{c="c"};
+             {if ($0 == "-1 0 0") {
+                getline;
+                {if ($0 == " 0-1 0"){
+                   getline;
+                   {if ($0 == " 0 0-1")
+                      {c= ""}
+             }}}}};
+             END{print c}')
 
 
 ## Construct file suffix lists ##
@@ -263,12 +277,12 @@ if [[ $p ]]; then               # concatenate ‘output1’ files
         cat $f > $file.$s
     done
 
-    [[ $v && -s $file.$s ]] && echo $file.$s created from $n parallel files
+    [[ $v && -s $file.$s ]] && blab $file.$s created from $n parallel files
 fi
 
 for suf in $should; do
     f="$file.$suf"
-    [[ -s $f ]] || warn "recommended file \`$f' not found (will continue)"
+    [[ -s $f ]] || carp "recommended file \`$f' not found (will continue)"
 done
 
 
