@@ -47,7 +47,7 @@ MODOPT ?= -J
 
 else ifneq "$(findstring ifort,$(FC))" ""
 FFLAGS += -free -gen-interface nosource -traceback -g #-debug all -check format,uninit,output_conversion -warn all
-#FOPT   += -ipo
+FFLAGS += -ip # -ipo
 MODOPT ?= -module
 
 ### If you use a different compiler, you need to specify $(MODOPT)
