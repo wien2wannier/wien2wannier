@@ -1,9 +1,9 @@
 ### wien2wannier/SRC_wplot/Makefile
 ###
-###    make           ... generate executable for the real-valued version
-###    make complex   ... generate executable for the complex-valued version
-###    make all       ... generate both the above
-###    make clean     ... delete unnecessary files
+###    make         ... generate executable for the real-valued version
+###    make complex ... generate executable for the complex-valued version
+###    make all     ... generate both the above
+###    make clean   ... delete unnecessary files
 ###
 ### Copyright 2013-2016 Elias Assmann
 
@@ -45,7 +45,7 @@ C_LIBS = $(R_LIBS)
 
 DESTDIR    := .
 R_EXECNAME := wplot
-C_EXECNAME := wplotc
+C_EXECNAME := $(R_EXECNAME)c
 
 # directories for ‘.o’ and ‘.mod’ files that are: common to real and
 # complex; real versions; complex versions
@@ -55,10 +55,11 @@ C_DIR := libc
 
 #########################################################################
 
-FFLAGS  = $(FGEN) $(FOPT) -I$(O_DIR)
+FFLAGS += $(FGEN) $(FOPT) -I$(O_DIR)
 R_EXEC  = $(DESTDIR)/$(R_EXECNAME)
 C_EXEC  = $(DESTDIR)/$(C_EXECNAME)
 
+## where to find the stuff we include from w2w
 SRCDIR  := ../SRC_w2w
 LIBDIR  := lib
 UTILDIR := $(SRCDIR)/$(LIBDIR)
@@ -112,7 +113,7 @@ C_OBJS = $(R_OBJS)
 #
 #  We must exclude those objects that are already named in R_OBJS
 #
-RC_OBJS = $(filter-out $(R_OBJS), $(MODRC_USERS))
+RC_OBJS = $(filter-out $(R_OBJS), $(modrc_users))
 
 #........................................................................
 #
@@ -120,19 +121,19 @@ RC_OBJS = $(filter-out $(R_OBJS), $(MODRC_USERS))
 #
 
 ## util_w2w.F:   utilities used in SRC_w2w, SRC_wplot, SRC_trig
-UTIL_USERS   = modules.o modules_rc.o wplot.o
+util_users   = modules.o modules_rc.o wplot.o
 ## mod_w2w.f:    modules and procedures shared by SRC_w2w and SRC_wplot
-MODW2W_USERS = modules.o modules_rc.o modules_rc.o wplot.o
+modw2w_users = modules.o modules_rc.o modules_rc.o wplot.o
 ## modules.f:    modules and procedures for SRC_wplot
-MOD_USERS    = modules_rc.o wplot.o
+mod_users    = modules_rc.o wplot.o
 ## modules_rc.f: modules and procedures for SRC_wplot -- real/complex
-MODRC_USERS  = wplot.o
+modrc_users  = wplot.o
 
 #........................................................................
 #
 #  “Real” targets
 #
-objs   = $(foreach o, $(OBJS)  , $(O_DIR)/$o)
+objs   = $(foreach o, $(OBJS)             , $(O_DIR)/$o)
 r_objs = $(foreach o, $(RC_OBJS) $(R_OBJS), $(R_DIR)/$o)
 c_objs = $(foreach o, $(RC_OBJS) $(C_OBJS), $(C_DIR)/$o)
 
@@ -150,7 +151,7 @@ $(C_EXEC): $(objs) $(c_objs) $(UTILOBJ) $(MODOBJ) Makefile
 #
 #  Real and complex need to be kept separate!
 #
-$(O_DIR)/%.o: %.f Makefile
+$(O_DIR)/%.o: %.[fF] Makefile
 	@test -d $(O_DIR) || mkdir $(O_DIR)
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(O_DIR)
 
@@ -173,21 +174,26 @@ $(MODOBJ): $(SRCDIR)/mod_w2w.f $(SRCDIR)/Makefile
 	make -C $(SRCDIR) $(LIBDIR)/mod_w2w.o
 
 # Dependencies on ‘modules.o’, ‘mod_w2w.o’, and ‘util_w2w.o’; these
-# files might have real/complex versions, or not
-mod_users  = $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
-	$(foreach o, $(MOD_USERS), $d/$o))
-modw2w_users  = $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
-	$(foreach o, $(MODW2W_USERS), $d/$o))
-util_users = $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
-	$(foreach o, $(UTIL_USERS), $d/$o))
+# files might have real/complex versions, or not, so we prefix them
+# with each of the repsective directories
+mod_users    := $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
+	$(foreach o, $(mod_users), $d/$o))
 
-$(mod_users): $(O_DIR)/modules.o
+modw2w_users := $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
+	$(foreach o, $(modw2w_users), $d/$o))
 
-$(foreach o, $(MODRC_USERS), $(R_DIR)/$o): $(R_DIR)/modules_rc.o
-$(foreach o, $(MODRC_USERS), $(C_DIR)/$o): $(C_DIR)/modules_rc.o
+util_users   := $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
+	$(foreach o, $(util_users), $d/$o))
 
-$(util_users): $(UTILOBJ)
-$(util_users): FFLAGS += -I$(UTILDIR)
+$(mod_users):    $(O_DIR)/modules.o
 
 $(modw2w_users): $(MODOBJ)
 $(modw2w_users): FFLAGS += -I$(UTILDIR)
+
+$(util_users):   $(UTILOBJ)
+$(util_users):   FFLAGS += -I$(UTILDIR)
+
+# Dependencies on ‘modules_rc.o’; we know these files must have
+# real/complex versions
+$(foreach o, $(modrc_users), $(R_DIR)/$o): $(R_DIR)/modules_rc.o
+$(foreach o, $(modrc_users), $(C_DIR)/$o): $(C_DIR)/modules_rc.o

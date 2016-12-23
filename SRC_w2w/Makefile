@@ -43,7 +43,7 @@ SHELL = /bin/sh
 
 C_LIBS = $(R_LIBS)
 
-DESTDIR	    = .
+DESTDIR    := .
 R_EXECNAME := w2w
 C_EXECNAME := $(R_EXECNAME)c
 
@@ -53,16 +53,16 @@ O_DIR := lib
 R_DIR := libr
 C_DIR := libc
 
-#############################################################################
+#########################################################################
 
-FFLAGS+= $(FGEN) $(FOPT) -I$(O_DIR)
-R_EXEC = $(DESTDIR)/$(R_EXECNAME)
-C_EXEC = $(DESTDIR)/$(C_EXECNAME)
+FFLAGS += $(FGEN) $(FOPT) -I$(O_DIR)
+R_EXEC  = $(DESTDIR)/$(R_EXECNAME)
+C_EXEC  = $(DESTDIR)/$(C_EXECNAME)
 
 ## site-specific configuration may overwrite the above
 -include ../make.sys
 
-#............................................................................
+#........................................................................
 #
 #  convenience rules
 #
@@ -83,6 +83,15 @@ distclean: clean
 
 #........................................................................
 #
+#  Object files common to both REAL and COMPLEX version
+#  (i.e., these are the same for REAL and COMPLEX)
+#
+OBJS = $(filter-out $(R_OBJS) $(RC_OBJS), \
+	$(patsubst %.F, %.o, $(wildcard *.F)) \
+	$(patsubst %.f, %.o, $(wildcard *.f)))
+
+#........................................................................
+#
 #  These object files have REAL and COMPLEX versions
 #
 #  The two versions go to different directories so we can keep both
@@ -98,15 +107,6 @@ C_OBJS = $(R_OBJS)
 #  We must exclude those objects that are already named in R_OBJS
 #
 RC_OBJS = $(filter-out $(R_OBJS), $(modrc_users))
-
-#........................................................................
-#
-#  Object files common to both REAL and COMPLEX version
-#  (i.e., these are the same for REAL and COMPLEX)
-#
-OBJS = $(filter-out $(R_OBJS) $(RC_OBJS), \
-	$(patsubst %.F, %.o, $(wildcard *.F)) \
-	$(patsubst %.f, %.o, $(wildcard *.f)))
 
 #........................................................................
 #
@@ -146,10 +146,6 @@ $(O_DIR)/%.o: %.[fF] Makefile
 	@test -d $(O_DIR) || mkdir $(O_DIR)
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(O_DIR)
 
-$(O_DIR)/%.o: %.c Makefile
-	@test -d $(O_DIR) || mkdir $(O_DIR)
-	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
-
 $(R_DIR)/%.o: %.[fF] Makefile
 	@test -d $(R_DIR) || mkdir $(R_DIR)
 	$(FC) $(FFLAGS) -c $< -o$@ $(MODOPT) $(R_DIR)
@@ -163,22 +159,23 @@ $(C_DIR)/%.o: %.[fF] Makefile
 #  Dependencies
 #
 
-## Dependencies on ‘util_w2w.o’; these files might have real/complex
-## versions, or not
-$(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
-	$(foreach o, $(util_users), $d/$o)): $(O_DIR)/util_w2w.o
+# Dependencies on ‘util_w2w.o’, ‘mod_w2w.o’, and ‘modules.o’; these
+# files might have real/complex versions, or not, so we prefix them
+# with each of the repsective directories
+mod_users    := $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
+	$(foreach o, $(mod_users), $d/$o))
 
-## Dependencies on ‘mod_w2w.o’; these files might have real/complex
-## versions, or not
-$(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
-	$(foreach o, $(modw2w_users), $d/$o)): $(O_DIR)/mod_w2w.o
+modw2w_users := $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
+	$(foreach o, $(modw2w_users), $d/$o))
 
-## Dependencies on ‘modules.o’; these files might have real/complex
-## versions, or not
-$(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
-	$(foreach o, $(mod_users), $d/$o)): $(O_DIR)/modules.o
+util_users   := $(foreach d, $(O_DIR) $(R_DIR) $(C_DIR), \
+	$(foreach o, $(util_users), $d/$o))
 
-## Dependencies on ‘modules_rc.o’; we know these files must have
-## real/complex versions
+$(mod_users):    $(O_DIR)/modules.o
+$(modw2w_users): $(O_DIR)/mod_w2w.o
+$(util_users):   $(O_DIR)/util_w2w.o
+
+# Dependencies on ‘modules_rc.o’; we know these files must have
+# real/complex versions
 $(foreach o, $(modrc_users), $(R_DIR)/$o): $(R_DIR)/modules_rc.o
 $(foreach o, $(modrc_users), $(C_DIR)/$o): $(C_DIR)/modules_rc.o
